@@ -3101,6 +3101,51 @@ GROW_STAIR_5_MIRRORED_B =
   }
 },
 
+GROW_STAIR_ASKEW =
+{
+  prob = 20,
+  skip_prob = 50,
+
+  structure =
+  {
+    "x...","xAAA",
+    "x...","xAAA",
+    "x...","x^^^",
+    "1...","1111",
+    "1...","1111"
+  }
+},
+
+GROW_STAIR_ASKEW_LONG =
+{
+  prob = 12,
+  skip_prob = 65,
+
+  structure =
+  {
+    "x......","xAAAAAA",
+    "x......","xAAAAAA",
+    "x......","x^^^^^^",
+    "1......","1111111",
+    "1......","1111111"
+  }
+},
+
+GROW_STAIR_ASKEW_LONG_DIVISIONS =
+{
+  prob = 12,
+  skip_prob = 65,
+
+  structure =
+  {
+    "x......","xAAAAAA",
+    "x......","xAAAAAA",
+    "x......","x^^1^^1",
+    "1......","1111111",
+    "1......","1111111"
+  }
+},
+
 -- MSSP's Greek COLONNADE sort of things. [MSSPCOLONNADE]
 
 GROW_COLONNADE_1 =
@@ -12333,6 +12378,60 @@ GROW_3x_C_CENT =
   },
 },
 
+GROW_CBM =
+{
+  prob = 10,
+  skip_prob = 88,
+
+  structure =
+  {
+    "xxx....xx","xxx/%/%xx",
+    "xx......x","xx/1111%x",
+    "x........","x/111111%",
+    "1........","111111111",
+    "1........","111111111",
+    "x........","x%111111/",
+    "xx......x","xx%1111/x"
+  },
+
+  diagonals =
+  {
+    ".1","1.",".1","1.",
+    ".1","1.",
+    ".1","1.",
+
+    ".1","1.",
+    ".1","1."
+  }
+},
+
+GROW_CBM_STEEPNESS =
+{
+  prob = 8,
+  skip_prob = 92,
+
+  structure =
+  {
+    "xxx....xx","xxx/%/%xx",
+    "xx......x","xx/11%A%x",
+    "x........","x/1111%A%",
+    "1........","111111>AA",
+    "1........","111111>AA",
+    "x........","x%1111/A/",
+    "xx......x","xx%11/A/x"
+  },
+
+  diagonals =
+  {
+    ".1","1.",".A","A.",
+    ".1","1A","A.",
+    ".1","1A","A.",
+
+    ".1","1A","A.",
+    ".1","1A","A."
+  }
+},
+
 GROW_3x_D =
 {
   prob = 40,
@@ -13596,7 +13695,7 @@ GROW_3x_T =
     "xx..xx","xx11xx",
     "xx..xx","xx11xx",
     "xx11xx","xx11xx",
-  },
+  }
 },
 
 GROW_3x_T_LIQUID =
@@ -13615,7 +13714,45 @@ GROW_3x_T_LIQUID =
     "......","~~11~~",
     "......","~~11~~",
     "xx11xx","xx11xx",
-  },
+  }
+},
+
+GROW_CROSS_PILLARS =
+{
+  prob = 8,
+  skip_prob = 80,
+
+  structure =
+  {
+    "xxxx11xxxx","xxxx11xxxx",
+    "..........","1111111111",
+    "..........","1111vv1111",
+    "..........","1111AA1111",
+    "..........","1111AA1111",
+    "..........","11#AAAA#11",
+    "..........","11#AAAA#11",
+    "..........","1111AA1111",
+    "..........","1111AA1111",
+    "..........","1111AA1111",
+    "..........","1111AA1111"
+  }
+},
+
+GROW_CROSS_PILLARS_SIDE =
+{
+  prob = 8,
+  skip_prob = 80,
+
+  structure =
+  {
+    "xxxx11xxxxxx","xxxx11xxxxxx",
+    "............","AAAA11AAAAAA",
+    "............","AAAA11AAAAAA",
+    "............","AA#111111>AA",
+    "............","AA#111111>AA",
+    "............","AAAA11AAAAAA",
+    "............","AAAA11AAAAAA"
+  }
 },
 
 GROW_3x_U =
