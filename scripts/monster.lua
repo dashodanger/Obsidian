@@ -2256,7 +2256,7 @@ gui.debugf("wants =\n%s\n\n", table.tostr(wants))
 
     want = math.clamp(min, rand.int(want), total)
 
-    gui.debugf("monsters_in_cage: %d (of %d) qty=%1.1f\n", want, total, qty)
+    gui.debugf("monsters_in_cage: %d (of " .. total .. ") qty=%1.1f\n", want, qty)
 
     for i = 1, want do
       -- ensure first monster in present in all skills
