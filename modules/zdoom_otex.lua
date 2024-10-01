@@ -510,6 +510,7 @@ end
 
 function OTEX_PROC_MODULE.synthesize_procedural_themes()
   local resource_tab = {}
+  local r
 
   local function pick_unique_texture(table, tex_group, total_tries)
     local tex
@@ -644,18 +645,9 @@ function OTEX_PROC_MODULE.synthesize_procedural_themes()
       for _,F in pairs(resource_group.flats) do
         local side_tex, group_pick
         -- hack fix to assign DMD flats a side texture rather than just a default
-        if string.find(group_name, "DMD") 
-        or string.find(group_name, "PAVE")
-        or string.find(group_name, "TL16")
-        or string.find(group_name, "TL32")
-        or string.find(group_name, "TLMX")
-        or string.find(group_name, "TRHX")
-        or string.find(group_name, "BSKT")
-        or string.find(group_name, "LLLL") then
-              group_pick = rand.key_by_probs(group_pick_list["urban"].textures)
+        if not OTEX_MATERIALS[F] then
+          group_pick = rand.key_by_probs(group_pick_list["urban"].textures)
           side_tex = rand.pick(resource_tab[group_pick].textures)
-        else
-          side_tex = "BROWNHUG"
         end
         OTEX_MATERIALS[F] =
         {
