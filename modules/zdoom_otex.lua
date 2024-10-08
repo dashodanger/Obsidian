@@ -233,6 +233,17 @@ OTEX_DIRECT_REMOVALS =
       "OMETLC94",
       "OMETLC95"
     }
+  },
+
+  TUDR =
+  {
+    textures =
+    {
+      "OTUDRA80",
+      "OTUDRA81",
+      "OTUDRB80",
+      "OTUDRB81"
+    }
   }
 }
 
