@@ -231,7 +231,14 @@ OTEX_DIRECT_REMOVALS =
       "OMETLC92",
       "OMETLC93",
       "OMETLC94",
-      "OMETLC95"
+      "OMETLC95",
+
+      "OMETLN37",
+      "OMETLO37",
+      "OEMTLP37",
+      "ONDSTJ91",
+      "ONDSTJ93",
+      "ONDSTJ94"
     }
   },
 
