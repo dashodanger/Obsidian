@@ -1698,6 +1698,56 @@ PARK_GROW_3 =
 },
 
 
+-- MSSP: added these in order to lessen the tendency for parks
+-- to be long and stringy, which feels really weird for natural outdoors
+PARK_GROW_4 =
+{
+  prob = 1000,
+
+  structure =
+  {
+    "11xx","11xx",
+    "....","1111",
+    "....","1111",
+    "....","1111",
+    "....","1111"
+  }
+},
+
+
+PARK_GROW_5 =
+{
+  prob = 700,
+
+  structure =
+  {
+    "11xxx","11xxx",
+    ".....","11111",
+    ".....","11111",
+    ".....","11111",
+    ".....","11111",
+    ".....","11111"
+  }
+},
+
+
+PARK_GROW_6 =
+{
+  prob = 600,
+
+  structure =
+  {
+    "11xxxx","11xxxx",
+    "......","111111",
+    "......","111111",
+    "......","111111",
+    "......","111111",
+    "......","111111",
+    "......","111111"
+  }
+},
+
+
 FILLER_1 =
 {
   pass = "filler",
