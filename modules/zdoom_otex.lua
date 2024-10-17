@@ -836,6 +836,35 @@ function OTEX_PROC_MODULE.get_levels_after_themes()
   table.deep_merge(GAME.ROOM_THEMES, OTEX_ROOM_THEMES, 2)
 end
 
+
+function OTEX_PROC_MODULE.all_done()
+  SCRIPTS.gldefs = ScriptMan_combine_script(SCRIPTS.gldefs, 
+[[
+Glow
+{
+  Flats
+  {
+    OBLODA01
+    OGOOPY01
+    OICYWA01
+    OLAVAA01
+    OLAVAA02
+    OLAVAB01
+    OLAVAC01
+    OLAVAD01
+    OLAVAE01
+    OLAVAF01
+    ONUKEA01
+    OSLUDG01
+    OPOOPY01
+    OTAR__01
+    OWATER01
+  }
+}
+]]
+  )
+end
+
 ----------------------------------------------------------------
 
 OB_MODULES["otex_proc_module"] =
@@ -855,7 +884,8 @@ OB_MODULES["otex_proc_module"] =
   hooks =
   {
     setup = OTEX_PROC_MODULE.setup,
-    get_levels_after_themes = OTEX_PROC_MODULE.get_levels_after_themes
+    get_levels_after_themes = OTEX_PROC_MODULE.get_levels_after_themes,
+    all_done = OTEX_PROC_MODULE.all_done
   },
 
   tooltip = _("If enabled, generates room themes using OTEX based on a resource table. ".. 
