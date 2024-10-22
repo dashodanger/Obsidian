@@ -45,13 +45,13 @@ Oblige v5-v7 Prefab WAD files and colocated Lua definitions - Andrew Apted
 
 "Mechanical Conveyor Belt Sound Clip" sound - Cagan Celik
 
-"The Bloodletter" song (renamed to D_DM2INT.ogg) - Chad Wolfe
+"The Bloodletter" song - Chad Wolfe
 
-"Sand - Flowing, sand sea digital" sound (renamed to DESERT.ogg) - Vrymaa via Freesound.org
+"Sand - Flowing, sand sea digital" sound - Vrymaa via Freesound.org
 
-"Car Radio Static" sound (renamed to STATIC.ogg) - TravieDoodle via Freesound.org
+"Car Radio Static" sound - TravieDoodle via Freesound.org
 
-"Demon Chant (Latin)" sound (renamed to SKLLCHNT.ogg) - cycro via Freesound.org
+"Demon Chant (Latin)" sound - cycro via Freesound.org
 
 ===========================================================================================
 CC-BY-3.0 Unported License
