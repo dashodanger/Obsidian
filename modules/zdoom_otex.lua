@@ -231,7 +231,25 @@ OTEX_DIRECT_REMOVALS =
       "OMETLC92",
       "OMETLC93",
       "OMETLC94",
-      "OMETLC95"
+      "OMETLC95",
+
+      "OMETLN37",
+      "OMETLO37",
+      "OEMTLP37",
+      "ONDSTJ91",
+      "ONDSTJ93",
+      "ONDSTJ94"
+    }
+  },
+
+  TUDR =
+  {
+    textures =
+    {
+      "OTUDRA80",
+      "OTUDRA81",
+      "OTUDRB80",
+      "OTUDRB81"
     }
   }
 }
@@ -420,15 +438,15 @@ OTEX_SPECIAL_RESOURCES =
     otex_goop = { mat="OGOOPY01", special=0},
     otex_ice = { mat="OICYWA01", special=0},
    
-    otex_lavaA1 = { mat="OLAVAA01", light_add=56, special=5, damage=10},
-    otex_lavaA2 = { mat="OLAVAA02", light_add=56, special=5, damage=10},
-    otex_lavaB1 = { mat="OLAVAB01", light_add=56, special=5, damage=10},
-    otex_lavaC1 = { mat="OLAVAC01", light_add=56, special=5, damage=10},
-    otex_lavaD1 = { mat="OLAVAD01", light_add=56, special=5, damage=10},
-    otex_lavaE1 = { mat="OLAVAE01", light_add=56, special=5, damage=10},
-    otex_lavaF1 = { mat="OLAVAF01", light_add=56, special=5, damage=10},
+    otex_lavaA1 = { mat="OLAVAA01", light_add=24, special=5, damage=10},
+    otex_lavaA2 = { mat="OLAVAA02", light_add=24, special=5, damage=10},
+    otex_lavaB1 = { mat="OLAVAB01", light_add=24, special=5, damage=10},
+    otex_lavaC1 = { mat="OLAVAC01", light_add=24, special=5, damage=10},
+    otex_lavaD1 = { mat="OLAVAD01", light_add=24, special=5, damage=10},
+    otex_lavaE1 = { mat="OLAVAE01", light_add=24, special=5, damage=10},
+    otex_lavaF1 = { mat="OLAVAF01", light_add=24, special=5, damage=10},
   
-    otex_nukage = { mat="ONUKEA01", light_add=56, special=7, damage=5},
+    otex_nukage = { mat="ONUKEA01", light_add=16, special=7, damage=5},
    
     otex_sludge = { mat="OSLUDG01", special=0},
     otex_poop = { mat="OPOOPY01", special=0},
@@ -510,6 +528,7 @@ end
 
 function OTEX_PROC_MODULE.synthesize_procedural_themes()
   local resource_tab = {}
+  local r
 
   local function pick_unique_texture(table, tex_group, total_tries)
     local tex
@@ -644,18 +663,9 @@ function OTEX_PROC_MODULE.synthesize_procedural_themes()
       for _,F in pairs(resource_group.flats) do
         local side_tex, group_pick
         -- hack fix to assign DMD flats a side texture rather than just a default
-        if string.find(group_name, "DMD") 
-        or string.find(group_name, "PAVE")
-        or string.find(group_name, "TL16")
-        or string.find(group_name, "TL32")
-        or string.find(group_name, "TLMX")
-        or string.find(group_name, "TRHX")
-        or string.find(group_name, "BSKT")
-        or string.find(group_name, "LLLL") then
-              group_pick = rand.key_by_probs(group_pick_list["urban"].textures)
+        if not OTEX_MATERIALS[F] then
+          group_pick = rand.key_by_probs(group_pick_list["urban"].textures)
           side_tex = rand.pick(resource_tab[group_pick].textures)
-        else
-          side_tex = "BROWNHUG"
         end
         OTEX_MATERIALS[F] =
         {
@@ -826,6 +836,35 @@ function OTEX_PROC_MODULE.get_levels_after_themes()
   table.deep_merge(GAME.ROOM_THEMES, OTEX_ROOM_THEMES, 2)
 end
 
+
+function OTEX_PROC_MODULE.all_done()
+  SCRIPTS.gldefs = ScriptMan_combine_script(SCRIPTS.gldefs, 
+[[
+Glow
+{
+  Flats
+  {
+    OBLODA01
+    OGOOPY01
+    OICYWA01
+    OLAVAA01
+    OLAVAA02
+    OLAVAB01
+    OLAVAC01
+    OLAVAD01
+    OLAVAE01
+    OLAVAF01
+    ONUKEA01
+    OSLUDG01
+    OPOOPY01
+    OTAR__01
+    OWATER01
+  }
+}
+]]
+  )
+end
+
 ----------------------------------------------------------------
 
 OB_MODULES["otex_proc_module"] =
@@ -845,7 +884,8 @@ OB_MODULES["otex_proc_module"] =
   hooks =
   {
     setup = OTEX_PROC_MODULE.setup,
-    get_levels_after_themes = OTEX_PROC_MODULE.get_levels_after_themes
+    get_levels_after_themes = OTEX_PROC_MODULE.get_levels_after_themes,
+    all_done = OTEX_PROC_MODULE.all_done
   },
 
   tooltip = _("If enabled, generates room themes using OTEX based on a resource table. ".. 
