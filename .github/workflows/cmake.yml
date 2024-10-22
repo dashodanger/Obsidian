@@ -49,9 +49,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Download w64devkit
-        run: invoke-webrequest https://github.com/skeeto/w64devkit/releases/download/v1.23.0/w64devkit-1.23.0.zip -outfile ${{github.workspace}}\w64devkit.zip
+        run: invoke-webrequest https://github.com/skeeto/w64devkit/releases/download/v2.0.0/w64devkit-x64-2.0.0.exe -outfile ${{github.workspace}}\w64devkit.exe
       - name: Extract w64devkit
-        run: expand-archive -path ${{github.workspace}}\w64devkit.zip -destinationpath ${{github.workspace}}
+        run: ${{github.workspace}}\w64devkit.exe -y
       - name: Set environment variables and build
         run: |
           $env:Path = "${{github.workspace}}\w64devkit\bin;" + $env:Path
