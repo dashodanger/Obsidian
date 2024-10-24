@@ -1048,8 +1048,6 @@ void CreateEdges()
 
     edge_c *left, *right;
 
-    LogPrint("Creating Edges...\n");
-
     for (i = 0; i < num_linedefs; i++)
     {
         linedef_c *line = Linedef(i);
@@ -1158,10 +1156,6 @@ bool Polygonate(bool require_border)
     if (was_ok)
     {
         ClockwisePolygons();
-
-        LogPrint("Built %d POLYGONS, %d EDGES, %d SPLIT-VERTS\n", num_polygons, num_edges, num_splits);
-
-        LogPrint("\n");
     }
 
     FreeQuickAllocCuts();

@@ -40,10 +40,6 @@ gui.import("stories")
 ------------------------------------------------------------
 
 function HERETIC.all_done()
-  if ob_match_port("advanced") then
-	  local wad_file = "games/heretic/data/HER_EXIT.wad"
-	  gui.wad_merge_sections(wad_file)
-  end
   gui.wad_insert_file("data/endoom/ENDOOM.bin", "ENDTEXT")
 end
 
@@ -65,6 +61,7 @@ OB_GAMES["heretic"] =
 
   hooks =
   {
+    setup = HERETIC.setup,
     factory_setup = HERETIC.factory_setup,
     slump_setup = HERETIC.slump_setup,
     get_levels = HERETIC.get_levels,

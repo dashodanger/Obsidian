@@ -2,7 +2,7 @@
   minilua.h -- Lua in a single header
   Project URL: https://github.com/edubart/minilua
 
-  This is Lua 5.4.6 contained in a single header to be bundled in C/C++ applications with ease.
+  This is Lua 5.4.7 contained in a single header to be bundled in C/C++ applications with ease.
   Lua is a powerful, efficient, lightweight, embeddable scripting language.
 
   Do the following in *one* C file to create the implementation:
@@ -344,6 +344,15 @@ extern "C" {
 #endif
 
 #endif
+
+
+/*
+** LUA_IGMARK is a mark to ignore all after it when building the
+** module name (e.g., used to build the luaopen_ function name).
+** Typically, the suffix after the mark is the module version,
+** as in "mod-v1.2.so".
+*/
+#define LUA_IGMARK		"-"
 
 /* }================================================================== */
 
@@ -899,14 +908,14 @@ extern "C" {
 
 #define LUA_VERSION_MAJOR	"5"
 #define LUA_VERSION_MINOR	"4"
-#define LUA_VERSION_RELEASE	"6"
+#define LUA_VERSION_RELEASE	"7"
 
 #define LUA_VERSION_NUM			504
-#define LUA_VERSION_RELEASE_NUM		(LUA_VERSION_NUM * 100 + 6)
+#define LUA_VERSION_RELEASE_NUM		(LUA_VERSION_NUM * 100 + 7)
 
 #define LUA_VERSION	"Lua " LUA_VERSION_MAJOR "." LUA_VERSION_MINOR
 #define LUA_RELEASE	LUA_VERSION "." LUA_VERSION_RELEASE
-#define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2023 Lua.org, PUC-Rio"
+#define LUA_COPYRIGHT	LUA_RELEASE "  Copyright (C) 1994-2024 Lua.org, PUC-Rio"
 #define LUA_AUTHORS	"R. Ierusalimschy, L. H. de Figueiredo, W. Celes"
 
 
@@ -1378,7 +1387,7 @@ struct lua_Debug {
 
 
 /******************************************************************************
-* Copyright (C) 1994-2023 Lua.org, PUC-Rio.
+* Copyright (C) 1994-2024 Lua.org, PUC-Rio.
 *
 * Permission is hereby granted, free of charge, to any person obtaining
 * a copy of this software and associated documentation files (the
@@ -2525,7 +2534,7 @@ typedef struct GCObject {
 typedef struct TString {
   CommonHeader;
   lu_byte extra;  /* reserved words for short strings; "has hash" for longs */
-  lu_byte shrlen;  /* length for short strings */
+  lu_byte shrlen;  /* length for short strings, 0xFF for long strings */
   unsigned int hash;
   union {
     size_t lnglen;  /* length for long strings */
@@ -2537,19 +2546,17 @@ typedef struct TString {
 
 
 /*
-** Get the actual string (array of bytes) from a 'TString'.
+** Get the actual string (array of bytes) from a 'TString'. (Generic
+** version and specialized versions for long and short strings.)
 */
-#define getstr(ts)  ((ts)->contents)
+#define getstr(ts)	((ts)->contents)
+#define getlngstr(ts)	check_exp((ts)->shrlen == 0xFF, (ts)->contents)
+#define getshrstr(ts)	check_exp((ts)->shrlen != 0xFF, (ts)->contents)
 
-
-/* get the actual string (array of bytes) from a Lua value */
-#define svalue(o)       getstr(tsvalue(o))
 
 /* get string length from 'TString *s' */
-#define tsslen(s)	((s)->tt == LUA_VSHRSTR ? (s)->shrlen : (s)->u.lnglen)
-
-/* get string length from 'TValue *o' */
-#define vslen(o)	tsslen(tsvalue(o))
+#define tsslen(s)  \
+	((s)->shrlen != 0xFF ? (s)->shrlen : (s)->u.lnglen)
 
 /* }================================================================== */
 
@@ -3056,7 +3063,6 @@ LUAI_FUNC void *luaM_malloc_ (lua_State *L, size_t size, int tag);
 
 
 /*#include "lobject.h"*/
-/*#include "lstate.h"*/
 
 
 /*
@@ -3143,8 +3149,8 @@ LUAI_FUNC int luaT_callorderiTM (lua_State *L, const TValue *p1, int v2,
                                  int inv, int isfloat, TMS event);
 
 LUAI_FUNC void luaT_adjustvarargs (lua_State *L, int nfixparams,
-                                   CallInfo *ci, const Proto *p);
-LUAI_FUNC void luaT_getvarargs (lua_State *L, CallInfo *ci,
+                                   struct CallInfo *ci, const Proto *p);
+LUAI_FUNC void luaT_getvarargs (lua_State *L, struct CallInfo *ci,
                                               StkId where, int wanted);
 
 
@@ -3332,7 +3338,7 @@ struct CallInfo {
   union {
     struct {  /* only for Lua functions */
       const Instruction *savedpc;
-      volatile l_signalT trap;
+      volatile l_signalT trap;  /* function is tracing lines/counts */
       int nextraargs;  /* # of extra arguments in vararg functions */
     } l;
     struct {  /* only for C functions */
@@ -3547,7 +3553,6 @@ union GCUnion {
 LUAI_FUNC void luaE_setdebt (global_State *g, l_mem debt);
 LUAI_FUNC void luaE_freethread (lua_State *L, lua_State *L1);
 LUAI_FUNC CallInfo *luaE_extendCI (lua_State *L);
-LUAI_FUNC void luaE_freeCI (lua_State *L);
 LUAI_FUNC void luaE_shrinkCI (lua_State *L);
 LUAI_FUNC void luaE_checkcstack (lua_State *L);
 LUAI_FUNC void luaE_incCstack (lua_State *L);
@@ -3836,15 +3841,15 @@ OP_LOADNIL,/*	A B	R[A], R[A+1], ..., R[A+B] := nil		*/
 OP_GETUPVAL,/*	A B	R[A] := UpValue[B]				*/
 OP_SETUPVAL,/*	A B	UpValue[B] := R[A]				*/
 
-OP_GETTABUP,/*	A B C	R[A] := UpValue[B][K[C]:string]			*/
+OP_GETTABUP,/*	A B C	R[A] := UpValue[B][K[C]:shortstring]		*/
 OP_GETTABLE,/*	A B C	R[A] := R[B][R[C]]				*/
 OP_GETI,/*	A B C	R[A] := R[B][C]					*/
-OP_GETFIELD,/*	A B C	R[A] := R[B][K[C]:string]			*/
+OP_GETFIELD,/*	A B C	R[A] := R[B][K[C]:shortstring]			*/
 
-OP_SETTABUP,/*	A B C	UpValue[A][K[B]:string] := RK(C)		*/
+OP_SETTABUP,/*	A B C	UpValue[A][K[B]:shortstring] := RK(C)		*/
 OP_SETTABLE,/*	A B C	R[A][R[B]] := RK(C)				*/
 OP_SETI,/*	A B C	R[A][B] := RK(C)				*/
-OP_SETFIELD,/*	A B C	R[A][K[B]:string] := RK(C)			*/
+OP_SETFIELD,/*	A B C	R[A][K[B]:shortstring] := RK(C)			*/
 
 OP_NEWTABLE,/*	A B C k	R[A] := {}					*/
 
@@ -4089,6 +4094,7 @@ LUAI_FUNC const char *luaG_addinfo (lua_State *L, const char *msg,
                                                   TString *src, int line);
 LUAI_FUNC l_noret luaG_errormsg (lua_State *L);
 LUAI_FUNC int luaG_traceexec (lua_State *L, const Instruction *pc);
+LUAI_FUNC int luaG_tracecall (lua_State *L);
 
 
 #endif
@@ -4165,7 +4171,6 @@ LUAI_FUNC int luaD_pretailcall (lua_State *L, CallInfo *ci, StkId func,
 LUAI_FUNC CallInfo *luaD_precall (lua_State *L, StkId func, int nResults);
 LUAI_FUNC void luaD_call (lua_State *L, StkId func, int nResults);
 LUAI_FUNC void luaD_callnoyield (lua_State *L, StkId func, int nResults);
-LUAI_FUNC StkId luaD_tryfuncTM (lua_State *L, StkId func);
 LUAI_FUNC int luaD_closeprotected (lua_State *L, ptrdiff_t level, int status);
 LUAI_FUNC int luaD_pcall (lua_State *L, Pfunc func, void *u,
                                         ptrdiff_t oldtop, ptrdiff_t ef);
@@ -4526,8 +4531,7 @@ LUAI_FUNC TString *luaS_createlngstrobj (lua_State *L, size_t l);
 /*
 ** Encode major-minor version in one byte, one nibble for each
 */
-#define MYINT(s)	(s[0]-'0')  /* assume one-digit numerals */
-#define LUAC_VERSION	(MYINT(LUA_VERSION_MAJOR)*16+MYINT(LUA_VERSION_MINOR))
+#define LUAC_VERSION  (((LUA_VERSION_NUM / 100) * 16) + LUA_VERSION_NUM % 100)
 
 #define LUAC_FORMAT	0	/* this is the official format */
 
@@ -4725,8 +4729,6 @@ LUAI_FUNC void luaH_setint (lua_State *L, Table *t, lua_Integer key,
 LUAI_FUNC const TValue *luaH_getshortstr (Table *t, TString *key);
 LUAI_FUNC const TValue *luaH_getstr (Table *t, TString *key);
 LUAI_FUNC const TValue *luaH_get (Table *t, const TValue *key);
-LUAI_FUNC void luaH_newkey (lua_State *L, Table *t, const TValue *key,
-                                                    TValue *value);
 LUAI_FUNC void luaH_set (lua_State *L, Table *t, const TValue *key,
                                                  TValue *value);
 LUAI_FUNC void luaH_finishset (lua_State *L, Table *t, const TValue *key,
@@ -4981,10 +4983,8 @@ typedef enum UnOpr { OPR_MINUS, OPR_BNOT, OPR_NOT, OPR_LEN, OPR_NOUNOPR } UnOpr;
 
 LUAI_FUNC int luaK_code (FuncState *fs, Instruction i);
 LUAI_FUNC int luaK_codeABx (FuncState *fs, OpCode o, int A, unsigned int Bx);
-LUAI_FUNC int luaK_codeAsBx (FuncState *fs, OpCode o, int A, int Bx);
 LUAI_FUNC int luaK_codeABCk (FuncState *fs, OpCode o, int A,
                                             int B, int C, int k);
-LUAI_FUNC int luaK_isKint (expdesc *e);
 LUAI_FUNC int luaK_exp2const (FuncState *fs, const expdesc *e, TValue *v);
 LUAI_FUNC void luaK_fixline (FuncState *fs, int line);
 LUAI_FUNC void luaK_nil (FuncState *fs, int from, int n);
@@ -4996,7 +4996,6 @@ LUAI_FUNC int luaK_exp2anyreg (FuncState *fs, expdesc *e);
 LUAI_FUNC void luaK_exp2anyregup (FuncState *fs, expdesc *e);
 LUAI_FUNC void luaK_exp2nextreg (FuncState *fs, expdesc *e);
 LUAI_FUNC void luaK_exp2val (FuncState *fs, expdesc *e);
-LUAI_FUNC int luaK_exp2RK (FuncState *fs, expdesc *e);
 LUAI_FUNC void luaK_self (FuncState *fs, expdesc *e, expdesc *key);
 LUAI_FUNC void luaK_indexed (FuncState *fs, expdesc *t, expdesc *k);
 LUAI_FUNC void luaK_goiftrue (FuncState *fs, expdesc *e);
@@ -5798,7 +5797,7 @@ static size_t loadUnsigned (LoadState *S, size_t limit) {
 
 
 static size_t loadSize (LoadState *S) {
-  return loadUnsigned(S, ~(size_t)0);
+  return loadUnsigned(S, MAX_SIZET);
 }
 
 
@@ -5839,7 +5838,7 @@ static TString *loadStringN (LoadState *S, Proto *p) {
     ts = luaS_createlngstrobj(L, size);  /* create string */
     setsvalue2s(L, L->top.p, ts);  /* anchor it ('loadVector' can GC) */
     luaD_inctop(L);
-    loadVector(S, getstr(ts), size);  /* load directly in final place */
+    loadVector(S, getlngstr(ts), size);  /* load directly in final place */
     L->top.p--;  /* pop string */
   }
   luaC_objbarrier(L, p, ts);
@@ -6406,7 +6405,7 @@ CallInfo *luaE_extendCI (lua_State *L) {
 /*
 ** free all CallInfo structures not in use by a thread
 */
-void luaE_freeCI (lua_State *L) {
+static void freeCI (lua_State *L) {
   CallInfo *ci = L->ci;
   CallInfo *next = ci->next;
   ci->next = NULL;
@@ -6491,7 +6490,7 @@ static void freestack (lua_State *L) {
   if (L->stack.p == NULL)
     return;  /* stack not completely built yet */
   L->ci = &L->base_ci;  /* free the entire 'ci' list */
-  luaE_freeCI(L);
+  freeCI(L);
   lua_assert(L->nci == 0);
   luaM_freearray(L, L->stack.p, stacksize(L) + EXTRA_STACK);  /* free stack */
 }
@@ -6720,7 +6719,7 @@ void luaE_warning (lua_State *L, const char *msg, int tocont) {
 void luaE_warnerror (lua_State *L, const char *where) {
   TValue *errobj = s2v(L->top.p - 1);  /* error object */
   const char *msg = (ttisstring(errobj))
-                  ? svalue(errobj)
+                  ? getstr(tsvalue(errobj))
                   : "error object is not a string";
   /* produce warning "error in %s (%s)" (where, msg) */
   luaE_warning(L, "error in ", 1);
@@ -7274,10 +7273,12 @@ static void traversestrongtable (global_State *g, Table *h) {
 static lu_mem traversetable (global_State *g, Table *h) {
   const char *weakkey, *weakvalue;
   const TValue *mode = gfasttm(g, h->metatable, TM_MODE);
+  TString *smode;
   markobjectN(g, h->metatable);
-  if (mode && ttisstring(mode) &&  /* is there a weak mode? */
-      (cast_void(weakkey = strchr(svalue(mode), 'k')),
-       cast_void(weakvalue = strchr(svalue(mode), 'v')),
+  if (mode && ttisshrstring(mode) &&  /* is there a weak mode? */
+      (cast_void(smode = tsvalue(mode)),
+       cast_void(weakkey = strchr(getshrstr(smode), 'k')),
+       cast_void(weakvalue = strchr(getshrstr(smode), 'v')),
        (weakkey || weakvalue))) {  /* is really weak? */
     if (!weakkey)  /* strong keys? */
       traverseweakvalue(g, h);
@@ -7370,7 +7371,9 @@ static int traversethread (global_State *g, lua_State *th) {
   for (uv = th->openupval; uv != NULL; uv = uv->u.open.next)
     markobject(g, uv);  /* open upvalues cannot be collected */
   if (g->gcstate == GCSatomic) {  /* final traversal? */
-    for (; o < th->stack_last.p + EXTRA_STACK; o++)
+    if (!g->gcemergency)
+      luaD_shrinkstack(th); /* do not change stack in emergency cycle */
+    for (o = th->top.p; o < th->stack_last.p + EXTRA_STACK; o++)
       setnilvalue(s2v(o));  /* clear dead stack slice */
     /* 'remarkupvals' may have removed thread from 'twups' list */
     if (!isintwups(th) && th->openupval != NULL) {
@@ -7378,8 +7381,6 @@ static int traversethread (global_State *g, lua_State *th) {
       g->twups = th;
     }
   }
-  else if (!g->gcemergency)
-    luaD_shrinkstack(th); /* do not change stack in emergency cycle */
   return 1 + stacksize(th);
 }
 
@@ -8141,7 +8142,7 @@ static void stepgenfull (lua_State *L, global_State *g) {
     setminordebt(g);
   }
   else {  /* another bad collection; stay in incremental mode */
-    g->GCestimate = gettotalbytes(g);  /* first estimate */;
+    g->GCestimate = gettotalbytes(g);  /* first estimate */
     entersweep(L);
     luaC_runtilstate(L, bitmask(GCSpause));  /* finish collection */
     setpause(g);
@@ -8336,7 +8337,7 @@ static lu_mem singlestep (lua_State *L) {
     case GCSenteratomic: {
       work = atomic(L);  /* work is what was traversed by 'atomic' */
       entersweep(L);
-      g->GCestimate = gettotalbytes(g);  /* first estimate */;
+      g->GCestimate = gettotalbytes(g);  /* first estimate */
       break;
     }
     case GCSswpallgc: {  /* sweep "regular" objects */
@@ -8442,6 +8443,8 @@ static void fullinc (lua_State *L, global_State *g) {
     entersweep(L); /* sweep everything to turn them back to white */
   /* finish any pending sweep phase to start a new cycle */
   luaC_runtilstate(L, bitmask(GCSpause));
+  luaC_runtilstate(L, bitmask(GCSpropagate));  /* start new cycle */
+  g->gcstate = GCSenteratomic;  /* go straight to atomic phase */
   luaC_runtilstate(L, bitmask(GCScallfin));  /* run up to finalizers */
   /* estimate must be correct after a full GC cycle */
   lua_assert(g->GCestimate == gettotalbytes(g));
@@ -9467,7 +9470,7 @@ int luaK_codeABx (FuncState *fs, OpCode o, int a, unsigned int bc) {
 /*
 ** Format and emit an 'iAsBx' instruction.
 */
-int luaK_codeAsBx (FuncState *fs, OpCode o, int a, int bc) {
+static int codeAsBx (FuncState *fs, OpCode o, int a, int bc) {
   unsigned int b = bc + OFFSET_sBx;
   lua_assert(getOpMode(o) == iAsBx);
   lua_assert(a <= MAXARG_A && b <= MAXARG_Bx);
@@ -9723,7 +9726,7 @@ static int fitsBx (lua_Integer i) {
 
 void luaK_int (FuncState *fs, int reg, lua_Integer i) {
   if (fitsBx(i))
-    luaK_codeAsBx(fs, OP_LOADI, reg, cast_int(i));
+    codeAsBx(fs, OP_LOADI, reg, cast_int(i));
   else
     luaK_codek(fs, reg, luaK_intK(fs, i));
 }
@@ -9732,7 +9735,7 @@ void luaK_int (FuncState *fs, int reg, lua_Integer i) {
 static void luaK_float (FuncState *fs, int reg, lua_Number f) {
   lua_Integer fi;
   if (luaV_flttointeger(f, &fi, F2Ieq) && fitsBx(fi))
-    luaK_codeAsBx(fs, OP_LOADF, reg, cast_int(fi));
+    codeAsBx(fs, OP_LOADF, reg, cast_int(fi));
   else
     luaK_codek(fs, reg, luaK_numberK(fs, f));
 }
@@ -9828,7 +9831,8 @@ void luaK_dischargevars (FuncState *fs, expdesc *e) {
       break;
     }
     case VLOCAL: {  /* already in a register */
-      e->u.info = e->u.var.ridx;
+      int temp = e->u.var.ridx;
+      e->u.info = temp;  /* (can't do a direct assignment; values overlap) */
       e->k = VNONRELOC;  /* becomes a non-relocatable value */
       break;
     }
@@ -10077,7 +10081,7 @@ static int luaK_exp2K (FuncState *fs, expdesc *e) {
 ** in the range of R/K indices).
 ** Returns 1 iff expression is K.
 */
-int luaK_exp2RK (FuncState *fs, expdesc *e) {
+static int exp2RK (FuncState *fs, expdesc *e) {
   if (luaK_exp2K(fs, e))
     return 1;
   else {  /* not a constant in the right range: put it in a register */
@@ -10089,7 +10093,7 @@ int luaK_exp2RK (FuncState *fs, expdesc *e) {
 
 static void codeABRK (FuncState *fs, OpCode o, int a, int b,
                       expdesc *ec) {
-  int k = luaK_exp2RK(fs, ec);
+  int k = exp2RK(fs, ec);
   luaK_codeABCk(fs, o, a, b, ec->u.info, k);
 }
 
@@ -10267,7 +10271,7 @@ static void codenot (FuncState *fs, expdesc *e) {
 
 
 /*
-** Check whether expression 'e' is a small literal string
+** Check whether expression 'e' is a short literal string
 */
 static int isKstr (FuncState *fs, expdesc *e) {
   return (e->k == VK && !hasjumps(e) && e->u.info <= MAXARG_B &&
@@ -10277,7 +10281,7 @@ static int isKstr (FuncState *fs, expdesc *e) {
 /*
 ** Check whether expression 'e' is a literal integer.
 */
-int luaK_isKint (expdesc *e) {
+static int isKint (expdesc *e) {
   return (e->k == VKINT && !hasjumps(e));
 }
 
@@ -10287,7 +10291,7 @@ int luaK_isKint (expdesc *e) {
 ** proper range to fit in register C
 */
 static int isCint (expdesc *e) {
-  return luaK_isKint(e) && (l_castS2U(e->u.ival) <= l_castS2U(MAXARG_C));
+  return isKint(e) && (l_castS2U(e->u.ival) <= l_castS2U(MAXARG_C));
 }
 
 
@@ -10296,7 +10300,7 @@ static int isCint (expdesc *e) {
 ** proper range to fit in register sC
 */
 static int isSCint (expdesc *e) {
-  return luaK_isKint(e) && fitsC(e->u.ival);
+  return isKint(e) && fitsC(e->u.ival);
 }
 
 
@@ -10335,15 +10339,17 @@ void luaK_indexed (FuncState *fs, expdesc *t, expdesc *k) {
   if (t->k == VUPVAL && !isKstr(fs, k))  /* upvalue indexed by non 'Kstr'? */
     luaK_exp2anyreg(fs, t);  /* put it in a register */
   if (t->k == VUPVAL) {
-    t->u.ind.t = t->u.info;  /* upvalue index */
-    t->u.ind.idx = k->u.info;  /* literal string */
+    int temp = t->u.info;  /* upvalue index */
+    lua_assert(isKstr(fs, k));
+    t->u.ind.t = temp;  /* (can't do a direct assignment; values overlap) */
+    t->u.ind.idx = k->u.info;  /* literal short string */
     t->k = VINDEXUP;
   }
   else {
     /* register index of the table */
     t->u.ind.t = (t->k == VLOCAL) ? t->u.var.ridx: t->u.info;
     if (isKstr(fs, k)) {
-      t->u.ind.idx = k->u.info;  /* literal string */
+      t->u.ind.idx = k->u.info;  /* literal short string */
       t->k = VINDEXSTR;
     }
     else if (isCint(k)) {
@@ -10511,7 +10517,7 @@ static void codebinK (FuncState *fs, BinOpr opr,
 */
 static int finishbinexpneg (FuncState *fs, expdesc *e1, expdesc *e2,
                              OpCode op, int line, TMS event) {
-  if (!luaK_isKint(e2))
+  if (!isKint(e2))
     return 0;  /* not an integer constant */
   else {
     lua_Integer i2 = e2->u.ival;
@@ -10644,7 +10650,7 @@ static void codeeq (FuncState *fs, BinOpr opr, expdesc *e1, expdesc *e2) {
     op = OP_EQI;
     r2 = im;  /* immediate operand */
   }
-  else if (luaK_exp2RK(fs, e2)) {  /* 2nd expression is constant? */
+  else if (exp2RK(fs, e2)) {  /* 2nd expression is constant? */
     op = OP_EQK;
     r2 = e2->u.info;  /* constant index */
   }
@@ -10710,7 +10716,7 @@ void luaK_infix (FuncState *fs, BinOpr op, expdesc *v) {
     }
     case OPR_EQ: case OPR_NE: {
       if (!tonumeral(v, NULL))
-        luaK_exp2RK(fs, v);
+        exp2RK(fs, v);
       /* else keep numeral, which may be an immediate operand */
       break;
     }
@@ -11945,10 +11951,11 @@ static int explist (LexState *ls, expdesc *v) {
 }
 
 
-static void funcargs (LexState *ls, expdesc *f, int line) {
+static void funcargs (LexState *ls, expdesc *f) {
   FuncState *fs = ls->fs;
   expdesc args;
   int base, nparams;
+  int line = ls->linenumber;
   switch (ls->t.token) {
     case '(': {  /* funcargs -> '(' [ explist ] ')' */
       luaX_next(ls);
@@ -11986,8 +11993,8 @@ static void funcargs (LexState *ls, expdesc *f, int line) {
   }
   init_exp(f, VCALL, luaK_codeABC(fs, OP_CALL, base, nparams+1, 2));
   luaK_fixline(fs, line);
-  fs->freereg = base+1;  /* call remove function and arguments and leaves
-                            (unless changed) one result */
+  fs->freereg = base+1;  /* call removes function and arguments and leaves
+                            one result (unless changed later) */
 }
 
 
@@ -12026,7 +12033,6 @@ static void suffixedexp (LexState *ls, expdesc *v) {
   /* suffixedexp ->
        primaryexp { '.' NAME | '[' exp ']' | ':' NAME funcargs | funcargs } */
   FuncState *fs = ls->fs;
-  int line = ls->linenumber;
   primaryexp(ls, v);
   for (;;) {
     switch (ls->t.token) {
@@ -12046,12 +12052,12 @@ static void suffixedexp (LexState *ls, expdesc *v) {
         luaX_next(ls);
         codename(ls, &key);
         luaK_self(fs, v, &key);
-        funcargs(ls, v, line);
+        funcargs(ls, v);
         break;
       }
       case '(': case TK_STRING: case '{': {  /* funcargs */
         luaK_exp2nextreg(fs, v);
-        funcargs(ls, v, line);
+        funcargs(ls, v);
         break;
       }
       default: return;
@@ -12921,7 +12927,7 @@ LClosure *luaY_parser (lua_State *L, ZIO *z, Mbuffer *buff,
 
 
 
-#define noLuaClosure(f)		((f) == NULL || (f)->c.tt == LUA_VCCL)
+#define LuaClosure(f)		((f) != NULL && (f)->c.tt == LUA_VLCL)
 
 
 static const char *funcnamefromcall (lua_State *L, CallInfo *ci,
@@ -13144,7 +13150,7 @@ LUA_API const char *lua_setlocal (lua_State *L, const lua_Debug *ar, int n) {
 
 
 static void funcinfo (lua_Debug *ar, Closure *cl) {
-  if (noLuaClosure(cl)) {
+  if (!LuaClosure(cl)) {
     ar->source = "=[C]";
     ar->srclen = LL("=[C]");
     ar->linedefined = -1;
@@ -13178,29 +13184,31 @@ static int nextline (const Proto *p, int currentline, int pc) {
 
 
 static void collectvalidlines (lua_State *L, Closure *f) {
-  if (noLuaClosure(f)) {
+  if (!LuaClosure(f)) {
     setnilvalue(s2v(L->top.p));
     api_incr_top(L);
   }
   else {
-    int i;
-    TValue v;
     const Proto *p = f->l.p;
     int currentline = p->linedefined;
     Table *t = luaH_new(L);  /* new table to store active lines */
     sethvalue2s(L, L->top.p, t);  /* push it on stack */
     api_incr_top(L);
-    setbtvalue(&v);  /* boolean 'true' to be the value of all indices */
-    if (!p->is_vararg)  /* regular function? */
-      i = 0;  /* consider all instructions */
-    else {  /* vararg function */
-      lua_assert(GET_OPCODE(p->code[0]) == OP_VARARGPREP);
-      currentline = nextline(p, currentline, 0);
-      i = 1;  /* skip first instruction (OP_VARARGPREP) */
-    }
-    for (; i < p->sizelineinfo; i++) {  /* for each instruction */
-      currentline = nextline(p, currentline, i);  /* get its line */
-      luaH_setint(L, t, currentline, &v);  /* table[line] = true */
+    if (p->lineinfo != NULL) {  /* proto with debug information? */
+      int i;
+      TValue v;
+      setbtvalue(&v);  /* boolean 'true' to be the value of all indices */
+      if (!p->is_vararg)  /* regular function? */
+        i = 0;  /* consider all instructions */
+      else {  /* vararg function */
+        lua_assert(GET_OPCODE(p->code[0]) == OP_VARARGPREP);
+        currentline = nextline(p, currentline, 0);
+        i = 1;  /* skip first instruction (OP_VARARGPREP) */
+      }
+      for (; i < p->sizelineinfo; i++) {  /* for each instruction */
+        currentline = nextline(p, currentline, i);  /* get its line */
+        luaH_setint(L, t, currentline, &v);  /* table[line] = true */
+      }
     }
   }
 }
@@ -13229,7 +13237,7 @@ static int auxgetinfo (lua_State *L, const char *what, lua_Debug *ar,
       }
       case 'u': {
         ar->nups = (f == NULL) ? 0 : f->c.nupvalues;
-        if (noLuaClosure(f)) {
+        if (!LuaClosure(f)) {
           ar->isvararg = 1;
           ar->nparams = 0;
         }
@@ -13307,40 +13315,6 @@ LUA_API int lua_getinfo (lua_State *L, const char *what, lua_Debug *ar) {
 ** =======================================================
 */
 
-static const char *getobjname (const Proto *p, int lastpc, int reg,
-                               const char **name);
-
-
-/*
-** Find a "name" for the constant 'c'.
-*/
-static void kname (const Proto *p, int c, const char **name) {
-  TValue *kvalue = &p->k[c];
-  *name = (ttisstring(kvalue)) ? svalue(kvalue) : "?";
-}
-
-
-/*
-** Find a "name" for the register 'c'.
-*/
-static void rname (const Proto *p, int pc, int c, const char **name) {
-  const char *what = getobjname(p, pc, c, name); /* search for 'c' */
-  if (!(what && *what == 'c'))  /* did not find a constant name? */
-    *name = "?";
-}
-
-
-/*
-** Find a "name" for a 'C' value in an RK instruction.
-*/
-static void rkname (const Proto *p, int pc, Instruction i, const char **name) {
-  int c = GETARG_C(i);  /* key index */
-  if (GETARG_k(i))  /* is 'c' a constant? */
-    kname(p, c, name);
-  else  /* 'c' is a register */
-    rname(p, pc, c, name);
-}
-
 
 static int filterpc (int pc, int jmptarget) {
   if (pc < jmptarget)  /* is code conditional (inside a jump)? */
@@ -13399,28 +13373,29 @@ static int findsetreg (const Proto *p, int lastpc, int reg) {
 
 
 /*
-** Check whether table being indexed by instruction 'i' is the
-** environment '_ENV'
+** Find a "name" for the constant 'c'.
 */
-static const char *gxf (const Proto *p, int pc, Instruction i, int isup) {
-  int t = GETARG_B(i);  /* table index */
-  const char *name;  /* name of indexed variable */
-  if (isup)  /* is an upvalue? */
-    name = upvalname(p, t);
-  else
-    getobjname(p, pc, t, &name);
-  return (name && strcmp(name, LUA_ENV) == 0) ? "global" : "field";
+static const char *kname (const Proto *p, int index, const char **name) {
+  TValue *kvalue = &p->k[index];
+  if (ttisstring(kvalue)) {
+    *name = getstr(tsvalue(kvalue));
+    return "constant";
+  }
+  else {
+    *name = "?";
+    return NULL;
+  }
 }
 
 
-static const char *getobjname (const Proto *p, int lastpc, int reg,
-                               const char **name) {
-  int pc;
-  *name = luaF_getlocalname(p, reg + 1, lastpc);
+static const char *basicgetobjname (const Proto *p, int *ppc, int reg,
+                                    const char **name) {
+  int pc = *ppc;
+  *name = luaF_getlocalname(p, reg + 1, pc);
   if (*name)  /* is a local? */
     return "local";
   /* else try symbolic execution */
-  pc = findsetreg(p, lastpc, reg);
+  *ppc = pc = findsetreg(p, pc, reg);
   if (pc != -1) {  /* could find instruction? */
     Instruction i = p->code[pc];
     OpCode op = GET_OPCODE(i);
@@ -13428,18 +13403,80 @@ static const char *getobjname (const Proto *p, int lastpc, int reg,
       case OP_MOVE: {
         int b = GETARG_B(i);  /* move from 'b' to 'a' */
         if (b < GETARG_A(i))
-          return getobjname(p, pc, b, name);  /* get name for 'b' */
+          return basicgetobjname(p, ppc, b, name);  /* get name for 'b' */
         break;
       }
+      case OP_GETUPVAL: {
+        *name = upvalname(p, GETARG_B(i));
+        return "upvalue";
+      }
+      case OP_LOADK: return kname(p, GETARG_Bx(i), name);
+      case OP_LOADKX: return kname(p, GETARG_Ax(p->code[pc + 1]), name);
+      default: break;
+    }
+  }
+  return NULL;  /* could not find reasonable name */
+}
+
+
+/*
+** Find a "name" for the register 'c'.
+*/
+static void rname (const Proto *p, int pc, int c, const char **name) {
+  const char *what = basicgetobjname(p, &pc, c, name); /* search for 'c' */
+  if (!(what && *what == 'c'))  /* did not find a constant name? */
+    *name = "?";
+}
+
+
+/*
+** Find a "name" for a 'C' value in an RK instruction.
+*/
+static void rkname (const Proto *p, int pc, Instruction i, const char **name) {
+  int c = GETARG_C(i);  /* key index */
+  if (GETARG_k(i))  /* is 'c' a constant? */
+    kname(p, c, name);
+  else  /* 'c' is a register */
+    rname(p, pc, c, name);
+}
+
+
+/*
+** Check whether table being indexed by instruction 'i' is the
+** environment '_ENV'
+*/
+static const char *isEnv (const Proto *p, int pc, Instruction i, int isup) {
+  int t = GETARG_B(i);  /* table index */
+  const char *name;  /* name of indexed variable */
+  if (isup)  /* is 't' an upvalue? */
+    name = upvalname(p, t);
+  else  /* 't' is a register */
+    basicgetobjname(p, &pc, t, &name);
+  return (name && strcmp(name, LUA_ENV) == 0) ? "global" : "field";
+}
+
+
+/*
+** Extend 'basicgetobjname' to handle table accesses
+*/
+static const char *getobjname (const Proto *p, int lastpc, int reg,
+                               const char **name) {
+  const char *kind = basicgetobjname(p, &lastpc, reg, name);
+  if (kind != NULL)
+    return kind;
+  else if (lastpc != -1) {  /* could find instruction? */
+    Instruction i = p->code[lastpc];
+    OpCode op = GET_OPCODE(i);
+    switch (op) {
       case OP_GETTABUP: {
         int k = GETARG_C(i);  /* key index */
         kname(p, k, name);
-        return gxf(p, pc, i, 1);
+        return isEnv(p, lastpc, i, 1);
       }
       case OP_GETTABLE: {
         int k = GETARG_C(i);  /* key index */
-        rname(p, pc, k, name);
-        return gxf(p, pc, i, 0);
+        rname(p, lastpc, k, name);
+        return isEnv(p, lastpc, i, 0);
       }
       case OP_GETI: {
         *name = "integer index";
@@ -13448,24 +13485,10 @@ static const char *getobjname (const Proto *p, int lastpc, int reg,
       case OP_GETFIELD: {
         int k = GETARG_C(i);  /* key index */
         kname(p, k, name);
-        return gxf(p, pc, i, 0);
-      }
-      case OP_GETUPVAL: {
-        *name = upvalname(p, GETARG_B(i));
-        return "upvalue";
-      }
-      case OP_LOADK:
-      case OP_LOADKX: {
-        int b = (op == OP_LOADK) ? GETARG_Bx(i)
-                                 : GETARG_Ax(p->code[pc + 1]);
-        if (ttisstring(&p->k[b])) {
-          *name = svalue(&p->k[b]);
-          return "constant";
-        }
-        break;
+        return isEnv(p, lastpc, i, 0);
       }
       case OP_SELF: {
-        rkname(p, pc, i, name);
+        rkname(p, lastpc, i, name);
         return "method";
       }
       default: break;  /* go through to return NULL */
@@ -13517,7 +13540,7 @@ static const char *funcnamefromcode (lua_State *L, const Proto *p,
     default:
       return NULL;  /* cannot find a reasonable name */
   }
-  *name = getstr(G(L)->tmname[tm]) + 2;
+  *name = getshrstr(G(L)->tmname[tm]) + 2;
   return "metamethod";
 }
 
@@ -13756,6 +13779,28 @@ static int changedline (const Proto *p, int oldpc, int newpc) {
 
 
 /*
+** Traces Lua calls. If code is running the first instruction of a function,
+** and function is not vararg, and it is not coming from an yield,
+** calls 'luaD_hookcall'. (Vararg functions will call 'luaD_hookcall'
+** after adjusting its variable arguments; otherwise, they could call
+** a line/count hook before the call hook. Functions coming from
+** an yield already called 'luaD_hookcall' before yielding.)
+*/
+int luaG_tracecall (lua_State *L) {
+  CallInfo *ci = L->ci;
+  Proto *p = ci_func(ci)->p;
+  ci->u.l.trap = 1;  /* ensure hooks will be checked */
+  if (ci->u.l.savedpc == p->code) {  /* first instruction (not resuming)? */
+    if (p->is_vararg)
+      return 0;  /* hooks will start at VARARGPREP instruction */
+    else if (!(ci->callstatus & CIST_HOOKYIELD))  /* not yieded? */
+      luaD_hookcall(L, ci);  /* check 'call' hook */
+  }
+  return 1;  /* keep 'trap' on */
+}
+
+
+/*
 ** Traces the execution of a Lua function. Called before the execution
 ** of each opcode, when debug is on. 'L->oldpc' stores the last
 ** instruction traced, to detect line changes. When entering a new
@@ -13778,12 +13823,12 @@ int luaG_traceexec (lua_State *L, const Instruction *pc) {
   }
   pc++;  /* reference is always next instruction */
   ci->u.l.savedpc = pc;  /* save 'pc' */
-  counthook = (--L->hookcount == 0 && (mask & LUA_MASKCOUNT));
+  counthook = (mask & LUA_MASKCOUNT) && (--L->hookcount == 0);
   if (counthook)
     resethookcount(L);  /* reset count */
   else if (!(mask & LUA_MASKLINE))
     return 1;  /* no line hook and count != 0; nothing to be done now */
-  if (ci->callstatus & CIST_HOOKYIELD) {  /* called hook last time? */
+  if (ci->callstatus & CIST_HOOKYIELD) {  /* hook yielded last time? */
     ci->callstatus &= ~CIST_HOOKYIELD;  /* erase mark */
     return 1;  /* do not call hook again (VM yielded, so it did not move) */
   }
@@ -13805,7 +13850,6 @@ int luaG_traceexec (lua_State *L, const Instruction *pc) {
   if (L->status == LUA_YIELD) {  /* did hook yield? */
     if (counthook)
       L->hookcount = 1;  /* undo decrement to zero */
-    ci->u.l.savedpc--;  /* undo increment (resume will increment it again) */
     ci->callstatus |= CIST_HOOKYIELD;  /* mark that it yielded */
     luaD_throw(L, LUA_YIELD);
   }
@@ -14650,7 +14694,7 @@ const char *luaO_pushvfstring (lua_State *L, const char *fmt, va_list argp) {
   addstr2buff(&buff, fmt, strlen(fmt));  /* rest of 'fmt' */
   clearbuff(&buff);  /* empty buffer into the stack */
   lua_assert(buff.pushed == 1);
-  return svalue(s2v(L->top.p - 1));
+  return getstr(tsvalue(s2v(L->top.p - 1)));
 }
 
 
@@ -15017,7 +15061,7 @@ int luaS_eqlngstr (TString *a, TString *b) {
   lua_assert(a->tt == LUA_VLNGSTR && b->tt == LUA_VLNGSTR);
   return (a == b) ||  /* same instance or... */
     ((len == b->u.lnglen) &&  /* equal length and ... */
-     (memcmp(getstr(a), getstr(b), len) == 0));  /* equal contents */
+     (memcmp(getlngstr(a), getlngstr(b), len) == 0));  /* equal contents */
 }
 
 
@@ -15033,7 +15077,7 @@ unsigned int luaS_hashlongstr (TString *ts) {
   lua_assert(ts->tt == LUA_VLNGSTR);
   if (ts->extra == 0) {  /* no hash? */
     size_t len = ts->u.lnglen;
-    ts->hash = luaS_hash(getstr(ts), len, ts->hash);
+    ts->hash = luaS_hash(getlngstr(ts), len, ts->hash);
     ts->extra = 1;  /* now it has its hash */
   }
   return ts->hash;
@@ -15138,6 +15182,7 @@ static TString *createstrobj (lua_State *L, size_t l, int tag, unsigned int h) {
 TString *luaS_createlngstrobj (lua_State *L, size_t l) {
   TString *ts = createstrobj(L, l, LUA_VLNGSTR, G(L)->seed);
   ts->u.lnglen = l;
+  ts->shrlen = 0xFF;  /* signals that it is a long string */
   return ts;
 }
 
@@ -15174,7 +15219,7 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
   TString **list = &tb->hash[lmod(h, tb->size)];
   lua_assert(str != NULL);  /* otherwise 'memcmp'/'memcpy' are undefined */
   for (ts = *list; ts != NULL; ts = ts->u.hnext) {
-    if (l == ts->shrlen && (memcmp(str, getstr(ts), l * sizeof(char)) == 0)) {
+    if (l == ts->shrlen && (memcmp(str, getshrstr(ts), l * sizeof(char)) == 0)) {
       /* found! */
       if (isdead(g, ts))  /* dead (but not collected yet)? */
         changewhite(ts);  /* resurrect it */
@@ -15187,8 +15232,8 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
     list = &tb->hash[lmod(h, tb->size)];  /* rehash with new size */
   }
   ts = createstrobj(L, l, LUA_VSHRSTR, h);
-  memcpy(getstr(ts), str, l * sizeof(char));
   ts->shrlen = cast_byte(l);
+  memcpy(getshrstr(ts), str, l * sizeof(char));
   ts->u.hnext = *list;
   *list = ts;
   tb->nuse++;
@@ -15204,10 +15249,10 @@ TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
     return internshrstr(L, str, l);
   else {
     TString *ts;
-    if (l_unlikely(l >= (MAX_SIZE - sizeof(TString))/sizeof(char)))
+    if (l_unlikely(l * sizeof(char) >= (MAX_SIZE - sizeof(TString))))
       luaM_toobig(L);
     ts = luaS_createlngstrobj(L, l);
-    memcpy(getstr(ts), str, l * sizeof(char));
+    memcpy(getlngstr(ts), str, l * sizeof(char));
     return ts;
   }
 }
@@ -15506,7 +15551,7 @@ LUAI_FUNC unsigned int luaH_realasize (const Table *t) {
     return t->alimit;  /* this is the size */
   else {
     unsigned int size = t->alimit;
-    /* compute the smallest power of 2 not smaller than 'n' */
+    /* compute the smallest power of 2 not smaller than 'size' */
     size |= (size >> 1);
     size |= (size >> 2);
     size |= (size >> 4);
@@ -15916,7 +15961,8 @@ static Node *getfreepos (Table *t) {
 ** put new key in its main position; otherwise (colliding node is in its main
 ** position), new key goes to an empty position.
 */
-void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
+static void luaH_newkey (lua_State *L, Table *t, const TValue *key,
+                                                 TValue *value) {
   Node *mp;
   TValue aux;
   if (l_unlikely(ttisnil(key)))
@@ -15975,22 +16021,36 @@ void luaH_newkey (lua_State *L, Table *t, const TValue *key, TValue *value) {
 
 /*
 ** Search function for integers. If integer is inside 'alimit', get it
-** directly from the array part. Otherwise, if 'alimit' is not equal to
-** the real size of the array, key still can be in the array part. In
-** this case, try to avoid a call to 'luaH_realasize' when key is just
-** one more than the limit (so that it can be incremented without
-** changing the real size of the array).
+** directly from the array part. Otherwise, if 'alimit' is not
+** the real size of the array, the key still can be in the array part.
+** In this case, do the "Xmilia trick" to check whether 'key-1' is
+** smaller than the real size.
+** The trick works as follow: let 'p' be an integer such that
+**   '2^(p+1) >= alimit > 2^p', or  '2^(p+1) > alimit-1 >= 2^p'.
+** That is, 2^(p+1) is the real size of the array, and 'p' is the highest
+** bit on in 'alimit-1'. What we have to check becomes 'key-1 < 2^(p+1)'.
+** We compute '(key-1) & ~(alimit-1)', which we call 'res'; it will
+** have the 'p' bit cleared. If the key is outside the array, that is,
+** 'key-1 >= 2^(p+1)', then 'res' will have some bit on higher than 'p',
+** therefore it will be larger or equal to 'alimit', and the check
+** will fail. If 'key-1 < 2^(p+1)', then 'res' has no bit on higher than
+** 'p', and as the bit 'p' itself was cleared, 'res' will be smaller
+** than 2^p, therefore smaller than 'alimit', and the check succeeds.
+** As special cases, when 'alimit' is 0 the condition is trivially false,
+** and when 'alimit' is 1 the condition simplifies to 'key-1 < alimit'.
+** If key is 0 or negative, 'res' will have its higher bit on, so that
+** if cannot be smaller than alimit.
 */
 const TValue *luaH_getint (Table *t, lua_Integer key) {
-  if (l_castS2U(key) - 1u < t->alimit)  /* 'key' in [1, t->alimit]? */
+  lua_Unsigned alimit = t->alimit;
+  if (l_castS2U(key) - 1u < alimit)  /* 'key' in [1, t->alimit]? */
     return &t->array[key - 1];
-  else if (!limitequalsasize(t) &&  /* key still may be in the array part? */
-           (l_castS2U(key) == t->alimit + 1 ||
-            l_castS2U(key) - 1u < luaH_realasize(t))) {
+  else if (!isrealasize(t) &&  /* key still may be in the array part? */
+           (((l_castS2U(key) - 1u) & ~(alimit - 1u)) < alimit)) {
     t->alimit = cast_uint(key);  /* probably '#t' is here now */
     return &t->array[key - 1];
   }
-  else {
+  else {  /* key is not in the array part; check the hash */
     Node *n = hashint(t, key);
     for (;;) {  /* check whether 'key' is somewhere in the chain */
       if (keyisinteger(n) && keyival(n) == key)
@@ -16643,7 +16703,7 @@ static void rethook (lua_State *L, CallInfo *ci, int nres) {
 ** stack, below original 'func', so that 'luaD_precall' can call it. Raise
 ** an error if there is no '__call' metafield.
 */
-StkId luaD_tryfuncTM (lua_State *L, StkId func) {
+static StkId tryfuncTM (lua_State *L, StkId func) {
   const TValue *tm;
   StkId p;
   checkstackGCp(L, 1, func);  /* space for metamethod */
@@ -16802,7 +16862,7 @@ int luaD_pretailcall (lua_State *L, CallInfo *ci, StkId func,
       return -1;
     }
     default: {  /* not a function */
-      func = luaD_tryfuncTM(L, func);  /* try to get '__call' metamethod */
+      func = tryfuncTM(L, func);  /* try to get '__call' metamethod */
       /* return luaD_pretailcall(L, ci, func, narg1 + 1, delta); */
       narg1++;
       goto retry;  /* try again */
@@ -16843,7 +16903,7 @@ CallInfo *luaD_precall (lua_State *L, StkId func, int nresults) {
       return ci;
     }
     default: {  /* not a function */
-      func = luaD_tryfuncTM(L, func);  /* try to get '__call' metamethod */
+      func = tryfuncTM(L, func);  /* try to get '__call' metamethod */
       /* return luaD_precall(L, func, nresults); */
       goto retry;  /* try again with metamethod */
     }
@@ -17026,6 +17086,10 @@ static void resume (lua_State *L, void *ud) {
     lua_assert(L->status == LUA_YIELD);
     L->status = LUA_OK;  /* mark that it is running (again) */
     if (isLua(ci)) {  /* yielded inside a hook? */
+      /* undo increment made by 'luaG_traceexec': instruction was not
+         executed yet */
+      lua_assert(ci->callstatus & CIST_HOOKYIELD);
+      ci->u.l.savedpc--;
       L->top.p = firstArg;  /* discard arguments */
       luaV_execute(L, ci);  /* just continue running Lua code */
     }
@@ -17349,8 +17413,10 @@ static int l_strton (const TValue *obj, TValue *result) {
   lua_assert(obj != result);
   if (!cvt2num(obj))  /* is object not a string? */
     return 0;
-  else
-    return (luaO_str2num(svalue(obj), result) == vslen(obj) + 1);
+  else {
+    TString *st = tsvalue(obj);
+    return (luaO_str2num(getstr(st), result) == tsslen(st) + 1);
+  }
 }
 
 
@@ -17624,30 +17690,32 @@ void luaV_finishset (lua_State *L, const TValue *t, TValue *key,
 
 
 /*
-** Compare two strings 'ls' x 'rs', returning an integer less-equal-
-** -greater than zero if 'ls' is less-equal-greater than 'rs'.
+** Compare two strings 'ts1' x 'ts2', returning an integer less-equal-
+** -greater than zero if 'ts1' is less-equal-greater than 'ts2'.
 ** The code is a little tricky because it allows '\0' in the strings
-** and it uses 'strcoll' (to respect locales) for each segments
-** of the strings.
+** and it uses 'strcoll' (to respect locales) for each segment
+** of the strings. Note that segments can compare equal but still
+** have different lengths.
 */
-static int l_strcmp (const TString *ls, const TString *rs) {
-  const char *l = getstr(ls);
-  size_t ll = tsslen(ls);
-  const char *r = getstr(rs);
-  size_t lr = tsslen(rs);
+static int l_strcmp (const TString *ts1, const TString *ts2) {
+  const char *s1 = getstr(ts1);
+  size_t rl1 = tsslen(ts1);  /* real length */
+  const char *s2 = getstr(ts2);
+  size_t rl2 = tsslen(ts2);
   for (;;) {  /* for each segment */
-    int temp = strcoll(l, r);
+    int temp = strcoll(s1, s2);
     if (temp != 0)  /* not equal? */
       return temp;  /* done */
     else {  /* strings are equal up to a '\0' */
-      size_t len = strlen(l);  /* index of first '\0' in both strings */
-      if (len == lr)  /* 'rs' is finished? */
-        return (len == ll) ? 0 : 1;  /* check 'ls' */
-      else if (len == ll)  /* 'ls' is finished? */
-        return -1;  /* 'ls' is less than 'rs' ('rs' is not finished) */
-      /* both strings longer than 'len'; go on comparing after the '\0' */
-      len++;
-      l += len; ll -= len; r += len; lr -= len;
+      size_t zl1 = strlen(s1);  /* index of first '\0' in 's1' */
+      size_t zl2 = strlen(s2);  /* index of first '\0' in 's2' */
+      if (zl2 == rl2)  /* 's2' is finished? */
+        return (zl1 == rl1) ? 0 : 1;  /* check 's1' */
+      else if (zl1 == rl1)  /* 's1' is finished? */
+        return -1;  /* 's1' is less than 's2' ('s2' is not finished) */
+      /* both strings longer than 'zl'; go on comparing after the '\0' */
+      zl1++; zl2++;
+      s1 += zl1; rl1 -= zl1; s2 += zl2; rl2 -= zl2;
     }
   }
 }
@@ -17882,8 +17950,9 @@ int luaV_equalobj (lua_State *L, const TValue *t1, const TValue *t2) {
 static void copy2buff (StkId top, int n, char *buff) {
   size_t tl = 0;  /* size already copied */
   do {
-    size_t l = vslen(s2v(top - n));  /* length of string being copied */
-    memcpy(buff + tl, svalue(s2v(top - n)), l * sizeof(char));
+    TString *st = tsvalue(s2v(top - n));
+    size_t l = tsslen(st);  /* length of string being copied */
+    memcpy(buff + tl, getstr(st), l * sizeof(char));
     tl += l;
   } while (--n > 0);
 }
@@ -17909,12 +17978,12 @@ void luaV_concat (lua_State *L, int total) {
     }
     else {
       /* at least two non-empty string values; get as many as possible */
-      size_t tl = vslen(s2v(top - 1));
+      size_t tl = tsslen(tsvalue(s2v(top - 1)));
       TString *ts;
       /* collect total length and number of strings */
       for (n = 1; n < total && tostring(L, s2v(top - n - 1)); n++) {
-        size_t l = vslen(s2v(top - n - 1));
-        if (l_unlikely(l >= (MAX_SIZE/sizeof(char)) - tl)) {
+        size_t l = tsslen(tsvalue(s2v(top - n - 1)));
+        if (l_unlikely(l >= MAX_SIZE - sizeof(TString) - tl)) {
           L->top.p = top - total;  /* pop strings to avoid wasting stack */
           luaG_runerror(L, "string length overflow");
         }
@@ -17927,7 +17996,7 @@ void luaV_concat (lua_State *L, int total) {
       }
       else {  /* long string; copy strings directly to final result */
         ts = luaS_createlngstrobj(L, tl);
-        copy2buff(top, n, getstr(ts));
+        copy2buff(top, n, getlngstr(ts));
       }
       setsvalue2s(L, top - n, ts);  /* create result */
     }
@@ -18525,18 +18594,11 @@ static const void *const disptab[NUM_OPCODES] = {
  startfunc:
   trap = L->hookmask;
  returning:  /* trap already set */
-  cl = clLvalue(s2v(ci->func.p));
+  cl = ci_func(ci);
   k = cl->p->k;
   pc = ci->u.l.savedpc;
-  if (l_unlikely(trap)) {
-    if (pc == cl->p->code) {  /* first instruction (not resuming)? */
-      if (cl->p->is_vararg)
-        trap = 0;  /* hooks will start after VARARGPREP instruction */
-      else  /* check 'call' hook */
-        luaD_hookcall(L, ci);
-    }
-    ci->u.l.trap = 1;  /* assume trap is on, for now */
-  }
+  if (l_unlikely(trap))
+    trap = luaG_tracecall(L);
   base = ci->func.p + 1;
   /* main loop of interpreter */
   for (;;) {
@@ -18623,7 +18685,7 @@ static const void *const disptab[NUM_OPCODES] = {
         const TValue *slot;
         TValue *upval = cl->upvals[GETARG_B(i)]->v.p;
         TValue *rc = KC(i);
-        TString *key = tsvalue(rc);  /* key must be a string */
+        TString *key = tsvalue(rc);  /* key must be a short string */
         if (luaV_fastget(L, upval, key, slot, luaH_getshortstr)) {
           setobj2s(L, ra, slot);
         }
@@ -18666,7 +18728,7 @@ static const void *const disptab[NUM_OPCODES] = {
         const TValue *slot;
         TValue *rb = vRB(i);
         TValue *rc = KC(i);
-        TString *key = tsvalue(rc);  /* key must be a string */
+        TString *key = tsvalue(rc);  /* key must be a short string */
         if (luaV_fastget(L, rb, key, slot, luaH_getshortstr)) {
           setobj2s(L, ra, slot);
         }
@@ -18679,7 +18741,7 @@ static const void *const disptab[NUM_OPCODES] = {
         TValue *upval = cl->upvals[GETARG_A(i)]->v.p;
         TValue *rb = KB(i);
         TValue *rc = RKC(i);
-        TString *key = tsvalue(rb);  /* key must be a string */
+        TString *key = tsvalue(rb);  /* key must be a short string */
         if (luaV_fastget(L, upval, key, slot, luaH_getshortstr)) {
           luaV_finishfastset(L, upval, slot, rc);
         }
@@ -18722,7 +18784,7 @@ static const void *const disptab[NUM_OPCODES] = {
         const TValue *slot;
         TValue *rb = KB(i);
         TValue *rc = RKC(i);
-        TString *key = tsvalue(rb);  /* key must be a string */
+        TString *key = tsvalue(rb);  /* key must be a short string */
         if (luaV_fastget(L, s2v(ra), key, slot, luaH_getshortstr)) {
           luaV_finishfastset(L, s2v(ra), slot, rc);
         }
@@ -19688,9 +19750,9 @@ LUA_API const char *lua_tolstring (lua_State *L, int idx, size_t *len) {
     o = index2value(L, idx);  /* previous call may reallocate the stack */
   }
   if (len != NULL)
-    *len = vslen(o);
+    *len = tsslen(tsvalue(o));
   lua_unlock(L);
-  return svalue(o);
+  return getstr(tsvalue(o));
 }
 
 
@@ -20814,6 +20876,7 @@ static int pushglobalfuncname (lua_State *L, lua_Debug *ar) {
   int top = lua_gettop(L);
   lua_getinfo(L, "f", ar);  /* push function */
   lua_getfield(L, LUA_REGISTRYINDEX, LUA_LOADED_TABLE);
+  luaL_checkstack(L, 6, "not enough stack");  /* slots for 'findfield' */
   if (findfield(L, top + 1, 2)) {
     const char *name = lua_tostring(L, -1);
     if (strncmp(name, LUA_GNAME ".", 3) == 0) {  /* name start with '_G.'? */
@@ -20983,11 +21046,13 @@ LUALIB_API int luaL_fileresult (lua_State *L, int stat, const char *fname) {
     return 1;
   }
   else {
+    const char *msg;
     luaL_pushfail(L);
+    msg = (en != 0) ? strerror(en) : "(no extra info)";
     if (fname)
-      lua_pushfstring(L, "%s: %s", fname, strerror(en));
+      lua_pushfstring(L, "%s: %s", fname, msg);
     else
-      lua_pushstring(L, strerror(en));
+      lua_pushstring(L, msg);
     lua_pushinteger(L, en);
     return 3;
   }
@@ -21466,9 +21531,12 @@ static const char *getF (lua_State *L, void *ud, size_t *size) {
 
 
 static int errfile (lua_State *L, const char *what, int fnameindex) {
-  const char *serr = strerror(errno);
+  int err = errno;
   const char *filename = lua_tostring(L, fnameindex) + 1;
-  lua_pushfstring(L, "cannot %s %s: %s", what, filename, serr);
+  if (err != 0)
+    lua_pushfstring(L, "cannot %s %s: %s", what, filename, strerror(err));
+  else
+    lua_pushfstring(L, "cannot %s %s", what, filename);
   lua_remove(L, fnameindex);
   return LUA_ERRFILE;
 }
@@ -21521,6 +21589,7 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   }
   else {
     lua_pushfstring(L, "@%s", filename);
+    errno = 0;
     lf.f = fopen(filename, "r");
     if (lf.f == NULL) return errfile(L, "open", fnameindex);
   }
@@ -21530,6 +21599,7 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   if (c == LUA_SIGNATURE[0]) {  /* binary file? */
     lf.n = 0;  /* remove possible newline */
     if (filename) {  /* "real" file? */
+      errno = 0;
       lf.f = freopen(filename, "rb", lf.f);  /* reopen in binary mode */
       if (lf.f == NULL) return errfile(L, "reopen", fnameindex);
       skipcomment(lf.f, &c);  /* re-read initial portion */
@@ -21537,6 +21607,7 @@ LUALIB_API int luaL_loadfilex (lua_State *L, const char *filename,
   }
   if (c != EOF)
     lf.buff[lf.n++] = c;  /* 'c' is the first character of the stream */
+  errno = 0;
   status = lua_load(L, getF, &lf, lua_tostring(L, -1), mode);
   readstatus = ferror(lf.f);
   if (filename) fclose(lf.f);  /* close file (even in case of errors) */
@@ -21667,7 +21738,7 @@ LUALIB_API const char *luaL_tolstring (lua_State *L, int idx, size_t *len) {
 LUALIB_API void luaL_setfuncs (lua_State *L, const luaL_Reg *l, int nup) {
   luaL_checkstack(L, nup, "too many upvalues");
   for (; l->name != NULL; l++) {  /* fill the table with given functions */
-    if (l->func == NULL)  /* place holder? */
+    if (l->func == NULL)  /* placeholder? */
       lua_pushboolean(L, 0);
     else {
       int i;
@@ -21759,9 +21830,14 @@ static void *l_alloc (void *ud, void *ptr, size_t osize, size_t nsize) {
 }
 
 
+/*
+** Standard panic funcion just prints an error message. The test
+** with 'lua_type' avoids possible memory errors in 'lua_tostring'.
+*/
 static int panic (lua_State *L) {
-  const char *msg = lua_tostring(L, -1);
-  if (msg == NULL) msg = "error object is not a string";
+  const char *msg = (lua_type(L, -1) == LUA_TSTRING)
+                  ? lua_tostring(L, -1)
+                  : "error object is not a string";
   lua_writestringerror("PANIC: unprotected error in call to Lua API (%s)\n",
                         msg);
   return 0;  /* return to Lua to abort */
@@ -23333,8 +23409,8 @@ static int f_gc (lua_State *L) {
 */
 static int io_fclose (lua_State *L) {
   LStream *p = tolstream(L);
-  int res = fclose(p->f);
-  return luaL_fileresult(L, (res == 0), NULL);
+  errno = 0;
+  return luaL_fileresult(L, (fclose(p->f) == 0), NULL);
 }
 
 
@@ -23360,6 +23436,7 @@ static int io_open (lua_State *L) {
   LStream *p = newfile(L);
   const char *md = mode;  /* to traverse/check mode */
   luaL_argcheck(L, l_checkmode(md), 2, "invalid mode");
+  errno = 0;
   p->f = fopen(filename, mode);
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
 }
@@ -23380,6 +23457,7 @@ static int io_popen (lua_State *L) {
   const char *mode = luaL_optstring(L, 2, "r");
   LStream *p = newprefile(L);
   luaL_argcheck(L, l_checkmodep(mode), 2, "invalid mode");
+  errno = 0;
   p->f = l_popen(L, filename, mode);
   p->closef = &io_pclose;
   return (p->f == NULL) ? luaL_fileresult(L, 0, filename) : 1;
@@ -23388,6 +23466,7 @@ static int io_popen (lua_State *L) {
 
 static int io_tmpfile (lua_State *L) {
   LStream *p = newfile(L);
+  errno = 0;
   p->f = tmpfile();
   return (p->f == NULL) ? luaL_fileresult(L, 0, NULL) : 1;
 }
@@ -23655,6 +23734,7 @@ static int g_read (lua_State *L, FILE *f, int first) {
   int nargs = lua_gettop(L) - 1;
   int n, success;
   clearerr(f);
+  errno = 0;
   if (nargs == 0) {  /* no arguments? */
     success = read_line(L, f, 1);
     n = first + 1;  /* to return 1 result */
@@ -23748,6 +23828,7 @@ static int io_readline (lua_State *L) {
 static int g_write (lua_State *L, FILE *f, int arg) {
   int nargs = lua_gettop(L) - arg;
   int status = 1;
+  errno = 0;
   for (; nargs--; arg++) {
     if (lua_type(L, arg) == LUA_TNUMBER) {
       /* optimization: could be done exactly as for strings */
@@ -23766,7 +23847,8 @@ static int g_write (lua_State *L, FILE *f, int arg) {
   }
   if (l_likely(status))
     return 1;  /* file handle already on stack top */
-  else return luaL_fileresult(L, status, NULL);
+  else
+    return luaL_fileresult(L, status, NULL);
 }
 
 
@@ -23791,6 +23873,7 @@ static int f_seek (lua_State *L) {
   l_seeknum offset = (l_seeknum)p3;
   luaL_argcheck(L, (lua_Integer)offset == p3, 3,
                   "not an integer in proper range");
+  errno = 0;
   op = l_fseek(f, offset, mode[op]);
   if (l_unlikely(op))
     return luaL_fileresult(L, 0, NULL);  /* error */
@@ -23807,19 +23890,25 @@ static int f_setvbuf (lua_State *L) {
   FILE *f = tofile(L);
   int op = luaL_checkoption(L, 2, NULL, modenames);
   lua_Integer sz = luaL_optinteger(L, 3, LUAL_BUFFERSIZE);
-  int res = setvbuf(f, NULL, mode[op], (size_t)sz);
+  int res;
+  errno = 0;
+  res = setvbuf(f, NULL, mode[op], (size_t)sz);
   return luaL_fileresult(L, res == 0, NULL);
 }
 
 
 
 static int io_flush (lua_State *L) {
-  return luaL_fileresult(L, fflush(getiofile(L, IO_OUTPUT)) == 0, NULL);
+  FILE *f = getiofile(L, IO_OUTPUT);
+  errno = 0;
+  return luaL_fileresult(L, fflush(f) == 0, NULL);
 }
 
 
 static int f_flush (lua_State *L) {
-  return luaL_fileresult(L, fflush(tofile(L)) == 0, NULL);
+  FILE *f = tofile(L);
+  errno = 0;
+  return luaL_fileresult(L, fflush(f) == 0, NULL);
 }
 
 
@@ -23861,7 +23950,7 @@ static const luaL_Reg meth[] = {
 ** metamethods for file handles
 */
 static const luaL_Reg metameth[] = {
-  {"__index", NULL},  /* place holder */
+  {"__index", NULL},  /* placeholder */
   {"__gc", f_gc},
   {"__close", f_gc},
   {"__tostring", f_tostring},
@@ -24165,6 +24254,15 @@ static int math_type (lua_State *L) {
 ** ===================================================================
 */
 
+/*
+** This code uses lots of shifts. ANSI C does not allow shifts greater
+** than or equal to the width of the type being shifted, so some shifts
+** are written in convoluted ways to match that restriction. For
+** preprocessor tests, it assumes a width of 32 bits, so the maximum
+** shift there is 31 bits.
+*/
+
+
 /* number of binary digits in the mantissa of a float */
 #define FIGS	l_floatatt(MANT_DIG)
 
@@ -24187,16 +24285,19 @@ static int math_type (lua_State *L) {
 
 /* 'long' has at least 64 bits */
 #define Rand64		unsigned long
+#define SRand64		long
 
 #elif !defined(LUA_USE_C89) && defined(LLONG_MAX)
 
 /* there is a 'long long' type (which must have at least 64 bits) */
 #define Rand64		unsigned long long
+#define SRand64		long long
 
 #elif ((LUA_MAXUNSIGNED >> 31) >> 31) >= 3
 
 /* 'lua_Unsigned' has at least 64 bits */
 #define Rand64		lua_Unsigned
+#define SRand64		lua_Integer
 
 #endif
 
@@ -24235,23 +24336,30 @@ static Rand64 nextrand (Rand64 *state) {
 }
 
 
-/* must take care to not shift stuff by more than 63 slots */
-
-
 /*
 ** Convert bits from a random integer into a float in the
 ** interval [0,1), getting the higher FIG bits from the
 ** random unsigned integer and converting that to a float.
+** Some old Microsoft compilers cannot cast an unsigned long
+** to a floating-point number, so we use a signed long as an
+** intermediary. When lua_Number is float or double, the shift ensures
+** that 'sx' is non negative; in that case, a good compiler will remove
+** the correction.
 */
 
 /* must throw out the extra (64 - FIGS) bits */
 #define shift64_FIG	(64 - FIGS)
 
-/* to scale to [0, 1), multiply by scaleFIG = 2^(-FIGS) */
+/* 2^(-FIGS) == 2^-1 / 2^(FIGS-1) */
 #define scaleFIG	(l_mathop(0.5) / ((Rand64)1 << (FIGS - 1)))
 
 static lua_Number I2d (Rand64 x) {
-  return (lua_Number)(trim64(x) >> shift64_FIG) * scaleFIG;
+  SRand64 sx = (SRand64)(trim64(x) >> shift64_FIG);
+  lua_Number res = (lua_Number)(sx) * scaleFIG;
+  if (sx < 0)
+    res += l_mathop(1.0);  /* correct the two's complement if negative */
+  lua_assert(0 <= res && res < 1);
+  return res;
 }
 
 /* convert a 'Rand64' to a 'lua_Unsigned' */
@@ -24386,8 +24494,6 @@ static lua_Number I2d (Rand64 x) {
 }
 
 #else	/* 32 < FIGS <= 64 */
-
-/* must take care to not shift stuff by more than 31 slots */
 
 /* 2^(-FIGS) = 1.0 / 2^30 / 2^3 / 2^(FIGS-33) */
 #define scaleFIG  \
@@ -24702,15 +24808,6 @@ LUAMOD_API int luaopen_math (lua_State *L) {
 
 /*#include "lauxlib.h"*/
 /*#include "lualib.h"*/
-
-
-/*
-** LUA_IGMARK is a mark to ignore all before it when building the
-** luaopen_ function name.
-*/
-#if !defined (LUA_IGMARK)
-#define LUA_IGMARK		"-"
-#endif
 
 
 /*
@@ -25602,6 +25699,7 @@ static int os_execute (lua_State *L) {
 
 static int os_remove (lua_State *L) {
   const char *filename = luaL_checkstring(L, 1);
+  errno = 0;
   return luaL_fileresult(L, remove(filename) == 0, filename);
 }
 
@@ -25609,6 +25707,7 @@ static int os_remove (lua_State *L) {
 static int os_rename (lua_State *L) {
   const char *fromname = luaL_checkstring(L, 1);
   const char *toname = luaL_checkstring(L, 2);
+  errno = 0;
   return luaL_fileresult(L, rename(fromname, toname) == 0, NULL);
 }
 
@@ -28655,12 +28754,13 @@ static void l_message (const char *pname, const char *msg) {
 
 /*
 ** Check whether 'status' is not OK and, if so, prints the error
-** message on the top of the stack. It assumes that the error object
-** is a string, as it was either generated by Lua or by 'msghandler'.
+** message on the top of the stack.
 */
 static int report (lua_State *L, int status) {
   if (status != LUA_OK) {
     const char *msg = lua_tostring(L, -1);
+    if (msg == NULL)
+      msg = "(error message not a string)";
     l_message(progname, msg);
     lua_pop(L, 1);  /* remove message */
   }
@@ -28750,12 +28850,17 @@ static int dostring (lua_State *L, const char *s, const char *name) {
 
 /*
 ** Receives 'globname[=modname]' and runs 'globname = require(modname)'.
+** If there is no explicit modname and globname contains a '-', cut
+** the suffix after '-' (the "version") to make the global name.
 */
 static int dolibrary (lua_State *L, char *globname) {
   int status;
+  char *suffix = NULL;
   char *modname = strchr(globname, '=');
-  if (modname == NULL)  /* no explicit name? */
+  if (modname == NULL) {  /* no explicit name? */
     modname = globname;  /* module name is equal to global name */
+    suffix = strchr(modname, *LUA_IGMARK);  /* look for a suffix mark */
+  }
   else {
     *modname = '\0';  /* global name ends here */
     modname++;  /* module name starts after the '=' */
@@ -28763,8 +28868,11 @@ static int dolibrary (lua_State *L, char *globname) {
   lua_getglobal(L, "require");
   lua_pushstring(L, modname);
   status = docall(L, 1, 1);  /* call 'require(modname)' */
-  if (status == LUA_OK)
+  if (status == LUA_OK) {
+    if (suffix != NULL)  /* is there a suffix mark? */
+      *suffix = '\0';  /* remove suffix from global name */
     lua_setglobal(L, globname);  /* globname = require(modname) */
+  }
   return report(L, status);
 }
 

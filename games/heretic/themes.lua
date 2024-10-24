@@ -2991,6 +2991,505 @@ function HERETIC.slump_setup()
   end
 end
 
+--------------------------------------------------------------------
+
+HERETIC.TITLE_MAIN_STYLES =
+{
+  --- Solid styles ---
+
+  solid_blue =
+  {
+    prob = 25,
+
+    font_mode = "solid",
+
+    font_colors = { "#00f" },
+
+    font_outline_mode = "shadow2",
+    font_outlines = { "#00c", "#009", "#006", "#000" },
+
+    narrow = 0.6,
+
+    alt =
+    {
+      font_mode = "solid",
+      font_colors = { "#ccf" },
+      font_outline_mode = "zoom",
+      font_outlines = { "#77f", "#00f", "#000" },
+    },
+  },
+
+  solid_red =
+  {
+    prob = 25,
+
+    font_mode = "solid",
+
+    font_colors = { "#f00" },
+
+    font_outline_mode = "shadow2",
+    font_outlines = { "#c00", "#900", "#600", "#000" },
+
+    narrow = 0.6,
+
+    alt =
+    {
+      font_mode = "solid",
+      font_colors = { "#fff" },
+      font_outline_mode = "surround",
+      font_outlines = { "#f44", "#900", "#000" },
+    },
+  },
+
+  solid_green =
+  {
+    prob = 25,
+
+    font_mode = "solid",
+
+    font_colors = { "#0f0" },
+
+    font_outline_mode = "shadow",
+    font_outlines = { "#0c0", "#090", "#060", "#000" },
+
+    narrow = 0.4,
+  },
+
+  solid_black_lightblue =
+  {
+    prob = 25,
+
+    font_mode = "solid",
+
+    font_colors = { "#000" },
+
+    font_outlines = { "#009", "#99f", "#ddd" },
+
+    narrow = 0.7,
+  },
+
+  shaded_white_n_blue =
+  {
+    font_mode = "solid",
+
+    font_colors = { "#fff" },
+
+    font_outline_mode = "shadow",
+    font_outlines = { "#bbf", "#99f", "#55f", "#22f", "#00f", "#009", "#004", "#000" },
+
+    narrow = 0.4,
+  },
+
+  shaded_white_n_red =
+  {
+    font_mode = "solid",
+
+    font_colors = { "#fff" },
+
+    font_outline_mode = "zoom",
+    font_outlines = { "#f99", "#f66", "#e00", "#b00", "#800", "#400", "#000" },
+
+    narrow = 0.4,
+  },
+
+  --- Gradient styles ---
+
+  gradient_white_black =
+  {
+    font_mode = "gradient",
+
+    font_colors = { "#fff", "#000" },
+
+    font_outlines = { "#000", "#555" },
+  },
+
+  gradient_green_black =
+  {
+    font_mode = "gradient",
+
+    font_colors = { "#7e6", "#000" },
+
+    font_outlines = { "#231", "#342" },
+  },
+
+  gradient_pink_black =
+  {
+    font_mode = "gradient3",
+
+    font_colors = { "#c77", "#611", "#000" },
+
+    font_outlines = { "#000", "#933" },
+  },
+
+  gradient_black_brown =
+  {
+    font_mode = "gradient3",
+
+    font_colors = { "#000", "#752", "#fb8" },
+
+    font_outlines = { "#432", "#000" },
+  },
+
+  grad3_white_red_black =
+  {
+    font_mode = "gradient3",
+
+    font_colors = { "#fff", "#f00", "#000" },
+
+    font_outlines = { "#c00" },
+  },
+
+  grad3_white_blue_black =
+  {
+    font_mode = "gradient3",
+
+    font_colors = { "#fff", "#00f", "#000" },
+
+    font_outlines = { "#00c" },
+  },
+
+  grad3_white_orange_black =
+  {
+    font_mode = "gradient3",
+
+    font_colors = { "#fff", "#720", "#000" },
+
+    font_outlines = { "#000" },
+  },
+
+  gradmirror_orange_white =
+  {
+    font_mode = "gradient3",
+
+    font_colors = { "#720", "#fff", "#720" },
+
+    font_outlines = { "#000" },
+  },
+
+  gradmirror_yellow_orange =
+  {
+    font_mode = "gradient3",
+
+    font_colors = { "#ff7", "#620", "#ff7" },
+
+    font_outlines = { "#000", "#000", "#000" },
+
+    narrow = 0.7,
+  },
+
+  --- Textured styles ---
+
+  textured_brick =
+  {
+    font_mode = "gradient",
+
+    font_colors = { "#7e6", "#000" },
+
+    font_outlines = { "#231", "#342" },
+
+    background = "brickwall",
+
+    props = 
+    {
+      barrel_1 =
+      {
+        image = "barrel1",
+        x = 40,
+        y = 160
+      },
+      barrel_2 =
+      {
+        image = "barrel1",
+        x = 245,
+        y = 160
+      },
+    },
+  },
+}
+
+
+HERETIC.TITLE_SUB_STYLES =
+{
+  white =
+  {
+    font_mode = "solid",
+    font_colors = { "#ddd" },
+    font_outlines = { "#000" },
+  },
+
+  yellow =
+  {
+    prob = 25,
+    font_mode = "solid",
+    font_colors = { "#ff7" },
+    font_outlines = { "#431" },
+  },
+
+  yellow_outline =
+  {
+    font_mode = "solid",
+    font_colors = { "#000" },
+    font_outlines = { "#ff7" },
+  },
+
+  red_outline =
+  {
+    font_mode = "solid",
+    font_colors = { "#000" },
+    font_outlines = { "#f44" },
+  },
+
+  lightbrown =
+  {
+    font_mode = "solid",
+    font_colors = { "#ea7" },
+    font_outlines = { "#431" },
+  },
+
+  green =
+  {
+    font_mode = "solid",
+    font_colors = { "#6d5" },
+    font_outlines = { "#242" },
+  },
+
+  purple =
+  {
+    font_mode = "solid",
+    font_colors = { "#f0f" },
+    font_outlines = { "#505" },
+  },
+}
+
+
+HERETIC.TITLE_SPACE_STYLES =
+{
+  red_nebula =
+  {
+    hue1   = "#300",
+    hue2   = "#f00",
+    hue3   = "#fff",
+    thresh = 0.5,
+  },
+
+  blue_nebula =
+  {
+    hue1   = "#000",
+    hue2   = "#00f",
+    hue3   = "#99f",
+    thresh = 0.5,
+  },
+
+  green_nebula =
+  {
+    hue1   = "#000",
+    hue2   = "#363",
+    hue3   = "#6f6",
+    thresh = 0.5,
+  },
+
+  brown_nebula =
+  {
+    hue1   = "#000000",
+    hue2   = "#ab6f43",
+    hue3   = "#ffebdf",
+    thresh = 0.25,
+    power  = 3.0,
+  },
+
+  firey_nebula =
+  {
+    prob = 100,
+
+    hue1   = "#300",
+    hue2   = "#732",
+    hue3   = "#ff8",
+    thresh = 0.2,
+    power  = 1.5,
+  },
+
+  grey_nebula =
+  {
+    prob   = 5,
+
+    hue1   = "#000",
+    hue2   = "#aaa",
+    hue3   = "#000",
+    power  = 4,
+  },
+
+  purple_nebula =
+  {
+    prob = 5,
+
+    hue1   = "#707",
+    hue2   = "#f0f",
+    hue3   = "#fff",
+    thresh = 0.3,
+    power  = 2,
+  },
+}
+
+
+HERETIC.TITLE_INTERMISSION_STYLES =
+{
+  brown_box =
+  {
+    hue1 = "#332b13",
+    hue2 = "#774f2b",
+    hue3 = "#ab6f43",
+
+    fracdim = 2.8
+  },
+
+  blue_box =
+  {
+    hue1 = "#005",
+    hue2 = "#00c",
+    hue3 = "#33f",
+
+    fracdim = 2.8
+  },
+
+  pink_box =
+  {
+    hue1 = "#600",
+    hue2 = "#933",
+    hue3 = "#b55",
+
+    fracdim = 2.8
+  },
+
+  green_box =
+  {
+    hue1 = "#13230b",
+    hue2 = "#27551b",
+    hue3 = "#448822",
+
+    fracdim = 2.8
+  },
+
+  dark_box =
+  {
+    hue1 = "#111",
+    hue2 = "#222",
+    hue3 = "#333",
+
+    fracdim = 2.9
+  }
+}
+
+
+HERETIC.TITLE_COLOR_RAMPS =
+{
+  white =
+  {
+    { 0,0,0 },
+    { 255,255,255 }
+  },
+
+  light_grey =
+  {
+    { 0,0,0 },
+    { 168,168,168 }
+  },
+
+  mid_grey =
+  {
+    { 0,0,0 },
+    { 128,128,128 }
+  },
+
+  dark_grey =
+  {
+    { 0,0,0 },
+    { 96,96,96 }
+  },
+
+  blue =
+  {
+    { 0,0,0 },
+    { 0,0,255 }
+  },
+
+  blue_white =
+  {
+    { 0,0,0 },
+    { 0,0,255 },
+    { 231,231,255 }
+  },
+
+  red =
+  {
+    { 60,0,0 },
+    { 255,0,0 }
+  },
+
+  red_white =
+  {
+    { 60,0,0 },
+    { 255,0,0 },
+    { 255,224,224 }
+  },
+
+  green =
+  {
+    { 8,23,8 },
+    { 62,147,62 },
+    { 115,255,115 }
+  },
+
+  mid_green =
+  {
+    { 8,23,8 },
+    { 62,147,62 }
+  },
+
+  orange_white =
+  {
+    {43,35,15},
+    {135,40,5},
+    {215,95,11},
+    {243,115,23},
+    {255,235,219}
+  },
+
+  pink =
+  {
+    {60,5,5},
+    {107,15,15},
+    {155,51,51},
+    {203,107,107},
+    {255,183,183}
+  },
+
+  light_brown =
+  {
+    {0,0,0},
+    {75,55,27},
+    {119,79,43},
+    {191,123,75},
+    {255,179,131},
+    {255,235,223}
+  },
+
+  brown_yellow =
+  {
+    {0,0,0},
+    {115,43,0},
+    {255,255,115}
+  }
+}
+
+function HERETIC.setup()
+  GAME.TITLE_MAIN_STYLES = HERETIC.TITLE_MAIN_STYLES 
+  GAME.TITLE_SUB_STYLES = HERETIC.TITLE_SUB_STYLES 
+  GAME.TITLE_SPACE_STYLES = HERETIC.TITLE_SPACE_STYLES
+  GAME.TITLE_INTERMISSION_STYLES = HERETIC.TITLE_INTERMISSION_STYLES
+  GAME.TITLE_COLOR_RAMPS = HERETIC.TITLE_COLOR_RAMPS
+  GAME.title_screen_asset_dir = "games/heretic/data/title"
+end
+
 ------------------------------------------------------------------------
 
 OB_THEMES["city"] =

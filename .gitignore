@@ -3,7 +3,7 @@ obsidian
 Obsidian.exe
 obsidian.exe
 
-#Logs/configs (Windows version)
+#Logs/configs
 CONFIG.txt
 OPTIONS.txt
 THEME.txt
@@ -32,22 +32,7 @@ cmake-build-*
 build/
 
 # User dirs
-addons/*
 !addons/.gitkeep
-
-# Quake files (not redistributable)
-quake_tex.wd2
-pak0.pak
-pak1.pak
-
-tools/filename_formatter
-tools/filename_formatter.exe
-tools/qsavetex
-tools/qsavetex.exe
-tools/qsavetex_log.txt
-
-web/out
-web/shots
 
 _work
 *~

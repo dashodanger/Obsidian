@@ -1680,7 +1680,7 @@ function MODDED_GAME_EXTRAS.create_hn_info(self, LEVEL)
     end
 
     if R.lev_along and not R.is_start and #LEVEL.rooms > 2 then
-      goal_string = goal_string .. " (" .. int(R.lev_along * 100) .. "%%)"
+      goal_string = goal_string .. " (" .. math.round(R.lev_along * 100) .. "%%)"
     end      
 
     return goal_string
@@ -2028,7 +2028,7 @@ function MODDED_GAME_EXTRAS.generate_hn_decorate()
     local thing_chunk = MODDED_GAME_EXTRAS.HELLSCAPE_NAVIGATOR_TEMPLATE.COPIES
     thing_chunk = string.gsub(thing_chunk, "NUMNUMNUM", editor_num)
     thing_chunk = string.gsub(thing_chunk, "NAMENAMENAME", name)
-    thing_chunk = string.gsub(thing_chunk, "SIZESIZESIZE", int(radius))
+    thing_chunk = string.gsub(thing_chunk, "SIZESIZESIZE", math.round(radius))
 
     decorate_string = decorate_string .. thing_chunk
   end

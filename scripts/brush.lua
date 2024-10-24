@@ -1100,7 +1100,7 @@ function brushlib.reverse(brush)
 
   -- second, actually reverse the coord tables
 
-  for i = 1, int(#xy_coords / 2) do
+  for i = 1, math.round(#xy_coords / 2) do
     local k = #xy_coords + 1 - i
 
     local C1 = brush[xy_coords[i].idx]

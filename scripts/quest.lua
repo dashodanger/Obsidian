@@ -912,7 +912,7 @@ function Quest_add_major_quests(LEVEL)
     local each_prob = style_sel("keys", 0, 40, 80, 100)
 
     -- decide maximum number
-    local max_num = 1 + int(#LEVEL.rooms / 5)
+    local max_num = 1 + math.round(#LEVEL.rooms / 5)
 
     for name,_ in pairs(key_tab) do
       if rand.odds(each_prob) then
@@ -938,7 +938,7 @@ function Quest_add_major_quests(LEVEL)
     if not rand.odds(any_prob) then return {} end
 
     -- decide maximum number
-    local max_num = 1 + int(#LEVEL.rooms / 5)
+    local max_num = 1 + math.round(#LEVEL.rooms / 5)
 
     for i = 1, max_num do
       if rand.odds(each_prob) then
@@ -1508,7 +1508,7 @@ function Quest_start_room(LEVEL)
     -- prefer no teleporter
     if not R:has_teleporter() then score = score + 1 end
 
-    gui.debugf("eval_start_room in %s --> space:%d dist:%d %1.2f\n", R.name, space, int(R.dist_to_exit or -1), score)
+    gui.debugf("eval_start_room in %s --> space:%d dist:%d %1.2f\n", R.name, space, math.round(R.dist_to_exit or -1), score)
 
     -- tie breaker
     return score + gui.random() * 2
@@ -1703,7 +1703,7 @@ function Quest_order_by_visit(LEVEL)
     gui.printf("Quest list:\n")
 
     for _,Q in pairs(LEVEL.quests) do
-      gui.printf("  %s : svolume:%d\n", Q.name, int(Q.svolume))
+      gui.printf("  %s : svolume:%d\n", Q.name, math.round(Q.svolume))
     end
   end
 
@@ -3028,7 +3028,7 @@ function Quest_room_themes(LEVEL)
     
     local building_tab = collect_usable_themes("building")
 
-    local max_room_theme = int(PARAM.float_max_room_themes or 1)
+    local max_room_theme = math.round(PARAM.float_max_room_themes or 1)
 
     if not PARAM.bool_avoid_room_theme_reuse or (PARAM.bool_avoid_room_theme_reuse and PARAM.bool_avoid_room_theme_reuse == 1) then
       for theme,odds in pairs(building_tab) do
@@ -3054,7 +3054,7 @@ function Quest_room_themes(LEVEL)
 
     visit_room(LEVEL.start_room, nil, nil, building_tab)
 
-    local max_wall_groups = int(PARAM.float_max_indoor_wall_groups or 2)
+    local max_wall_groups = math.round(PARAM.float_max_indoor_wall_groups or 2)
 
     local the_wall_group_tab = table.copy(LEVEL.theme.wall_groups)
 

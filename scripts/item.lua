@@ -141,7 +141,7 @@ function Player_give_stuff(hmodel, give_list)
 
     elseif give.ammo then
       gui.debugf("Giving [%s] ammo: %dx %s\n",
-                 hmodel.class, int(give.count), give.ammo)
+                 hmodel.class, math.round(give.count), give.ammo)
 
       hmodel.stats[give.ammo] = (hmodel.stats[give.ammo] or 0) + give.count
 
@@ -301,14 +301,14 @@ function Player_weapon_palettes(LEVEL)
 
     -- Note: result is often longer than strictly required
 
-    local num_low  = int(total / 2 + gui.random())
+    local num_low  = math.round(total / 2 + gui.random())
     local num_high = total - num_low
 
     insert_multiple(list, num_low,  Low)
     insert_multiple(list, num_high, High)
 
     if total >= 2 then
-      local num_very = int(total / 6 + gui.random())
+      local num_very = math.round(total / 6 + gui.random())
 
       insert_multiple(list, num_very, Lowest)
       insert_multiple(list, num_very, Highest)
@@ -341,7 +341,7 @@ function Player_weapon_palettes(LEVEL)
     local pal = {}
 
     -- decide number of "normal" weapons : at least one!
-    local normal_num = int(total / 3 + gui.random())
+    local normal_num = math.round(total / 3 + gui.random())
     if normal_num < 1 then normal_num = 1 end
 
     got_weaps = table.copy(got_weaps)
@@ -872,7 +872,7 @@ function Item_pickups_for_class(LEVEL, CL)
       elseif max_num * each_qty <= qty then
         count = max_num - rand.sel(20,1,0)
       else
-        count = 1 + int(qty / each_qty)
+        count = 1 + math.round(qty / each_qty)
       end
     end
 

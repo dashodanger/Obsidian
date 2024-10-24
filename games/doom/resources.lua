@@ -957,7 +957,7 @@ function DOOM.all_done()
     gui.wad_merge_sections(dir .. "short_bars.wad")
   end
 
-  if ob_mod_enabled("compress_output") == 1 and OB_CONFIG.port ~= "dsda" then -- DSDA (I think) needs everything in the WAD still
+  if ob_mod_enabled("compress_output") == 1 then
     gui.pk3_insert_file("data/endoom/ENDOOM.bin", "ENDOOM.bin")
   else
     gui.wad_insert_file("data/endoom/ENDOOM.bin", "ENDOOM")

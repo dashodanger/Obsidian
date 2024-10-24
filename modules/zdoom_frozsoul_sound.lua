@@ -238,7 +238,7 @@ end
 function ZDOOM_SOUND.merge_frozsoul_sounds(self)
 
   if PARAM.bool_merge_frozsoul_sounds == 1 then
-    local dir = "data/sounds/"
+    local dir = "games/doom/data/sounds/"
 
     for _,sound in pairs(ZDOOM_SOUND_DEFS) do
       if ob_mod_enabled("compress_output") == 1 then

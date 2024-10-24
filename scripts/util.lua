@@ -35,10 +35,6 @@ function non_nil(val)
   return val
 end
 
-function int(val)
-  return math.floor(val)
-end
-
 function sel(cond, yes_val, no_val)
   -- a poor man's ?: operator
   -- NOTE: both expressions are evaluated!
@@ -98,14 +94,6 @@ end
 
 function math.mid(x, y)
   return (x + y) / 2.0
-end
-
-function math.i_mid(x, y)
-  return int((x + y) / 2.0)
-end
-
-function math.in_range(low, x, high)
-  return low <= x and x <= high
 end
 
 function math.clamp(low, x, high)
@@ -213,7 +201,7 @@ function module_param_up(module)
             if opt.increment < 1 then
               PARAM[opt.name] = value
             else
-              PARAM[opt.name] = int(value)
+              PARAM[opt.name] = math.round(value)
             end
           end
         elseif opt.valuator == "button" then
@@ -360,7 +348,7 @@ end
 function table.reverse(t)
   if not t then return nil end
 
-  for x = 1, int(#t / 2) do
+  for x = 1, math.round(#t / 2) do
     local y = #t - (x-1)
     -- swap 'em
     t[x], t[y] = t[y], t[x]
@@ -722,7 +710,7 @@ function rand.irange(L,H)
 end
 
 function rand.int(val)
-  return math.floor(val + gui.random())
+  return math.round(val + gui.random())
 end
 
 function rand.skew(mid, dist)
@@ -860,7 +848,7 @@ end
 -- where all the index values start at 1
 function div_mod(x, mod)
   x = x - 1
-  return 1 + int(x / mod), 1 + (x % mod)
+  return 1 + math.round(x / mod), 1 + (x % mod)
 end
 
 function dir_to_delta(dir)
@@ -1259,7 +1247,7 @@ end
 
 
 function geom.box_mid(x1,y1, x2,y2)
-  return int((x1 + x2) / 2), int((y1 + y2) / 2)
+  return math.round((x1 + x2) / 2), math.round((y1 + y2) / 2)
 end
 
 function geom.box_size(x1,y1, x2,y2)

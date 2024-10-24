@@ -1,0 +1,8 @@
+add_subdirectory(fastPRNG)
+if(NOT CONSOLE_ONLY)
+  add_subdirectory(fltk)
+endif()
+add_subdirectory(minilua)
+add_subdirectory(miniz)
+add_subdirectory(physfs)
+add_subdirectory(steve)

@@ -58,13 +58,8 @@ class UI_MiniMap : public Fl_Box
     void DrawPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b);
     void DrawBox(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b);
     void DrawLine(int x1, int y1, int x2, int y2, uint8_t r, uint8_t g, uint8_t b);
-    void DrawEntity(int x, int y, uint8_t r, uint8_t g, uint8_t b);
 
     void MapClear();
-
-    void GifStart(std::string_view filename, int delay);
-    void GifFrame();
-    void GifFinish();
 
   private:
     inline void RawPixel(int x, int y, uint8_t r, uint8_t g, uint8_t b)

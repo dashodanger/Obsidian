@@ -26,10 +26,7 @@ function Render_add_exit_sign(E, z, SEEDS, LEVEL)
 
   if PARAM.bool_exit_signs ~= 1 then return end
 
-  -- These games need an engine that supports TX_START/TX_END merging
-  if ob_match_game({ game = { heretic=1} }) then
-     if not ob_match_port({ port = { edge=1, zdoom=1 } }) then return end
-  end
+  if ob_match_game({ game = "doomish" }) then return end
 
   local def
 
@@ -43,9 +40,9 @@ function Render_add_exit_sign(E, z, SEEDS, LEVEL)
 
   local len = geom.dist(x1,y1, x2,y2)
 
-  local ofs = int(len / 6)
+  local ofs = math.round(len / 6)
   if len > 340 then
-    ofs = int(len / 4)
+    ofs = math.round(len / 4)
   end
 
   local ax = x1 + ofs * (x2 - x1) / len
@@ -3193,8 +3190,8 @@ function Render_all_street_traffic(LEVEL, SEEDS)
   for _,SPOT in pairs(LEVEL.road_street_traffic_spots) do
 
     -- stagger positions a bit
-    SPOT.x = SPOT.x + int(rand.range(-32,32))
-    SPOT.y = SPOT.y + int(rand.range(-32,32))
+    SPOT.x = SPOT.x + math.round(rand.range(-32,32))
+    SPOT.y = SPOT.y + math.round(rand.range(-32,32))
 
     local T = Trans.spot_transform(SPOT.x, SPOT.y, SPOT.z, SPOT.dir)
     local reqs = {}
@@ -3679,7 +3676,7 @@ function Render_scenic_fabs(LEVEL, SEEDS)
       end
     end
 
-    for i = 1, int(area.svolume/32) do
+    for i = 1, math.round(area.svolume/32) do
       try_decor_here(area)
     end
   end
@@ -4331,7 +4328,7 @@ function Render_cells(LEVEL, area)
     assert(B)
     assert(B.floor_h)
 
-    return string.format("1-%5d-%5d", int(B.floor_h + 50000), int(50000 - (B.ceil_h or 0)))
+    return string.format("1-%5d-%5d", math.round(B.floor_h + 50000), math.round(50000 - (B.ceil_h or 0)))
   end
 
 

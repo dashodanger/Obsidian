@@ -379,8 +379,8 @@ function B_prefab(c, fab,skin,parm, model,combo, x,y, dir,mirror_x,mirror_y)
 
     tx, ty = mid_x + tx, mid_y + ty
 
-    local bx = x + int(tx / 64)
-    local by = y + int(ty / 64)
+    local bx = x + math.round(tx / 64)
+    local by = y + math.round(ty / 64)
 
     local dx = (tx % 64) - 32
     local dy = (ty % 64) - 32
@@ -996,8 +996,8 @@ function B_vista(src,dest, x1,y1, x2,y2, side, b_combo,kind)
     local sp_min = 2.0 + deep / 6.0
     local sp_max = 2.0 + deep / 2.5
 
-    local front_pillars = int( rand.range(fp_min, fp_max) + rand.skew()*0.5 )
-    local  side_pillars = int( rand.range(sp_min, sp_max) + rand.skew()*0.5 )
+    local front_pillars = math.round( rand.range(fp_min, fp_max) + rand.skew()*0.5 )
+    local  side_pillars = math.round( rand.range(sp_min, sp_max) + rand.skew()*0.5 )
 
     gui.debugf("VISTA %dx%d --> PILLARS front:%d side:%d\n", long, deep,
                front_pillars, side_pillars)
@@ -1005,8 +1005,8 @@ function B_vista(src,dest, x1,y1, x2,y2, side, b_combo,kind)
     for fp = 1, front_pillars do
       local u = (fp - 1) / (front_pillars - 1)
 
-      local x = int(px1 + (px2-px1) * u)
-      local y = int(py1 + (py2-py1) * u)
+      local x = math.round(px1 + (px2-px1) * u)
+      local y = math.round(py1 + (py2-py1) * u)
       
       frag_fill(src, x,y, x,y, { solid=support })
     end
@@ -1014,13 +1014,13 @@ function B_vista(src,dest, x1,y1, x2,y2, side, b_combo,kind)
     for sp = 1, side_pillars do
       local u = (sp - 1) / (side_pillars - 1)
 
-      local x1 = int(px1 + (wx1-px1) * u)
-      local y1 = int(py1 + (wy1-py1) * u)
+      local x1 = math.round(px1 + (wx1-px1) * u)
+      local y1 = math.round(py1 + (wy1-py1) * u)
       
       frag_fill(src, x1,y1, x1,y1, { solid=support })
       
-      local x2 = int(px2 + (wx2-px2) * u)
-      local y2 = int(py2 + (wy2-py2) * u)
+      local x2 = math.round(px2 + (wx2-px2) * u)
+      local y2 = math.round(py2 + (wy2-py2) * u)
 
       frag_fill(src, x2,y2, x2,y2, { solid=support })
     end
@@ -1255,8 +1255,8 @@ function make_chunks()
     local L, M, R
 
     if q_pos then
-      M = int((total+2) / 3)
-      L = int(total / 3)
+      M = math.round((total+2) / 3)
+      L = math.round(total / 3)
       R = total - M - L
 
           if q_pos == 1 then return M, L, R
@@ -1350,9 +1350,9 @@ function make_chunks()
     local pos
 
         if link.where == -2 then pos = 0
-    elseif link.where == -1 then pos = int((diff+2)/4)
-    elseif link.where ==  0 then pos = int(diff / 2)
-    elseif link.where ==  1 then pos = diff - int((diff+2)/4)
+    elseif link.where == -1 then pos = math.round((diff+2)/4)
+    elseif link.where ==  0 then pos = math.round(diff / 2)
+    elseif link.where ==  1 then pos = diff - math.round((diff+2)/4)
     elseif link.where ==  2 then pos = diff
     else
       error("Bad where value: " .. tostring(link.where))
@@ -1450,8 +1450,8 @@ function make_chunks()
       if (d_pos < d_min) then d_pos = d_min end
       if (d_pos > d_max) then d_pos = d_max end
 
-      local j1 = int((d_pos - 1) / JW)
-      local j2 = int((d_pos - 1 + link.long-1) / JW)
+      local j1 = math.round((d_pos - 1) / JW)
+      local j2 = math.round((d_pos - 1 + link.long-1) / JW)
       
       for j = j1,j2 do
         assert (0 <= j and j < KW)
@@ -3292,7 +3292,7 @@ end
 --
 --      -- pillar in middle of special arch
 --      if link.where == "wide" then
---        long = int((long-1) / 2)
+--        long = math.round((long-1) / 2)
 --        x, y  = x+long*ax,  y+long*ay
 --        ex,ey = ex-long*ax, ey-long*ay
 --
@@ -3347,7 +3347,7 @@ end
 --
 --
 --      B_door(c, link, b_combo, x, y, c.floor_h, dir,
---             1 + int(info.w / 64), 1, info, door_kind, tag, key_tex)
+--             1 + math.round(info.w / 64), 1, info, door_kind, tag, key_tex)
 --    else
 --      error("build_link: bad kind: " .. tostring(link.kind))
 --    end
@@ -3565,10 +3565,10 @@ end
         if spot.long >= 7 or
            (spot.long >= 5 and (WINDOW.c_h - WINDOW.f_h) < 72)
         then
-          local mx1 = int((x1+x2)/2)
-          local my1 = int((y1+y2)/2)
-          local mx2 = int((x1+x2+1)/2)
-          local my2 = int((y1+y2+1)/2)
+          local mx1 = math.round((x1+x2)/2)
+          local my1 = math.round((y1+y2)/2)
+          local mx2 = math.round((x1+x2+1)/2)
+          local my2 = math.round((y1+y2+1)/2)
           fill (c, mx1,my1, mx2,my2, { solid=D.combo.wall })
         end
       else
@@ -3739,7 +3739,7 @@ function build_grotto(c, x1,y1, x2,y2)
   local WALL = { solid=c.combo.wall }
 
   for y = y1+1, y2-1, 2 do
-    for x = x1+1+(int(y/2)%2)*2, x2-3, 4 do
+    for x = x1+1+(math.round(y/2)%2)*2, x2-3, 4 do
       gap_fill(c, x-2,y, x-2,y, WALL)
       gap_fill(c, x+2,y, x+2,y, WALL)
 
@@ -3770,8 +3770,8 @@ function build_pacman_level(c)
   local mid_fab = GAME.FACTORY.PREFABS[rand.pick(PACMAN_MID_FABS)]
   assert(mid_fab)
 
-  local mid_x = 32 - int(mid_fab.long/2)
-  local mid_y = 30 - int(mid_fab.deep/2)
+  local mid_x = 32 - math.round(mid_fab.long/2)
+  local mid_y = 30 - math.round(mid_fab.deep/2)
 
   local top_fab = GAME.FACTORY.PREFABS[rand.pick(PACMAN_CORN_FABS)]
   local bot_fab = GAME.FACTORY.PREFABS[rand.pick(PACMAN_CORN_FABS)]
@@ -4605,7 +4605,7 @@ sel(B.on_path, "YES", "NO"))
 
       local skew = 1.0 + rand.skew() * 0.35
 
-      local kill_blk = int(rec.total_blk * c.space_factor / 100 * skew)
+      local kill_blk = math.round(rec.total_blk * c.space_factor / 100 * skew)
 
       if kill_blk >= rec.total_blk then
         for pos = 1,rec.long do
@@ -4660,7 +4660,7 @@ sel(B.on_path, "YES", "NO"))
 
       local skew = 1.0 + rand.skew() * 0.35
 
-      local kill_blk = int(rec.total_blk * c.space_factor / 100 * skew)
+      local kill_blk = math.round(rec.total_blk * c.space_factor / 100 * skew)
 
       if kill_blk >= rec.total_blk then
         for pos = 1,rec.long do
@@ -4698,7 +4698,7 @@ sel(B.on_path, "YES", "NO"))
 -- gui.printf("GUILLOTINE: SPACE:%d  |  min:%1.1f max:%1.1f @avg:%1.1f --> new_deep:%1.2f\n",
 --   (c.space_factor/10), t_min, t_max, t_avg, new_deep)
 
-      new_deep = int(new_deep)
+      new_deep = math.round(new_deep)
 
       if new_deep <= 0 then
         for pos = 1,rec.long do
@@ -4960,7 +4960,7 @@ gui.debugf("  CELL:   (%d,%d) .. (%d,%d)\n", c.bx1,c.by1, c.bx2,c.by2)
           y = y1 + i*h/(count+1)
         end
 
-        local spot = add_special_pickup_spot(c, int(x), int(y), 32,32, 200)
+        local spot = add_special_pickup_spot(c, math.round(x), math.round(y), 32,32, 200)
 
         spot.vista_side = side
       end
@@ -5411,7 +5411,7 @@ gui.debugf("  EDGE1:%s  EDGE2:%s\n", edge1 or "OK", edge2 or "OK")
       -- limit width to reasonable values (128 or 256 units)
           if long == 3 then long = 2
       elseif long >= 5 and rand.odds(95) then
-        local pos = int( (long - 4 + rand.irange(0,1)) / 2)
+        local pos = math.round( (long - 4 + rand.irange(0,1)) / 2)
         x, y = x + pos*ax, y + pos*ay
         long = 4
       end
@@ -5491,8 +5491,8 @@ gui.debugf("  EDGE1:%s  EDGE2:%s\n", edge1 or "OK", edge2 or "OK")
     local function link_walk_pos(L)
       local dx,dy = dir_to_delta(10-L.side) -- inwards
 
-      local x = int((L.link.x1 + L.link.x2) / 2)
-      local y = int((L.link.y1 + L.link.y2) / 2)
+      local x = math.round((L.link.x1 + L.link.x2) / 2)
+      local y = math.round((L.link.y1 + L.link.y2) / 2)
 
       return x+dx, y+dy
     end
@@ -5613,8 +5613,8 @@ gui.debugf("  EDGE1:%s  EDGE2:%s\n", edge1 or "OK", edge2 or "OK")
         if K.kind == "empty" then K.kind = "room" end
 
         -- TODO: prefer block is not on stair/lift
-        local rx = int((K.x1+K.x2)/2)
-        local ry = int((K.y1+K.y2)/2)
+        local rx = math.round((K.x1+K.x2)/2)
+        local ry = math.round((K.y1+K.y2)/2)
 
         for i = 1,#link_list do
           find_path("room", link_list[i], rx, ry)
@@ -5635,12 +5635,12 @@ gui.debugf("  EDGE1:%s  EDGE2:%s\n", edge1 or "OK", edge2 or "OK")
 
           if K.kx == 1 then qx = K.x2
       elseif K.kx == 3 then qx = K.x1
-      else   qx = int((K.x1+K.x2) / 2)
+      else   qx = math.round((K.x1+K.x2) / 2)
       end
 
           if K.ky == 1 then qy = K.y2
       elseif K.ky == 3 then qy = K.y1
-      else   qy = int((K.y1+K.y2) / 2)
+      else   qy = math.round((K.y1+K.y2) / 2)
       end
 
       find_path("room", rand.pick(link_list), qx, qy)
@@ -6594,7 +6594,7 @@ gui.debugf("add_quest_object: %s @ (%d,%d)\n", name, x, y)
     if not info then error("Unknown boss: " .. name) end
 
     local count = 1
-    if info.hp < 900 then count = int(1900/info.hp) end
+    if info.hp < 900 then count = math.round(1900/info.hp) end
 
     for i = 1,count do
       add_quest_object(c, name)
@@ -6716,8 +6716,8 @@ gui.debugf("add_wall_stuff: %s @ (%d,%d) block:(%d,%d) dir:%d\n",
     if c.quest.return_args then
       local dx,dy = dir_to_delta(dir)
 
-      local x  = int((K.x1+K.x2) / 2) + dx * 4
-      local y  = int((K.y1+K.y2) / 2) + dy * 4
+      local x  = math.round((K.x1+K.x2) / 2) + dx * 4
+      local y  = math.round((K.y1+K.y2) / 2) + dy * 4
 
       sort_fab_locs(c, "near", x, y)
 
@@ -7037,8 +7037,8 @@ gui.debugf("add_prefab: %s  dir:%d\n", def.name, dir)
       if (c.x==1 and c.y==1) or (c.x==PLAN.w and c.y==PLAN.h) then
         -- OK
       elseif math.max(PLAN.w,PLAN.h) >= 5 and
-             c.x == int(PLAN.w/2 + 0.6) and
-             c.y == int(PLAN.h/2 + 0.6) then
+             c.x == math.round(PLAN.w/2 + 0.6) and
+             c.y == math.round(PLAN.h/2 + 0.6) then
         -- OK
       else return end
     else

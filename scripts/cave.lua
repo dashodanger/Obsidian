@@ -371,8 +371,8 @@ end
 
 
 function Cave_cell_touches_map_edge(LEVEL, area, cx, cy)
-  local sx = area.base_sx + int((cx - 1) / 2)
-  local sy = area.base_sy + int((cy - 1) / 2)
+  local sx = area.base_sx + math.round((cx - 1) / 2)
+  local sy = area.base_sy + math.round((cy - 1) / 2)
 
   if (cx % 2) == 0 then
     if sx >= LEVEL.absolute_x2 then return true end
@@ -398,8 +398,8 @@ function Cave_cell_touches_room(area, cx, cy, R, SEEDS)
     local nx, ny = geom.nudge(cx, cy, dir)
 
     -- get seed coordinate of neighbor cell
-    local sx = area.base_sx + int((nx - 1) / 2)
-    local sy = area.base_sy + int((ny - 1) / 2)
+    local sx = area.base_sx + math.round((nx - 1) / 2)
+    local sy = area.base_sy + math.round((ny - 1) / 2)
 
     if not Seed_valid(sx, sy) then goto continue end
 
@@ -1483,7 +1483,7 @@ function Cave_bunch_areas(R, mode, LEVEL)
 
   setup()
 
-  local try_count = int(#area.walk_floors / rand.sel(50, 8, 14))
+  local try_count = math.round(#area.walk_floors / rand.sel(50, 8, 14))
 
   for i = 1, try_count do
     local B1 = pick_start_area()
@@ -2625,7 +2625,7 @@ function Cave_decorations(R)
     local quota = #locs * perc / 100
 
     quota = quota * rand.range(0.8, 1.2)
-    quota = int(quota + gui.random())
+    quota = math.round(quota + gui.random())
 
     -- very rarely add lots of torches
     if area.torch_mode ~= "few" and rand.odds(1) then
@@ -3995,7 +3995,7 @@ function Cave_build_a_park(LEVEL, R, entry_h, SEEDS)
 
     -- extra health for damaging liquid
     if LEVEL.liquid.damage then
-      R.hazard_health = R.hazard_health + int(B.size / 4)
+      R.hazard_health = R.hazard_health + math.round(B.size / 4)
     end
   end
 

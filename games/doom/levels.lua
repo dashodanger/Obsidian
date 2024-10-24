@@ -300,20 +300,13 @@ function DOOM.get_levels()
       local selected_mode = rand.pick(special_mode)
       if selected_mode == "streets" then
         LEV.has_streets = true
-        LEV.is_linear = false
-        LEV.is_nature = false
-      elseif selected_mode == "linear" then
-        LEV.has_streets = false
-        LEV.is_linear = true
         LEV.is_nature = false
       else
         LEV.has_streets = false
-        LEV.is_linear = false
         LEV.is_nature = true
       end
     else
       LEV.has_streets = false
-      LEV.is_linear = false
       LEV.is_nature = false
     end
 

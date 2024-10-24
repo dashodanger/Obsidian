@@ -1,14 +1,10 @@
-# AJBSP CMake Script
-cmake_minimum_required(VERSION 3.2.2)
+##########################################
+# miniz
+##########################################
 
-project(
+add_library(
   miniz
-  LANGUAGES C
-  VERSION 0.1.0
-)
+  miniz.c 
+  )
 
-set(CMAKE_CC_FLAGS
-    "-O2 -ffast-math -fno-strict-aliasing -DINLINE_G=inline -Wall"
-)
-
-add_library(miniz miniz.c)
+target_include_directories(miniz PUBLIC ./)

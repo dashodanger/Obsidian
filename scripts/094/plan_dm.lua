@@ -402,7 +402,7 @@ function plan_dm_arena(level)
 
     rand.shuffle(locs)
 
-    local num_f = int((PLAN.w + PLAN.h) / 4)
+    local num_f = math.round((PLAN.w + PLAN.h) / 4)
 
     while #locs > 0 and num_f > 0 do
 
@@ -483,7 +483,7 @@ function plan_dm_arena(level)
       end
     end
     
-    ob_size = math.clamp(low, int(rand.irange(low, high) * result_skew), high)
+    ob_size = math.clamp(low, math.round(rand.irange(low, high) * result_skew), high)
     goto foundsize
   end
 
@@ -521,7 +521,7 @@ function plan_dm_arena(level)
     local def_large = PARAM.float_level_upper_bound - def_small or 42
 
     -- this basically ramps up
-    ob_size = int(def_small + along * def_large)
+    ob_size = math.round(def_small + along * def_large)
   end
 
   ::foundsize::
@@ -585,8 +585,8 @@ function plan_dm_arena(level)
   PLAN.cells[pw][ph].require_player = true
 
   -- guarantee at least one weapon (central cell)
-  local mx = int((PLAN.w+1)/2)
-  local my = int((PLAN.h+1)/2)
+  local mx = math.round((PLAN.w+1)/2)
+  local my = math.round((PLAN.h+1)/2)
 
   PLAN.cells[mx][my].require_weapon = true
 

@@ -1054,7 +1054,7 @@ gui.debugf("MonRelease in %s : kind --> %s\n",
 
     local qty = rand.index_by_probs({ 40,40,20,5 })
 
-    if STYLE.traps == "few"   then int((qty + 1) / 2) end
+    if STYLE.traps == "few"   then math.round((qty + 1) / 2) end
     if STYLE.traps == "more"  then qty = qty + 1 end
     if STYLE.traps == "heaps" then qty = qty + 2 end
 
@@ -2802,18 +2802,18 @@ function Layout_indoor_lighting(LEVEL)
 
   local LIGHT_LEVELS =
   {
-    bright   = (int)(224 * PARAM.float_overall_lighting_mult),
-    normal   = (int)(192 * PARAM.float_overall_lighting_mult),
-    dark     = (int)(160 * PARAM.float_overall_lighting_mult),
-    verydark = (int)(128 * PARAM.float_overall_lighting_mult),
+    bright   = math.round(224 * PARAM.float_overall_lighting_mult),
+    normal   = math.round(192 * PARAM.float_overall_lighting_mult),
+    dark     = math.round(160 * PARAM.float_overall_lighting_mult),
+    verydark = math.round(128 * PARAM.float_overall_lighting_mult),
   }
 
   local CAVE_LEVELS =
   {
-    bright   = (int)(192 * PARAM.float_overall_lighting_mult),
-    normal   = (int)(160 * PARAM.float_overall_lighting_mult),
-    dark     = (int)(128 * PARAM.float_overall_lighting_mult),
-    verydark = (int)(96 * PARAM.float_overall_lighting_mult),
+    bright   = math.round(192 * PARAM.float_overall_lighting_mult),
+    normal   = math.round(160 * PARAM.float_overall_lighting_mult),
+    dark     = math.round(128 * PARAM.float_overall_lighting_mult),
+    verydark = math.round(96 * PARAM.float_overall_lighting_mult),
   }
 
   local function sky_light_to_keyword()
@@ -2848,7 +2848,7 @@ function Layout_indoor_lighting(LEVEL)
       local JITTER = {0, 0, 0, -16, 16}
       base_light = base_light + rand.pick(JITTER)
     else
-      local JITTER = {0, 0, 0, -(int)(base_light * 0.1), (int)(base_light * 0.1)}
+      local JITTER = {0, 0, 0, -math.round(base_light * 0.1), math.round(base_light * 0.1)}
       base_light = base_light + rand.pick(JITTER)
     end
 

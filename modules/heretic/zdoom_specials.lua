@@ -964,7 +964,7 @@ function ZDOOM_SPECIALS_HERETIC.do_special_stuff()
     ZStoryGen_init()
   end
 
-  gui.wad_merge_sections("data/loading/loading_screens.wad")
+  gui.wad_merge_sections("games/heretic/data/loading/loading_screens.wad")
 
 end
 

@@ -963,11 +963,11 @@ function ZDOOM_SPECIALS.do_special_stuff()
   -- insert custom music
   if PARAM.story_generator ~= "none" then
     if PARAM.generic_intermusic == "$MUSIC_DM2INT" then
-      gui.wad_insert_file("data/music/D_DM2INT.ogg","D_DM2INT")
+      gui.wad_insert_file("games/doom/data/music/D_DM2INT.ogg","D_DM2INT")
     end
   end
 
-  gui.wad_merge_sections("data/loading/loading_screens.wad")
+  gui.wad_merge_sections("games/doom/data/loading/loading_screens.wad")
 end
 
 OB_MODULES["zdoom_specials_lighting"] =

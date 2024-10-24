@@ -157,6 +157,9 @@ KadKad1
 Lobo
   - EDGE-Classic Enhancement Addon
 
+DaveFriedLiver
+  - Widget tooltip updates/grammar corrections
+
 # OBLIGE
 
 ## DEVELOPER:

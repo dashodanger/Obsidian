@@ -870,7 +870,7 @@ function Title_make_stroke(T, x1,y1, x2,y2)
   x1, y1 = T.func(T, x1, y1)
   x2, y2 = T.func(T, x2, y2)
 
-  gui.title_draw_line(int(x1 + T.ofs_x), int(y1 + T.ofs_y), int(x2 + T.ofs_x), int(y2 + T.ofs_y))
+  gui.title_draw_line(math.round(x1 + T.ofs_x), math.round(y1 + T.ofs_y), math.round(x2 + T.ofs_x), math.round(y2 + T.ofs_y))
 end
 
 
@@ -965,7 +965,7 @@ end
 
 
 function Title_centered_string(T, mx, my, text, style)
-  assert(style.mode)
+  assert(style.font_mode)
 
   -- do not create really tall letters
   if T.fh / T.fw > 2.5 then
@@ -999,27 +999,27 @@ function Title_centered_string(T, mx, my, text, style)
 
   -- do the outlines --
 
-  if style.outlines then
+  if style.font_outlines then
     gui.title_prop("render_mode", "solid")
 
-    for i = #style.outlines, 1, -1 do
-      local outline = style.outlines[i]
+    for i = #style.font_outlines, 1, -1 do
+      local outline = style.font_outlines[i]
 
       gui.title_prop("color", outline)
 
-      if style.outline_mode == "shadow" then
+      if style.font_outline_mode == "shadow" then
         thick = T.thick + i
 
         T.ofs_x = base_ofs
         T.ofs_y = base_ofs
 
-      elseif style.outline_mode == "shadow2" then
+      elseif style.font_outline_mode == "shadow2" then
         thick = T.thick + i
 
         T.ofs_x = base_ofs - i
         T.ofs_y = base_ofs
 
-      elseif style.outline_mode == "zoom" then
+      elseif style.font_outline_mode == "zoom" then
         thick = T.thick + i
 
         T.ofs_x = base_ofs - i / 2
@@ -1032,8 +1032,8 @@ function Title_centered_string(T, mx, my, text, style)
         T.ofs_y = base_ofs - i
       end
 
-      gui.title_prop("box_w", int(thick))
-      gui.title_prop("box_h", int(thick))
+      gui.title_prop("box_w", math.round(thick))
+      gui.title_prop("box_h", math.round(thick))
 
       Title_draw_string(T, text)
     end
@@ -1042,25 +1042,25 @@ function Title_centered_string(T, mx, my, text, style)
 
   -- do central part of text --
 
-  if style.mode == "texture" then
-    gui.title_prop("texture", "data/masks/" .. style.texture .. ".tga")
+  if style.font_mode == "texture" and style.font_texture then
+    gui.title_prop("texture", GAME.title_screen_asset_dir .. "/" .. style.font_texture .. ".tga")
   else
-    gui.title_prop("render_mode", style.mode)
+    gui.title_prop("render_mode", style.font_mode)
 
     for k = 1, 4 do
-      if style.colors[k] then
-        gui.title_prop("color" .. k, style.colors[k])
+      if style.font_colors[k] then
+        gui.title_prop("color" .. k, style.font_colors[k])
       end
     end
   end
 
-  if style.mode == "gradient" or style.mode == "gradient3" then
-    gui.title_prop("grad_y1", int(T.y - T.fh + 1))
-    gui.title_prop("grad_y2", int(T.y - 1))
+  if style.font_mode == "gradient" or style.font_mode == "gradient3" then
+    gui.title_prop("grad_y1", math.round(T.y - T.fh + 1))
+    gui.title_prop("grad_y2", math.round(T.y - 1))
   end
 
-  gui.title_prop("box_w", int(T.thick))
-  gui.title_prop("box_h", int(T.thick))
+  gui.title_prop("box_w", math.round(T.thick))
+  gui.title_prop("box_h", math.round(T.thick))
 
   T.ofs_x = base_ofs
   T.ofs_y = base_ofs
@@ -1110,9 +1110,9 @@ function Title_interp_color(list, ity, out)
       local A = list[pos]
       local B = list[pos+1]
 
-      out[1] = int(A[1] * (1 - ity) + B[1] * ity)
-      out[2] = int(A[2] * (1 - ity) + B[2] * ity)
-      out[3] = int(A[3] * (1 - ity) + B[3] * ity)
+      out[1] = math.round(A[1] * (1 - ity) + B[1] * ity)
+      out[2] = math.round(A[2] * (1 - ity) + B[2] * ity)
+      out[3] = math.round(A[3] * (1 - ity) + B[3] * ity)
       return
     end
 
@@ -1128,527 +1128,24 @@ end
 ------------------------------------------------------------------------
 
 
-TITLE_MAIN_STYLES =
-{
-  --- Solid styles ---
+TITLE_MAIN_STYLE =
+{ }
 
-  solid_blue =
-  {
-    prob = 25,
 
-    mode = "solid",
+TITLE_SUB_STYLE =
+{ }
 
-    colors = { "#00f" },
 
-    outline_mode = "shadow2",
-    outlines = { "#00c", "#009", "#006", "#000" },
+TITLE_SPACE_STYLE =
+{ }
 
-    narrow = 0.6,
 
-    alt =
-    {
-      mode = "solid",
-      colors = { "#ccf" },
-      outline_mode = "zoom",
-      outlines = { "#77f", "#00f", "#000" },
-    },
-  },
-
-  solid_red =
-  {
-    prob = 25,
-
-    mode = "solid",
-
-    colors = { "#f00" },
-
-    outline_mode = "shadow2",
-    outlines = { "#c00", "#900", "#600", "#000" },
-
-    narrow = 0.6,
-
-    alt =
-    {
-      mode = "solid",
-      colors = { "#fff" },
-      outline_mode = "surround",
-      outlines = { "#f44", "#900", "#000" },
-    },
-  },
-
-  solid_green =
-  {
-    prob = 25,
-
-    mode = "solid",
-
-    colors = { "#0f0" },
-
-    outline_mode = "shadow",
-    outlines = { "#0c0", "#090", "#060", "#000" },
-
-    narrow = 0.4,
-  },
-
-  solid_black_lightblue =
-  {
-    prob = 25,
-
-    mode = "solid",
-
-    colors = { "#000" },
-
-    outlines = { "#009", "#99f", "#ddd" },
-
-    narrow = 0.7,
-  },
-
-  shaded_white_n_blue =
-  {
-    mode = "solid",
-
-    colors = { "#fff" },
-
-    outline_mode = "shadow",
-    outlines = { "#bbf", "#99f", "#55f", "#22f", "#00f", "#009", "#004", "#000" },
-
-    narrow = 0.4,
-  },
-
-  shaded_white_n_red =
-  {
-    mode = "solid",
-
-    colors = { "#fff" },
-
-    outline_mode = "zoom",
-    outlines = { "#f99", "#f66", "#e00", "#b00", "#800", "#400", "#000" },
-
-    narrow = 0.4,
-  },
-
-  --- Gradient styles ---
-
-  gradient_white_black =
-  {
-    mode = "gradient",
-
-    colors = { "#fff", "#000" },
-
-    outlines = { "#000", "#555" },
-  },
-
-  gradient_green_black =
-  {
-    mode = "gradient",
-
-    colors = { "#7e6", "#000" },
-
-    outlines = { "#231", "#342" },
-  },
-
-  gradient_pink_black =
-  {
-    mode = "gradient3",
-
-    colors = { "#c77", "#611", "#000" },
-
-    outlines = { "#000", "#933" },
-  },
-
-  gradient_black_brown =
-  {
-    mode = "gradient3",
-
-    colors = { "#000", "#752", "#fb8" },
-
-    outlines = { "#432", "#000" },
-  },
-
-  grad3_white_red_black =
-  {
-    mode = "gradient3",
-
-    colors = { "#fff", "#f00", "#000" },
-
-    outlines = { "#c00" },
-  },
-
-  grad3_white_blue_black =
-  {
-    mode = "gradient3",
-
-    colors = { "#fff", "#00f", "#000" },
-
-    outlines = { "#00c" },
-  },
-
-  grad3_white_orange_black =
-  {
-    mode = "gradient3",
-
-    colors = { "#fff", "#720", "#000" },
-
-    outlines = { "#000" },
-  },
-
-  gradmirror_orange_white =
-  {
-    mode = "gradient3",
-
-    colors = { "#720", "#fff", "#720" },
-
-    outlines = { "#000" },
-  },
-
-  gradmirror_yellow_orange =
-  {
-    mode = "gradient3",
-
-    colors = { "#ff7", "#620", "#ff7" },
-
-    outlines = { "#000", "#000", "#000" },
-
-    narrow = 0.7,
-  },
-
-  --- Textured styles ---
-
-  groovy_1 =
-  {
-    mode = "texture",
-
-    texture = "groovy1",
-
-    outlines = { "#000", "#864", "#000" },
-  },
-
-  compgreen_1 =
-  {
-    prob = 15,
-
-    mode = "texture",
-
-    texture = "compgreen",
-
-    outlines = { "#000", "#cb4" },
-
-    narrow = 0.9,
-  },
-
-  yellowish_1 =
-  {
-    mode = "texture",
-
-    texture = "yellowish",
-
-    outlines = { "#654", "#ca8", "#000" },
-  },
-
-  redrock_1 =
-  {
-    mode = "texture",
-
-    texture = "redrock",
-
-    outline_mode = "zoom",
-    outlines = { "#c66", "#933", "#622", "#511" },
-  },
-
-  fireblu_1 =
-  {
-    mode = "texture",
-
-    texture = "fireblu",
-
-    outlines = { "#ccc", "#000" },
-  },
-
-  shawn_1 =
-  {
-    mode = "texture",
-
-    texture = "shawn_r",
-
-    outlines = { "#643", "#321", "#000" },
-
-    narrow = 0.8,
-  },
-}
-
-
-TITLE_SUB_STYLES =
-{
-  white =
-  {
-    mode = "solid",
-    colors = { "#ddd" },
-    outlines = { "#000" },
-  },
-
-  yellow =
-  {
-    prob = 25,
-    mode = "solid",
-    colors = { "#ff7" },
-    outlines = { "#431" },
-  },
-
-  yellow_outline =
-  {
-    mode = "solid",
-    colors = { "#000" },
-    outlines = { "#ff7" },
-  },
-
-  red_outline =
-  {
-    mode = "solid",
-    colors = { "#000" },
-    outlines = { "#f44" },
-  },
-
-  lightbrown =
-  {
-    mode = "solid",
-    colors = { "#ea7" },
-    outlines = { "#431" },
-  },
-
-  green =
-  {
-    mode = "solid",
-    colors = { "#6d5" },
-    outlines = { "#242" },
-  },
-
-  purple =
-  {
-    mode = "solid",
-    colors = { "#f0f" },
-    outlines = { "#505" },
-  },
-}
-
-
-TITLE_SPACE_STYLES =
-{
-  red_nebula =
-  {
-    hue1   = "#300",
-    hue2   = "#f00",
-    hue3   = "#fff",
-    thresh = 0.5,
-  },
-
-  blue_nebula =
-  {
-    hue1   = "#000",
-    hue2   = "#00f",
-    hue3   = "#99f",
-    thresh = 0.5,
-  },
-
-  green_nebula =
-  {
-    hue1   = "#000",
-    hue2   = "#363",
-    hue3   = "#6f6",
-    thresh = 0.5,
-  },
-
-  brown_nebula =
-  {
-    hue1   = "#000000",
-    hue2   = "#ab6f43",
-    hue3   = "#ffebdf",
-    thresh = 0.25,
-    power  = 3.0,
-  },
-
-  firey_nebula =
-  {
-    prob = 100,
-
-    hue1   = "#300",
-    hue2   = "#732",
-    hue3   = "#ff8",
-    thresh = 0.2,
-    power  = 1.5,
-  },
-
-  grey_nebula =
-  {
-    prob   = 5,
-
-    hue1   = "#000",
-    hue2   = "#aaa",
-    hue3   = "#000",
-    power  = 4,
-  },
-
-  purple_nebula =
-  {
-    prob = 5,
-
-    hue1   = "#707",
-    hue2   = "#f0f",
-    hue3   = "#fff",
-    thresh = 0.3,
-    power  = 2,
-  },
-}
-
-
-TITLE_INTERMISSION_STYLES =
-{
-  brown_box =
-  {
-    hue1 = "#332b13",
-    hue2 = "#774f2b",
-    hue3 = "#ab6f43",
-
-    fracdim = 2.8
-  },
-
-  blue_box =
-  {
-    hue1 = "#005",
-    hue2 = "#00c",
-    hue3 = "#33f",
-
-    fracdim = 2.8
-  },
-
-  pink_box =
-  {
-    hue1 = "#600",
-    hue2 = "#933",
-    hue3 = "#b55",
-
-    fracdim = 2.8
-  },
-
-  green_box =
-  {
-    hue1 = "#13230b",
-    hue2 = "#27551b",
-    hue3 = "#448822",
-
-    fracdim = 2.8
-  },
-
-  dark_box =
-  {
-    hue1 = "#111",
-    hue2 = "#222",
-    hue3 = "#333",
-
-    fracdim = 2.9
-  }
-}
+TITLE_INTERMISSION_STYLE =
+{ }
 
 
 TITLE_COLOR_RAMPS =
-{
-  white =
-  {
-    { 0,0,0 },
-    { 255,255,255 }
-  },
-
-  light_grey =
-  {
-    { 0,0,0 },
-    { 168,168,168 }
-  },
-
-  mid_grey =
-  {
-    { 0,0,0 },
-    { 128,128,128 }
-  },
-
-  dark_grey =
-  {
-    { 0,0,0 },
-    { 96,96,96 }
-  },
-
-  blue =
-  {
-    { 0,0,0 },
-    { 0,0,255 }
-  },
-
-  blue_white =
-  {
-    { 0,0,0 },
-    { 0,0,255 },
-    { 231,231,255 }
-  },
-
-  red =
-  {
-    { 60,0,0 },
-    { 255,0,0 }
-  },
-
-  red_white =
-  {
-    { 60,0,0 },
-    { 255,0,0 },
-    { 255,224,224 }
-  },
-
-  green =
-  {
-    { 8,23,8 },
-    { 62,147,62 },
-    { 115,255,115 }
-  },
-
-  mid_green =
-  {
-    { 8,23,8 },
-    { 62,147,62 }
-  },
-
-  orange_white =
-  {
-    {43,35,15},
-    {135,40,5},
-    {215,95,11},
-    {243,115,23},
-    {255,235,219}
-  },
-
-  pink =
-  {
-    {60,5,5},
-    {107,15,15},
-    {155,51,51},
-    {203,107,107},
-    {255,183,183}
-  },
-
-  light_brown =
-  {
-    {0,0,0},
-    {75,55,27},
-    {119,79,43},
-    {191,123,75},
-    {255,179,131},
-    {255,235,223}
-  },
-
-  brown_yellow =
-  {
-    {0,0,0},
-    {115,43,0},
-    {255,255,115}
-  }
-}
+{ }
 
 
 ------------------------------------------------------------------------
@@ -1662,7 +1159,7 @@ function Title_gen_space_scene()
   -- generate a night sky scene
   --
 
-  local style = Title_pick_style(TITLE_SPACE_STYLES, {})
+  local style = TITLE_SPACE_STYLE
 
   local density = rand.pick({40,70,100})
 
@@ -1706,7 +1203,7 @@ function Title_gen_space_scene()
 
 
   local function draw_big_star(mx, my, r)
-    local r2 = int(r * 1.2)
+    local r2 = math.round(r * 1.2)
 
     local DD = 0.09
 
@@ -1724,7 +1221,7 @@ function Title_gen_space_scene()
 
       if ity < 50 then goto continue end
       
-      ity = int(ity)
+      ity = math.round(ity)
 
       gui.title_prop("color", { ity, ity, ity })
       gui.title_draw_rect(x, y, 1, 1)
@@ -1790,9 +1287,9 @@ function Title_gen_space_scene()
     else
       gui.title_draw_rect(mx, my, 1, 1)
 
-      col[1] = int(col[1] * 0.6)
-      col[2] = int(col[2] * 0.6)
-      col[3] = int(col[3] * 0.6)
+      col[1] = math.round(col[1] * 0.6)
+      col[2] = math.round(col[2] * 0.6)
+      col[3] = math.round(col[3] * 0.6)
 
       gui.title_prop("color", col)
 
@@ -1893,7 +1390,7 @@ function Title_gen_ray_burst()
       Title_interp_color(color_list, ity, col)
 
       gui.title_prop("color", col)
-      gui.title_draw_line(mx, my, int(x1), int(y1), col)
+      gui.title_draw_line(mx, my, math.round(x1), math.round(y1), col)
     end
     end
   end
@@ -1909,78 +1406,35 @@ end
 
 
 function Title_gen_wall_scene()
-  local tex_list
+  local style = TITLE_MAIN_STYLE
 
-  local lamp_y
-  local lamp_sprite
-
-  if rand.odds(37) then
-    -- tech lamp
-    lamp_y = 154
-    lamp_sprite = "lamp2"
-
-    tex_list = { "airduct", "cement" }
-
-  else
-    if rand.odds(50) then
-      -- standing lamp
-      lamp_y = 130
-      lamp_sprite = "lamp1"
-    else
-      -- wall-mounted torch
-      lamp_y = 80
-      lamp_sprite = "lamp3"
-    end
-
-   -- Added new shit here
-
-    tex_list = { "block1", "block2", "bodiesc", "bricks08", "bricks09", "bronze5", "darkf03", "goth6", "goth10", "goth36", "goth50", "goth51",
-                 "graymet2", "helmet1", "helmet2", "helwal1", "rdrok1" }
-  end
-
-  -- draw the texture over the whole screen
-  local tex = rand.pick(tex_list)
-
-  gui.title_prop("texture", "data/bg/" .. tex .. ".tga")
+  -- draw the background over the whole screen
+  gui.title_prop("texture", GAME.title_screen_asset_dir .. "/" .. style.background .. ".tga")
 
   gui.title_draw_rect(0, 0, 320, 200)
 
-  -- decide # of lamps
-  local lamp_num = 2
-  if rand.odds(25) then lamp_num = 1 end
-  if rand.odds(25) then lamp_num = 3 end
+  if not style.props then return end
 
-  local lights = {}
-
-  for i = 1, lamp_num do
-    local x = 150
-
-    if lamp_num >= 2 and i == 1 then x = 35 end
-    if lamp_num >= 2 and i == lamp_num then x = 265 end
-
-    table.insert(lights, { x=x, y=lamp_y })
-  end
-
-  -- apply lighting effect
-  gui.title_prop("render_mode", "multiply")
+  -- apply lighting effect???
+  --[[gui.title_prop("render_mode", "multiply")
 
   local col = { 0,0,0 }
   
   local xf = 1.0
-  if lamp_num == 1 then xf = 0.7 end
-  if lamp_num == 3 then xf = 1.6 end
+  if #style.props == 1 then xf = 0.7 end
+  if #style.props == 3 then xf = 1.6 end
 
   for x = 0, 319 do
   for y = 0, 199  do
     local d = 9e9
-    for _,L in pairs(lights) do
-      d = math.min(d, geom.dist(L.x * xf, L.y, x * xf, y))
+    for _,prop in pairs(style.props) do
+      d = math.min(d, geom.dist(prop.x * xf, prop.y, x * xf, y))
     end
 
     local ity = math.exp(-d / 50) * 255  --- 255 - (d ^ 1.5) / 2.0,
     ity = math.clamp(0, ity, 255)
     
-    ity = int(ity)
+    ity = math.round(ity)
 
     col[1] = ity
     col[2] = ity
@@ -1989,11 +1443,11 @@ function Title_gen_wall_scene()
     gui.title_prop("color", col)
     gui.title_draw_rect(x, y, 1, 1)
   end
-  end
+  end]]--
 
-  -- draw each lamp
-  for _,L in pairs(lights) do
-    gui.title_load_image(L.x - 10, L.y - 16, "data/bg/" .. lamp_sprite .. ".tga")
+  -- draw each prop
+  for _,prop in pairs(style.props) do
+    gui.title_load_image(prop.x, prop.y, GAME.title_screen_asset_dir .. "/" .. prop.image .. ".tga")
   end
 end
 
@@ -2082,7 +1536,7 @@ function Title_gen_cave_scene()
         Title_interp_color(color_list, ity, col)
 
         gui.title_prop("color", col)
-        gui.title_draw_rect(int(x), int(y), 1, 1)
+        gui.title_draw_rect(math.round(x), math.round(y), 1, 1)
       end
       ::continue::
     end
@@ -2144,7 +1598,7 @@ function Title_gen_tunnel_scene()
     Title_interp_color(color_list, ity, col)
 
     gui.title_prop("color", col)
-    gui.title_draw_disc(int(mx - r*x_mul), int(my - r*y_mul), int(r*1.2), int(r))
+    gui.title_draw_disc(math.round(mx - r*x_mul), math.round(my - r*y_mul), math.round(r*1.2), math.round(r))
   end
 end
 
@@ -2264,7 +1718,7 @@ function Title_calc_max_thickness(fw, fh)
 
   fw = math.min(fw, fh)
 
-  fw = int(fw / 5 + 0.5)
+  fw = math.round(fw / 5 + 0.5)
 
   if fw < 1 then return 1 end
 
@@ -2361,24 +1815,10 @@ function Title_add_title()
     bb_main.h = bb_main.h + 5
   end
 
---[[
-  stderrf("bb_main =\n%s\n\n", table.tostr(bb_main))
-  stderrf("bb_sub  =\n%s\n\n", table.tostr(bb_sub))
-
-  gui.title_prop("color", "#070")
-  gui.title_draw_rect(bb_main.x, bb_main.y, bb_main.w, bb_main.h)
-
-  gui.title_prop("color", "#00f")
-  gui.title_draw_rect(bb_sub.x, bb_sub.y, bb_sub.w, bb_sub.h)
---]]
-
-
-  -- pick the styles to use
-  local style = Title_pick_style(TITLE_MAIN_STYLES, {})
+  local style = TITLE_MAIN_STYLE
 
   -- FIXME : this used for the smaller words, often make it different (and simpler)
   local mid_style = style.alt or style
-
 
   -- vertical sizing of the main title
   local line_h = bb_main.h / (main_lines * 2 + other_lines)
@@ -2410,14 +1850,8 @@ function Title_add_title()
 
   local h3 = line_h * 0.7
 
---[[
-stderrf("line_h = %1.1f\n", line_h)
-stderrf("font sizes: %d x %d  |  %d x %d  |  %d x %d\n", w1,h1, w2,h2, w3,h3)
---]]
-
 
   -- TODO: find a good naming scheme for these title parts
-
 
   -- decide geometry for major parts --
 
@@ -2509,7 +1943,7 @@ stderrf("font sizes: %d x %d  |  %d x %d  |  %d x %d\n", w1,h1, w2,h2, w3,h3)
     local mx = 160
     local my = bb_sub.y + bb_sub.h / 2
 
-    style = Title_pick_style(TITLE_SUB_STYLES, {})
+    style = TITLE_SUB_STYLE
 
     sub_T.fw = rand.sel(25, 13, 11)
     sub_T.fh = 13
@@ -2595,7 +2029,7 @@ function Title_make_interpic()
   gui.title_create(320, 200, "#000")
   gui.title_set_palette(GAME.RESOURCES.PALETTES.normal)
 
-  local style = Title_pick_style(TITLE_INTERMISSION_STYLES, {})
+  local style = TITLE_INTERMISSION_STYLE
 
   gui.title_draw_clouds(TITLE_SEED, style.hue1, style.hue2, style.hue3,
                         style.thresh or 0, style.power or 1,
@@ -2629,14 +2063,14 @@ end
 
 
 function Title_add_background()
-  if rand.odds(12) then
+  if TITLE_MAIN_STYLE.background then
+    Title_gen_wall_scene()
+  elseif rand.odds(12) then
     Title_gen_ray_burst()
   elseif rand.odds(12) then
     Title_gen_tunnel_scene()
   elseif rand.odds(6) then
     Title_gen_cave_scene()
-  elseif rand.odds(35) then
-    Title_gen_wall_scene()
   else
     Title_gen_space_scene()
   end
@@ -2669,10 +2103,20 @@ function Title_generate()
   assert(GAME.title)
   assert(GAME.RESOURCES.PALETTES)
   assert(GAME.RESOURCES.PALETTES.normal)
+  assert(GAME.TITLE_MAIN_STYLES)
+  assert(GAME.TITLE_SUB_STYLES)
+  assert(GAME.TITLE_SPACE_STYLES)
+  assert(GAME.TITLE_INTERMISSION_STYLES)
+  assert(GAME.TITLE_COLOR_RAMPS)
 
   Title_process_raw_fonts()
 
   TITLE_SEED = gui.random_int()
+  TITLE_MAIN_STYLE = Title_pick_style(GAME.TITLE_MAIN_STYLES, {})
+  TITLE_SUB_STYLE = Title_pick_style(GAME.TITLE_SUB_STYLES, {})
+  TITLE_SPACE_STYLE = Title_pick_style(GAME.TITLE_SPACE_STYLES, {})
+  TITLE_COLOR_RAMPS = GAME.TITLE_COLOR_RAMPS
+  TITLE_INTERMISSION_STYLE = Title_pick_style(GAME.TITLE_INTERMISSION_STYLES, {})
 
   Title_make_interpic()
   Title_make_titlepic()

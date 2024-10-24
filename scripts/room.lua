@@ -2285,7 +2285,7 @@ function Room_choose_size(LEVEL, R, not_big)
   if not R.is_start
   or not R.is_secret then
     if LEVEL.area_multiplier then
-      R.floor_limit = int(R.floor_limit * LEVEL.area_multiplier)
+      R.floor_limit = math.round(R.floor_limit * LEVEL.area_multiplier)
     end
     if LEVEL.has_absurd_new_area_rules then
       R.floor_limit = R.floor_limit * 4
@@ -2316,8 +2316,8 @@ function Room_choose_size(LEVEL, R, not_big)
   elseif not LEVEL.is_procedural_gotcha then
 
     if R.is_start then
-      R.size_limit = int(R.size_limit / 2)
-      R.floor_limit = int(R.floor_limit / 2)
+      R.size_limit = math.round(R.size_limit / 2)
+      R.floor_limit = math.round(R.floor_limit / 2)
       R.size_limit = math.clamp(rand.pick({4,8,12,16}),R.size_limit,EXTREME_H)
     end
 
@@ -2333,8 +2333,8 @@ function Room_choose_size(LEVEL, R, not_big)
   -- tame teleporter trunks and hallway exits
   if (not R.grow_parent and not R.is_start)
   or (R.grow_parent and R.grow_parent.is_hallway) then
-    R.size_limit = int(R.size_limit / 5)
-    R.floor_limit = int(R.floor_limit / 2)
+    R.size_limit = math.round(R.size_limit / 5)
+    R.floor_limit = math.round(R.floor_limit / 2)
     R.is_big = false
   end
 end

@@ -54,7 +54,6 @@
     prebuilt    -- true if level will is prebuilt (not generated)
 
     is_procedural_gotcha -- true if this level is a special Procedural Gotcha arena
-    is_linear   -- true if this level is linear, as in no branching rooms
     is_nature   -- true if this level is entirely parks and caves
 
     has_streets -- true if this level contains Street Mode streets
@@ -197,7 +196,7 @@ function Level_determine_map_size(LEV)
       end
     end
 
-    ob_size = math.clamp(low, int(rand.irange(low, high) * result_skew), high)
+    ob_size = math.clamp(low, math.round(rand.irange(low, high) * result_skew), high)
   end
 
   if ob_size == gui.gettext("Episodic") or 
@@ -224,7 +223,7 @@ function Level_determine_map_size(LEV)
     local def_large = PARAM.float_level_upper_bound - def_small or 42
 
     -- this basically ramps up
-    W = int(def_small + along * def_large)
+    W = math.round(def_small + along * def_large)
   else
 
     -- Single Size --
@@ -245,7 +244,7 @@ function Level_determine_map_size(LEV)
 
   gui.printf("Initial size for " .. LEV.name .. ": " .. W .. "\n")
 
-  local H = 1 + int(W * 0.8)
+  local H = 1 + math.round(W * 0.8)
 
   return W, H
 end
@@ -1201,7 +1200,7 @@ function Episode_plan_weapons()
     end
 
     quota = quota * (PARAM.weapon_factor or 1)
-    quota = int(quota)
+    quota = math.round(quota)
 
     if quota < 1 then quota = 1 end
 
@@ -1353,7 +1352,7 @@ function Episode_plan_weapons()
 
       if rand.odds(30) then lev_idx = lev_idx + 1 end
 
-      lev_idx = int(lev_idx * rand.pick({ 1.0, 1.3, 1.6 }))
+      lev_idx = math.round(lev_idx * rand.pick({ 1.0, 1.3, 1.6 }))
     end
 
     -- ensure it is valid
@@ -1516,7 +1515,7 @@ function Episode_plan_weapons()
   local function reduce_weapon_gaps(level_list)
     local max_gap = 2
 
-    max_gap = max_gap + int(#level_list / 20)
+    max_gap = max_gap + math.round(#level_list / 20)
 
     if OB_CONFIG.weapons == "very_late" then max_gap = max_gap + 2 end
     if OB_CONFIG.weapons == "later"     then max_gap = max_gap + 1 end
@@ -2329,14 +2328,14 @@ function Level_choose_darkness(LEVEL)
     --prob = style_sel("darkness", 0, 10, 30, 90) --Original
   end
 
-  LEVEL.sky_light  = (int)(rand.pick(SKY_LIGHT_NORMAL) * PARAM.float_overall_lighting_mult)
+  LEVEL.sky_light  = math.round(rand.pick(SKY_LIGHT_NORMAL) * PARAM.float_overall_lighting_mult)
   LEVEL.sky_shadow = 32
 
   if rand.odds(prob) then
     gui.printf("Level is dark.\n")
 
     LEVEL.is_dark = true
-    LEVEL.sky_light = (int)(rand.pick(SKY_LIGHT_DARK) * PARAM.float_overall_lighting_mult)
+    LEVEL.sky_light = math.round(rand.pick(SKY_LIGHT_DARK) * PARAM.float_overall_lighting_mult)
     LEVEL.sky_shadow = 32
   end
 
@@ -2702,7 +2701,7 @@ function Level_make_level(LEV)
 
   if coverage_target == 0 then coverage_target = LEVEL.min_coverage end
 
-  if not LEVEL.is_linear and not SHAPE_GRAMMAR.ignore_coverage  then
+  if not SHAPE_GRAMMAR.ignore_coverage then
     if LEVEL.cur_coverage < coverage_target then
       res = "runt"
     end

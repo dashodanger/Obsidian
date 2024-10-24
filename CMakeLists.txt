@@ -1,12 +1,5 @@
 cmake_minimum_required(VERSION 3.12..3.20)
 
-if(NOT CONSOLE_ONLY)
-  add_subdirectory(libraries/fltk EXCLUDE_FROM_ALL)
-endif()
-add_subdirectory(libraries/miniz EXCLUDE_FROM_ALL)
-add_subdirectory(libraries/physfs EXCLUDE_FROM_ALL)
-add_subdirectory(libraries/steve EXCLUDE_FROM_ALL)
-
 project(
   obsidian
   LANGUAGES C CXX
@@ -21,11 +14,7 @@ add_compile_definitions(OBSIDIAN_TIMESTAMP="${BUILD_TIMESTAMP}")
 if(CONSOLE_ONLY)
   add_compile_definitions(OBSIDIAN_CONSOLE_ONLY)
 endif()
-if(WIN32)
-  add_compile_definitions(WIN32_LEAN_AND_MEAN)
-  add_compile_definitions(UNICODE)
-  add_compile_definitions(_UNICODE)
-elseif(NOT APPLE AND NOT CONSOLE_ONLY)
+if(NOT WIN32 AND NOT APPLE AND NOT CONSOLE_ONLY)
   add_compile_definitions(USE_XFT)
 endif()
 if(MSVC)
@@ -51,6 +40,16 @@ endif()
 if(${CMAKE_SYSTEM} MATCHES "OpenBSD")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -I /usr/X11R6/include")
 endif()
+
+if(UNIX)
+  if(NOT CONSOLE_ONLY
+     AND NOT APPLE
+  )
+    find_package(Fontconfig REQUIRED)
+  endif()
+endif()
+
+add_subdirectory(libraries)
 
 set(OBSIDIAN_SOURCE_FILES
     source/bsp_level.cc
@@ -126,27 +125,6 @@ add_executable(
   ${OBSIDIAN_SOURCE_FILES}
 )
 
-target_include_directories(obsidian SYSTEM PRIVATE libraries/fastPRNG)
-if(NOT CONSOLE_ONLY)
-  target_include_directories(obsidian SYSTEM PRIVATE libraries/fltk)
-  target_include_directories(
-    obsidian SYSTEM PRIVATE "${PROJECT_BINARY_DIR}/libraries/fltk"
-  ) # Hack for FLTK 1.4 (for now)
-endif()
-target_include_directories(obsidian SYSTEM PRIVATE libraries/gif-h)
-target_include_directories(obsidian SYSTEM PRIVATE libraries/minilua)
-target_include_directories(obsidian SYSTEM PRIVATE libraries/miniz)
-target_include_directories(obsidian SYSTEM PRIVATE libraries/physfs/src)
-target_include_directories(obsidian SYSTEM PRIVATE libraries/steve/src)
-
-if(UNIX)
-  if(NOT CONSOLE_ONLY
-     AND NOT APPLE
-  )
-    find_package(Fontconfig REQUIRED)
-  endif()
-endif()
-
 # Copies executables to local install directory after build
 add_custom_command(
   TARGET obsidian
@@ -160,8 +138,10 @@ if(UNIX)
     if(NOT CONSOLE_ONLY)
       target_link_libraries(
         obsidian
-        PRIVATE fltk
+        PRIVATE fastPRNG
+                fltk
                 fltk_images
+                minilua
                 miniz
                 physfs-static
                 steve
@@ -172,30 +152,34 @@ if(UNIX)
       )
     else()
       target_link_libraries(
-        obsidian PRIVATE miniz physfs-static steve
+        obsidian PRIVATE fastPRNG minilua miniz physfs-static steve
       )
     endif()
   elseif(${CMAKE_SYSTEM} MATCHES "BSD")
     if(NOT CONSOLE_ONLY)
       target_link_libraries(
         obsidian
-        PRIVATE fltk
+        PRIVATE fastPRNG
+                fltk
                 fltk_images
+                minilua
                 miniz
                 physfs-static
                 steve
       )
     else()
       target_link_libraries(
-        obsidian PRIVATE miniz physfs-static steve
+        obsidian PRIVATE fastPRNG minilua miniz physfs-static steve
       )
     endif()
   else()
     if(NOT CONSOLE_ONLY)
       target_link_libraries(
         obsidian
-        PRIVATE fltk
+        PRIVATE fastPRNG
+                fltk
                 fltk_images
+                minilua
                 miniz
                 physfs-static
                 fontconfig
@@ -205,7 +189,9 @@ if(UNIX)
     else()
       target_link_libraries(
         obsidian
-        PRIVATE miniz
+        PRIVATE fastPRNG
+                minilua
+                miniz
                 physfs-static
                 pthread
                 steve
@@ -216,15 +202,17 @@ else()
   if(NOT CONSOLE_ONLY)
     target_link_libraries(
       obsidian
-      PRIVATE fltk
+      PRIVATE fastPRNG
+              fltk
               fltk_images
+              minilua
               miniz
               physfs-static
               steve
     )
   else()
     target_link_libraries(
-      obsidian PRIVATE miniz physfs-static steve
+      obsidian PRIVATE fastPRNG minilua miniz physfs-static steve
     )
   endif()
 endif()

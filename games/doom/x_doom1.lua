@@ -5302,12 +5302,6 @@ function ULTDOOM.get_levels()
       end
   
       if not LEV.prebuilt then
-        if PARAM.float_linear_mode then
-          if rand.odds(PARAM.float_linear_mode) then
-            LEV.is_linear = true
-          end
-        end
-  
         -- nature mode
         if PARAM.float_nature_mode then
           if rand.odds(PARAM.float_nature_mode) then
@@ -10601,8 +10595,8 @@ function ULTDOOM.factory_setup()
         error("Prefab not a multiple of four: " .. tostring(P.name))
       end
 
-      P.long = int(f_long / 4)
-      P.deep = int(f_deep / 4)
+      P.long = math.round(f_long / 4)
+      P.deep = math.round(f_deep / 4)
     else
       error("Unsupported scale " .. tostring(P.scale) .. " in prefab: " .. tostring(P.name))
     end

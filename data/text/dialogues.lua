@@ -25,10 +25,6 @@ _("Obsidian Cookbook Recipe for Doom #666 - [REDACTED]\n\nCreate a map pack of [
 
 --
 
-_("Did you know?\n\nIf you don't feel like backtracking or navigating levels with multiple deep paths and potential dead ends, Linear Mode will create levels that just go from point A to point B!"),
-
---
-
 _("Did you know?\n\nNature Mode generates levels that are entirely Parks and/or Caves. Who said you needed to go outside to experience outside?"),
 
 --

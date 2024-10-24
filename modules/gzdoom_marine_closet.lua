@@ -1579,7 +1579,7 @@ OB_MODULES["gzdoom_marine_closets"] =
       max = 10,
       increment = 1,
       default = 1,
-      tooltip = _("Sets least amount of closets that can spawn per map."),
+      tooltip = _("Sets lowest number of closets that can spawn per map."),
       randomize_group = "monsters"
     },
 
@@ -1593,7 +1593,7 @@ OB_MODULES["gzdoom_marine_closets"] =
       max = 10,
       increment = 1,
       default = 2,
-      tooltip = _("Sets most amount of closets that can spawn per map."),
+      tooltip = _("Sets greatest number of closets that can spawn per map."),
       randomize_group = "monsters"
     },
 
@@ -1619,7 +1619,7 @@ OB_MODULES["gzdoom_marine_closets"] =
       max = 10,
       increment = 1,
       default = 1,
-      tooltip = _("Sets least amount of marines that can spawn per closet."),
+      tooltip = _("Sets lowest number of marines that can spawn per closet."),
       randomize_group = "monsters"
     },
 
@@ -1633,7 +1633,7 @@ OB_MODULES["gzdoom_marine_closets"] =
       max = 10,
       increment = 1,
       default = 5,
-      tooltip = _("Sets most amount of marines that can spawn per closet."),
+      tooltip = _("Sets greatest number of marines that can spawn per closet."),
       randomize_group = "monsters"
     },
 
@@ -1765,7 +1765,7 @@ OB_MODULES["gzdoom_marine_closets"] =
       priority = 83,
       choices = MARINE_CLOSET_TUNE.QUANTITY,
       default = "default",
-      tooltip = _("Influences amount of monsters in rooms with a marine closet."),
+      tooltip = _("Influences number of monsters in rooms with a marine closet."),
       randomize_group = "monsters"
     },
 

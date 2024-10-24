@@ -1,0 +1,179 @@
+===========================================================================================
+BSD 2-Clause License
+===========================================================================================
+
+fastPRNG - Copyright (c) 2020 Michele Morrone
+
+===========================================================================================
+BSD 3-Clause License
+===========================================================================================
+
+3270 Font - Copyright (c) 2011-2017, Ricardo Banffy.
+				Copyright (c) 1993-2011, Paul Mattes.
+				Copyright (c) 2004-2005, Don Russell.
+				Copyright (c) 2004, Dick Altenbern.
+				Copyright (c) 1990, Jeff Sparkes.
+				Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA 30332.
+
+Blasphemer (Assorted graphic assets) - Copyright (c) 2021 Contributors to the Blasphemer project
+
+Freedoom (Assorted graphic assets) - Copyright (c) 2001-2019 Contributors to the Freedoom project
+
+===========================================================================================
+CC0 1.0 Universal License
+===========================================================================================
+
+Oblige v5-v7 Prefab WAD files and colocated Lua definitions - Andrew Apted
+
+"Wind Arctic Cold" sound - cobratronik via Freesound.org
+
+"Dark Cave Drone" sound - Kinoton via Freesound.org
+
+"Depths of Hell" sound - Elan Hickler via Freesound.org
+
+"Building Rooftops Ambient" sound - batman6661 via Freesound.org
+
+"ZOOM0077" sound - marjan83 via Freesound.org
+
+"Empty Office Room Tone" sound - Rich Wise via Freesound.org
+
+"Noisy Bathroom Exhaust Fan" sound - deleted_user_7146007 via Freesound.org
+
+"Vending Machines - Drinks Machine Hum" sound - portwain via Freesound.org
+
+"Indoor Nice Fish Tank Ambiance" sound - 7778 via Freesound.org
+
+"Mechanical Conveyor Belt Sound Clip" sound - Cagan Celik
+
+"The Bloodletter" song - Chad Wolfe
+
+"Sand - Flowing, sand sea digital" sound - Vrymaa via Freesound.org
+
+"Car Radio Static" sound - TravieDoodle via Freesound.org
+
+"Demon Chant (Latin)" sound - cycro via Freesound.org
+
+===========================================================================================
+CC-BY-3.0 Unported License
+===========================================================================================
+
+"Haunting Ambiance" sound - Copyright (c) 2015 OllieOllie via Freesound.org
+
+"Sci-Fi Laboratory Ambience" sound - Copyright (c) 2013 Iwan ‘qubodup’ Gabovitch
+				with sounds by wolick, swiftoid, Diboz via Freesound.org
+
+"Water Down Gutter 3" sound - Copyright (c) Mike Koenig via SoundBible.com
+
+"Liquid" sound - Copyright (c) Caroline Ford
+
+===========================================================================================
+CC-BY-NC-3.0 Unported License
+===========================================================================================
+
+"Water Drain" sound - Copyright (c) 2018 chris.t via Freesound.org
+
+===========================================================================================
+CC-BY-4.0 International License
+===========================================================================================
+
+ObAddon and OBSIDIAN Prefab WAD files and colocated Lua definitions - Copyright (c) 2018-2024 The OBSIDIAN Team
+
+"Wide Stereo Outdoor Ambience" sound - Copyright (c) 2014 Kasper August Topp via Freesound.org
+
+"Machine Hum 1" sound - Copyright (c) 2011 duckduckpony via Freesound.org
+
+"Fish Tank Aquarium Water Filter Natural Sounds" - Copyright (c) 2017 DudeAwesome via Freesound.org
+
+"Spark 01" sound - Copyright (c) 2008 chipfork71 via Freesound.org
+
+"Waterfall Sound Effect HQ" - Copyright (c) 2016 Virtual Ambiance
+
+===========================================================================================
+CC-SAMPLING+-1.0 Generic License
+===========================================================================================
+
+"Background Noise" sound - Copyright Stomp via SoundBible.com
+
+"Fan Noise" sound - Copyright (c) 2020 calivintage via Freesound.org
+
+===========================================================================================
+FLTK License
+===========================================================================================
+
+FLTK - Copyright (c) 1998-2024 Bill Spitzak and others
+
+===========================================================================================
+GPL2 License
+===========================================================================================
+
+AJBSP - Copyright (c) 2000-2023 Andrew Apted, et al
+				Copyright (c) 1994-1998 Colin Reed
+				Copyright (c) 1997-1998 Lee Killough
+
+AJ-Polygonator - Copyright (c) 2021-2024 The OBSIDIAN Team
+				Copyright (c) 2000-2013 Andrew Apted
+
+Filename Formatter - Copyright (c) 2021-2024 Phytolizer
+
+OBSIDIAN/OBLIGE Level Maker - Copyright (c) 2021-2024 The OBSIDIAN Team
+				Copyright (c) 2006-2017 Andrew Apted
+
+SLUMP - Copyright (c) 2021-2024 The OBSIDIAN Team
+				Copyright (c) 2005-2007 Sam Trenholme
+				Copyright (c) 2000 David Chess
+
+===========================================================================================
+MIT License
+===========================================================================================
+
+minilua - Copyright (c) 2020-2023 Eduardo Bart (https://github.com/edubart).
+				Copyright (c) 1994–2019 Lua.org, PUC-Rio.
+
+miniz - Copyright (c) 2013-2014 RAD Game Tools and Valve Software
+				Copyright (c) 2010-2014 Rich Geldreich and Tenacious Software LLC
+
+
+===========================================================================================
+SIL Open Font License
+===========================================================================================
+
+Avenixel - Copyright (c) 2020 Gabriel Sammartino (https://www.behance.net/webcreativity | contact@gabrielsammartino.com),
+										with Reserved Font Name Avenixel.
+
+Drama Sans - Copyright (c) 2018 Drama Sans (dramasans@outlook.com),
+										with Reserved Font Name "Drama Sans".
+
+FPD Pressure - Copyright (c) 2020 Felix Summ
+
+Kalam - Copyright (c) 2014 Indian Type Foundry (info@indiantypefoundry.com)
+
+MiniSmallCaps (renamed to "Sam I Am") - Copyright (c) 2019 Sam Trenholme
+
+Source Sans Pro (renamed to "Sauce") - Copyright 2010, 2012, 2014 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name ‘Source’
+
+Teko - Copyright (c) 2014, Indian Type Foundry (info@indiantypefoundry.com)
+
+The Neue Black (renamed to "New Black") - Copyright (c) 2019-2021, Tre Seals <beheard@vocaltype.co>, Micah Rich <micah@micahrich.com>, The League of Moveable Type Limited Liability Company <founders@theleagueofmoveabletype.com>
+with Reserved Font Name: "The Neue Black"
+
+Workbench - Copyright (c) 2019, Jens Kutilek (www.kutilek.de)
+
+===========================================================================================
+Public Domain
+===========================================================================================
+
+ppmforge - John Walker
+
+"Rainforest Ambiance" sound - GlorySunz via SoundBible.com
+
+===========================================================================================
+The Unlicense
+===========================================================================================
+
+steve - Lou Catonnet
+
+===========================================================================================
+zlib License
+===========================================================================================
+
+PHYSFS - Copyright (c) 2001-2022 Ryan C. Gordon <icculus@icculus.org> and others

@@ -232,11 +232,11 @@ OB_MODULES["ui_arch"] =
 
     { name="outdoors",     
     label=_("Outdoors"),   choices=STYLE_CHOICES, priority = 78, randomize_group="architecture", 
-    tooltip = _("Control the amount of outdoor areas.")
+    tooltip = _("Control the number of outdoor areas.")
     },
     { name="caves",        
     label=_("Caves"),      choices=STYLE_CHOICES, priority = 77, randomize_group="architecture", 
-    tooltip = _("Control the amount of caves.") 
+    tooltip = _("Control the number of caves.") 
     },
     { name="liquids",      
     label=_("Liquids"),    choices=STYLE_CHOICES, priority = 76, randomize_group="architecture", 
@@ -244,11 +244,11 @@ OB_MODULES["ui_arch"] =
     },
     { name="hallways",     
     label=_("Hallways"),   choices=STYLE_CHOICES, priority = 75, randomize_group="architecture", 
-    tooltip = _("Control the amount of hallways.")
+    tooltip = _("Control the number of hallways.")
     },
     { name="teleporters",  
     label=_("Teleports"),  choices=STYLE_CHOICES, priority = 74, randomize_group="architecture", 
-    tooltip = _("Control the amount of teleporters.") 
+    tooltip = _("Control the number of teleporters.") 
     },
     {
       name="bool_allow_teleporter_emergency_breaks",

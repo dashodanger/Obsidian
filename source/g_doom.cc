@@ -1380,10 +1380,6 @@ bool Doom::game_interface_c::Start(const char *preset)
         return false;
     }
 
-    gif_filename = filename;
-
-    ReplaceExtension(gif_filename, ".gif");
-
     if (file_per_map)
     {
         filename = PathAppend(home_dir, "temp/resources.wad");

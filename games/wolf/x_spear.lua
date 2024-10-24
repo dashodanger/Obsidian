@@ -306,7 +306,7 @@ function SPEAR.get_factory_levels(episode)
         end
       end
   
-      ob_size = math.clamp(low, int(rand.irange(low, high) * result_skew), high)
+      ob_size = math.clamp(low, math.round(rand.irange(low, high) * result_skew), high)
       goto foundsize
     end
   
@@ -344,7 +344,7 @@ function SPEAR.get_factory_levels(episode)
       local def_large = PARAM.float_level_upper_bound_wolf_3d - def_small or 42
   
       -- this basically ramps up
-      ob_size = int(def_small + along * def_large)
+      ob_size = math.round(def_small + along * def_large)
     end
 
     ::foundsize::

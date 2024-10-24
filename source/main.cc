@@ -160,7 +160,6 @@ bool        password_mode          = false;
 bool        mature_word_lists      = false;
 bool        did_specify_seed       = false;
 
-std::string gif_filename = "gif_output.gif";
 std::string default_output_path;
 
 std::string string_seed;
@@ -1038,7 +1037,7 @@ void Main_SetSeed()
 static void Module_Defaults()
 {
     ob_set_mod_option("sky_generator", "self", "1");
-    ob_set_mod_option("armaetus_epic_textures", "self", "1");
+    //ob_set_mod_option("armaetus_epic_textures", "self", "1");
     ob_set_mod_option("music_swapper", "self", "1");
     ob_set_mod_option("compress_output", "self", "1");
 }

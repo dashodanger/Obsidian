@@ -456,7 +456,6 @@ OB_MODULES["doom_mon_control_id24"] =
   game = "doomish",
   engine = "idtech_1",
   port = "!limit_enforcing",
-  port2 = "!edge",
   where = "experimental",
 
   hooks =

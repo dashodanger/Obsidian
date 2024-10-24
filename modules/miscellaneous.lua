@@ -243,21 +243,6 @@ OB_MODULES["misc"] =
     },
 
     {
-      name = "float_linear_mode",
-      label = _("Linear Mode"),
-      valuator = "slider",
-      units = _("% Chance Per Level"),
-      min = 0,
-      max = 100,
-      increment = 1,
-      default = 0,
-      tooltip = _("Creates linear levels, where rooms are connected along a linear layout from start to exit."),
-      longtip = _("Due to the nature of linear levels, you may encounter teleports even if you have teleports off. This is necessary in order for linear levels not to prematuraly terminate and therefore become stunted i.e. only have 2-5 rooms."),
-      randomize_group="architecture",
-      priority = 98
-    },
-
-    {
       name = "float_nature_mode",
       label = _("Nature Mode"),
       valuator = "slider",
@@ -308,7 +293,7 @@ OB_MODULES["misc"] =
       name="room_area_multiplier", label=_("Area Count Multiplier"),
       choices = MISC_STUFF.AREA_COUNT_MULTIPLIER_CHOICES,
       default = "mixed",
-      tooltip = _("Alters the amount of areas in a room. Influences the amount rooms are divided into different elevations or simply different ceilings if a level has no steepness.\n\nVanilla: No area quantity multipliers.\n\nMix It Up: All multiplier ranges are randomly used with highest and lowest multipliers being rarest."),
+      tooltip = _("Alters the number of areas in a room. Influences the amount rooms are divided into different elevations or simply different ceilings if a level has no steepness.\n\nVanilla: No area quantity multipliers.\n\nMix It Up: All multiplier ranges are randomly used with highest and lowest multipliers being rarest."),
       priority = 93,
       randomize_group="architecture",
     },
@@ -355,7 +340,7 @@ OB_MODULES["misc"] =
     },
     { name="sub_rooms", 
       label=_("Sub Rooms"), 
-      tooltip=_("Controls amount of small sub rooms. Actually controls the degree at which ungrown rooms are left instead of culled."), 
+      tooltip=_("Controls number of small sub rooms. Actually controls the degree at which ungrown rooms are left instead of culled."), 
       choices=STYLE_CHOICES, priority = 87.5, randomize_group="architecture",
       
     },
@@ -373,7 +358,7 @@ OB_MODULES["misc"] =
 
     { name="parks",       
     label=_("Parks"), 
-    tooltip = _("Control the amount of parks."), 
+    tooltip = _("Control the number of parks."), 
     choices=STYLE_CHOICES, priority = 86, randomize_group="architecture", },
     {
       name="natural_parks",
@@ -397,7 +382,7 @@ OB_MODULES["misc"] =
 
     { name="windows",     
     label=_("Windows"), 
-    tooltip = _("Control the amount of windows."), 
+    tooltip = _("Control the number of windows."), 
     choices=STYLE_CHOICES, priority = 83, randomize_group="architecture", },
     {
       name="passable_windows",
@@ -454,7 +439,7 @@ OB_MODULES["misc"] =
     { name="scenics",     
     label=_("Scenics"),          
     choices=STYLE_CHOICES,
-    tooltip = _("Controls the amount of fancy scenics visible at room bordering the maps."),
+    tooltip = _("Controls the number of fancy scenics visible at room bordering the maps."),
     priority = 76,
     gap = 1,
     randomize_group="architecture",
@@ -511,11 +496,11 @@ OB_MODULES["misc"] =
 
     { name="doors",       
     label=_("Doors"), 
-    tooltip = _("Control the amount of doors."), 
+    tooltip = _("Control the number of doors."), 
     choices=STYLE_CHOICES, priority = 69, randomize_group="architecture", },
     { name="keys",        
     label=_("Keyed Doors"), 
-    tooltip = _("Control the amount of keyed doors."), 
+    tooltip = _("Control the number of keyed doors."), 
     choices=STYLE_CHOICES, priority = 68, randomize_group="architecture", },
     { name="trikeys",     
     label=_("Triple-Keyed Doors"),          

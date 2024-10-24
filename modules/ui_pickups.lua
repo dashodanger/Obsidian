@@ -86,7 +86,7 @@ OB_MODULES["ui_pickups"] =
     { name="health",     
     label=_("Health"),    
     choices=UI_PICKUPS.HEALTH_CHOICES, randomize_group="pickups", 
-    tooltip = _("Control the amount of health items.") 
+    tooltip = _("Control the number of health items.") 
     },
 
     { name="ammo",       
@@ -98,19 +98,19 @@ OB_MODULES["ui_pickups"] =
     { name="weapons",    
       label=_("Weapons"),   
       choices=UI_PICKUPS.WEAPON_CHOICES, randomize_group="pickups", 
-      tooltip = _("Control the amount of weapons.") 
+      tooltip = _("Control the number of weapons.") 
     },
 
     { name="items",      
       label=_("Items"),     
       choices=UI_PICKUPS.ITEM_CHOICES, randomize_group="pickups", 
-      tooltip = _("Control the amount of armor and miscellaneous items.")
+      tooltip = _("Control the number of armor and miscellaneous items.")
     },
 
     { name="secrets",    
       label=_("Secrets"),   
       choices=STYLE_CHOICES, randomize_group="pickups", 
-      tooltip = _("Control the amount of secrets.")
+      tooltip = _("Control the number of secrets.")
     },
 
     { name="secrets_bonus",

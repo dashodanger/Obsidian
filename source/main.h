@@ -167,8 +167,6 @@ extern std::string default_output_path;
 
 extern std::string Resolve_DefaultOutputPath();
 
-extern std::string gif_filename;
-
 extern std::string string_seed;
 extern std::string selected_lang;
 
