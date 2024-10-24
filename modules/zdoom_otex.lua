@@ -518,6 +518,24 @@ OTEX_SPECIAL_RESOURCES =
   }
 }
 
+OTEX_GLOWING_FLATS =
+[[
+    OBLODA01
+    OGOOPY01
+    OICYWA01
+    OLAVAA01
+    OLAVAA02
+    OLAVAB01
+    OLAVAC01
+    OLAVAD01
+    OLAVAE01
+    OLAVAF01
+    ONUKEA01
+    OSLUDG01
+    OPOOPY01
+    OTAR__01
+    OWATER01
+]]
 
 function OTEX_PROC_MODULE.setup(self)
   PARAM.OTEX_module_activated = true
@@ -838,30 +856,10 @@ end
 
 
 function OTEX_PROC_MODULE.all_done()
-  SCRIPTS.gldefs = ScriptMan_combine_script(SCRIPTS.gldefs, 
-[[
-Glow
-{
-  Flats
-  {
-    OBLODA01
-    OGOOPY01
-    OICYWA01
-    OLAVAA01
-    OLAVAA02
-    OLAVAB01
-    OLAVAC01
-    OLAVAD01
-    OLAVAE01
-    OLAVAF01
-    ONUKEA01
-    OSLUDG01
-    OPOOPY01
-    OTAR__01
-    OWATER01
-  }
-}
-]]
+  string.gsub(
+    GAME.RESOURCES.GLOWING_FLATS_GLDEFS,
+    "GLOWFLTS",
+    OTEX_GLOWING_FLATS
   )
 end
 
