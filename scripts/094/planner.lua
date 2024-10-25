@@ -354,7 +354,7 @@ function std_decide_quests(Level, QUEST_TAB, LEN_PROBS)
       end
     end
     
-    ob_size = math.clamp(low, math.round(rand.irange(low, high) * result_skew), high)
+    ob_size = math.clamp(low, math.floor(rand.irange(low, high) * result_skew), high)
     goto foundsize
   end
 
@@ -392,7 +392,7 @@ function std_decide_quests(Level, QUEST_TAB, LEN_PROBS)
     local def_large = PARAM.float_level_upper_bound - def_small or 42
 
     -- this basically ramps up
-    ob_size = math.round(def_small + along * def_large)
+    ob_size = math.floor(def_small + along * def_large)
   end
 
   ::foundsize::
@@ -1434,8 +1434,8 @@ c.along, Q.level, Q.sub_level, c.room_type.name)
 
     -- add very first room somewhere in lower-left quarter of map
     if not Q.parent and Q.level == 1 then
-      local x = rand.irange(1, math.round(PLAN.w / 2))
-      local y = rand.irange(1, math.round(PLAN.h / 2))
+      local x = rand.irange(1, math.floor(PLAN.w / 2))
+      local y = rand.irange(1, math.floor(PLAN.h / 2))
 
       local c = create_cell(x, y, Q, 1, Q.combo)
 
@@ -1459,9 +1459,9 @@ c.along, Q.level, Q.sub_level, c.room_type.name)
     local want_len = Q.want_len
     if OB_CONFIG.game ~= "hexen" then
       if want_len >= 4 and Q.ob_size < 25 then
-        want_len = math.round(want_len * 0.85 - gui.random())
+        want_len = math.floor(want_len * 0.85 - gui.random())
       elseif Q.ob_size > 50 then
-        want_len = math.round(want_len * 1.35 + gui.random())
+        want_len = math.floor(want_len * 1.35 + gui.random())
       end
     end
 
@@ -2041,7 +2041,7 @@ gui.debugf("qlist now:\n%s\n\n", table.tostr(qlist,2))
 --T2 = GAME.FACTORY.themes["CAVE"]
 
     -- choose change-over point
-    local mid_q = math.round(#PLAN.quests / 2 + gui.random())
+    local mid_q = math.floor(#PLAN.quests / 2 + gui.random())
 
     if #PLAN.quests >= 4 then
       mid_q = mid_q + (rand.index_by_probs { 1,3,1 }) - 2

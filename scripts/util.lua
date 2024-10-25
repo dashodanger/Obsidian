@@ -201,7 +201,7 @@ function module_param_up(module)
             if opt.increment < 1 then
               PARAM[opt.name] = value
             else
-              PARAM[opt.name] = math.round(value)
+              PARAM[opt.name] = math.floor(value)
             end
           end
         elseif opt.valuator == "button" then
@@ -348,7 +348,7 @@ end
 function table.reverse(t)
   if not t then return nil end
 
-  for x = 1, math.round(#t / 2) do
+  for x = 1, math.floor(#t / 2) do
     local y = #t - (x-1)
     -- swap 'em
     t[x], t[y] = t[y], t[x]
@@ -710,7 +710,7 @@ function rand.irange(L,H)
 end
 
 function rand.int(val)
-  return math.round(val + gui.random())
+  return math.floor(val + gui.random())
 end
 
 function rand.skew(mid, dist)
@@ -848,7 +848,7 @@ end
 -- where all the index values start at 1
 function div_mod(x, mod)
   x = x - 1
-  return 1 + math.round(x / mod), 1 + (x % mod)
+  return 1 + math.floor(x / mod), 1 + (x % mod)
 end
 
 function dir_to_delta(dir)
@@ -1247,7 +1247,7 @@ end
 
 
 function geom.box_mid(x1,y1, x2,y2)
-  return math.round((x1 + x2) / 2), math.round((y1 + y2) / 2)
+  return math.floor((x1 + x2) / 2), math.floor((y1 + y2) / 2)
 end
 
 function geom.box_size(x1,y1, x2,y2)

@@ -112,7 +112,7 @@ function rectangle_to_spots(c, x,y, x2,y2)
   local spots = {}
 
   local function carve_it_up(x,y, w,h)
-    local w2, h2 = math.round(w/2), math.round(h/2)
+    local w2, h2 = math.floor(w/2), math.floor(h/2)
     
     if h > 2 then
       carve_it_up(x, y, w, h2)
@@ -525,7 +525,7 @@ function simulate_battle(HM, mon_set, quest)
       assert(info)
 
       remain_shots = 1 + gui.random() + gui.random()
-      remain_shots = math.round(remain_shots * info.rate)
+      remain_shots = math.floor(remain_shots * info.rate)
 
       if remain_shots < 1 then remain_shots = 1 end
 
@@ -939,7 +939,7 @@ function distribute_pickups(c, HM, backtrack)
     local idx = rand.index_by_probs(probs)
     local th_info = infos[idx]
 
-    local count = 1 + math.round(R / th_info.give)
+    local count = 1 + math.floor(R / th_info.give)
     if GAME.FACTORY.caps.blocky_items then count = 1 end
 
     if th_info.clu_max then count = math.min(count, th_info.clu_max) end
@@ -1306,7 +1306,7 @@ function battle_in_cell(c)
     local probs = { 30     }
 
     for name,info in pairs(GAME.FACTORY.monsters) do
-      if (info.pow < T*2) and (fp >= math.round(info.fp)) then
+      if (info.pow < T*2) and (fp >= math.floor(info.fp)) then
 
         local prob = info.prob * (c.mon_prefs[name] or 1)
 
@@ -1337,7 +1337,7 @@ function battle_in_cell(c)
 
   local function decide_monster_horde(info)
     local horde = 1
-    local max_horde = 1 + math.round(T / info.pow)
+    local max_horde = 1 + math.floor(T / info.pow)
 
     if info.hp <= 500 and rand.odds(30) then horde = horde + 1 end
     if info.hp <= 100 then horde = horde + rand.index_by_probs { 90, 40, 10, 3, 0.5 } end
@@ -1391,7 +1391,7 @@ function battle_in_cell(c)
 
     for name,info in pairs(GAME.FACTORY.monsters) do
       if (info.cage_fallback) or 
-         ((info.pow < T*2/x_horde) and (fp >= math.round(info.fp)))
+         ((info.pow < T*2/x_horde) and (fp >= math.floor(info.fp)))
       then
         local prob = info.cage_prob or info.cage_fallback or 0
 
@@ -1455,8 +1455,8 @@ function battle_in_cell(c)
       local horde = decide_cage_horde(spot, info)
 
       for i = 1,horde do
-        local dx = math.round((i-1)%2) * 64
-        local dy = math.round((i-1)/2) * 64
+        local dx = math.floor((i-1)%2) * 64
+        local dy = math.floor((i-1)/2) * 64
 
         local angle = rand.irange(0,7) * 45
         local options = { [SK]=true }
@@ -1492,8 +1492,8 @@ function battle_in_cell(c)
         local horde = decide_cage_horde(spot, info)
 
         for i = 1,horde do
-          local dx = math.round((i-1)%2) * 64
-          local dy = math.round((i-1)/2) * 64
+          local dx = math.floor((i-1)%2) * 64
+          local dy = math.floor((i-1)/2) * 64
 
           local angle = delta_to_angle(5-(spot.x+dx/64), 5-(spot.y+dy/64))
           local options = { [SK]=true }

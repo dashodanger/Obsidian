@@ -408,7 +408,7 @@ function write_level(lev_name)
     local function line_length(L)
       local dx = L.ex - L.sx
       local dy = L.ey - L.sy
-      return math.round(math.sqrt(dx*dx + dy*dy) + 0.5)
+      return math.floor(math.sqrt(dx*dx + dy*dy) + 0.5)
     end
 
     local function frag_pair(f,b,norm, x,y,dx,dy)
@@ -940,11 +940,11 @@ function write_wolf_level()
 
         if kind.dirs and th.angle then
           if kind.dirs == "player" then
-            local offset = math.round((360 - th.angle + 135) / 90) % 4
+            local offset = math.floor((360 - th.angle + 135) / 90) % 4
             assert(0 <= offset and offset <= 3)
             obj = obj + offset
           else
-            local offset = math.round((th.angle + 45) / 90) % 4
+            local offset = math.floor((th.angle + 45) / 90) % 4
             assert(0 <= offset and offset <= 3)
             obj = obj + offset
           end

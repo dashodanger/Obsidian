@@ -1674,7 +1674,7 @@ function Area_locate_chunks(LEVEL, SEEDS)
 
 
   local function find_sized_chunks(A, seed_list, pass, LEVEL)
-    local dx = math.round(pass / 10) - 1
+    local dx = math.floor(pass / 10) - 1
     local dy = (pass % 10) - 1
 
     local use_prob = USE_PROBS[pass] or 99
@@ -2908,7 +2908,7 @@ function Area_create_rooms(LEVEL, SEEDS)
 
   if SHAPE_GRAMMAR.force_level_size then
     LEVEL.map_W = SHAPE_GRAMMAR.force_level_size
-    LEVEL.map_H = 1 + math.round(LEVEL.map_W * 0.8)
+    LEVEL.map_H = 1 + math.floor(LEVEL.map_W * 0.8)
     SEEDS = Seed_init(LEVEL)
   end
 

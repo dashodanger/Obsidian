@@ -450,13 +450,13 @@ function Monster_zone_palettes(LEVEL)
       skip_perc = skip_perc / 2
     end
 
-    quants[0] = math.round(total * skip_perc / 100 + gui.random() * 0.7)
+    quants[0] = math.floor(total * skip_perc / 100 + gui.random() * 0.7)
     total = total - quants[0]
 
-    quants[2] = math.round(total * rand.range(0.3, 0.7) + gui.random())
+    quants[2] = math.floor(total * rand.range(0.3, 0.7) + gui.random())
     total = total - quants[2]
 
-    quants[1] = math.round(total * rand.range(0.3, 0.7) + gui.random())
+    quants[1] = math.floor(total * rand.range(0.3, 0.7) + gui.random())
     total = total - quants[1]
 
     quants[3] = total
@@ -523,7 +523,7 @@ function Monster_zone_palettes(LEVEL)
       gui.debugf("   %-12s* %1.2f\n", mon, qty)
     end
     
-    gui.debugf("   TOUGHNESS: %d\n", math.round(palette_toughness(pal)))
+    gui.debugf("   TOUGHNESS: %d\n", math.floor(palette_toughness(pal)))
   end
 
 
@@ -585,8 +585,8 @@ function Monster_split_spots(list, max_size)
   for _,spot in pairs(list) do
     local w, h = geom.box_size(spot.x1, spot.y1, spot.x2, spot.y2)
 
-    local XN = math.round(w / max_size)
-    local YN = math.round(h / max_size)
+    local XN = math.floor(w / max_size)
+    local YN = math.floor(h / max_size)
 
     if XN < 2 and YN < 2 then
       table.insert(new_list, spot)
@@ -603,8 +603,8 @@ function Monster_split_spots(list, max_size)
 
       local new_spot = table.copy(spot)
 
-      new_spot.x1 = math.round(x1) ; new_spot.y1 = math.round(y1)
-      new_spot.x2 = math.round(x2) ; new_spot.y2 = math.round(y2)
+      new_spot.x1 = math.floor(x1) ; new_spot.y1 = math.floor(y1)
+      new_spot.x2 = math.floor(x2) ; new_spot.y2 = math.floor(y2)
       new_spot.marked = nil
 
       table.insert(new_list, new_spot)
@@ -874,11 +874,11 @@ function Monster_fill_room(LEVEL, R, SEEDS)
     gui.debugf("raw number_of_kinds in %s : tally:%d / %d seeds | base:%1.2f factor:%1.2f ---> %1.2f\n",
                R.name, fodder_tally, R.svolume, base_num, factor, num)
 --]]
-    num = math.round(base_num)
+    num = math.floor(base_num)
 
     num = math.clamp(1, num, 5)
 
-    gui.debugf("number_of_kinds: %d (base: %d)\n", num, math.round(base_num))
+    gui.debugf("number_of_kinds: %d (base: %d)\n", num, math.floor(base_num))
 
     return num
   end
@@ -1127,8 +1127,8 @@ function Monster_fill_room(LEVEL, R, SEEDS)
      for _,spot in pairs(spot_list) do
       local w, h = geom.box_size(spot.x1, spot.y1, spot.x2, spot.y2)
 
-      w = math.round(w / 64) ; if w < 1 then w = 1 end
-      h = math.round(h / 64) ; if h < 1 then h = 1 end
+      w = math.floor(w / 64) ; if w < 1 then w = 1 end
+      h = math.floor(h / 64) ; if h < 1 then h = 1 end
 
       count = count + w * h
     end
@@ -1367,7 +1367,7 @@ function Monster_fill_room(LEVEL, R, SEEDS)
       num_kinds = rand.index_by_probs({ 20, 40, 60 })
     else
       local size = math.sqrt(R.svolume)
-      num_kinds = math.round(size / 1.2)
+      num_kinds = math.floor(size / 1.2)
     end
 
     local list = {}
@@ -1708,8 +1708,8 @@ function Monster_fill_room(LEVEL, R, SEEDS)
 
     local w, h = geom.box_size(spot.x1, spot.y1, spot.x2, spot.y2)
 
-    w = math.round(w / rr / 2)
-    h = math.round(h / rr / 2)
+    w = math.floor(w / rr / 2)
+    h = math.floor(h / rr / 2)
 
     return w * h
   end
@@ -2078,7 +2078,7 @@ gui.debugf("wants =\n%s\n\n", table.tostr(wants))
     local tally = fodder_tally
     tally = 3 * (1 + tally ^ 0.7)
 
-    want_total = math.round(tally * qty / 100 + gui.random())
+    want_total = math.floor(tally * qty / 100 + gui.random())
 
 
     -- determine how many of each kind of monster we want
@@ -2208,7 +2208,7 @@ gui.debugf("wants =\n%s\n\n", table.tostr(wants))
       elseif choice == "crazy" then
         min_val = spot_total
       else
-        min_val = math.round(min_val + (spot_total * tab[choice]))
+        min_val = math.floor(min_val + (spot_total * tab[choice]))
       end
 
       return min_val
@@ -2219,8 +2219,8 @@ gui.debugf("wants =\n%s\n\n", table.tostr(wants))
     -- determine maximum number that will fit
     local w, h = geom.box_size(spot.x1,spot.y1, spot.x2,spot.y2)
 
-    w = math.round(w / info.r / 2)
-    h = math.round(h / info.r / 2)
+    w = math.floor(w / info.r / 2)
+    h = math.floor(h / info.r / 2)
 
     assert(w >= 1 and h >= 1)
 
@@ -2566,7 +2566,7 @@ function Monster_show_stats(LEVEL)
 
   local function get_stat(mon)
     local num = LEVEL.mon_stats[mon] or 0
-    local div = math.round(num * 99.8 / total)
+    local div = math.floor(num * 99.8 / total)
     if div == 0 and num > 0 then div = 1 end
     return string.format("%02d", div)
   end

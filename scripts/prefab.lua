@@ -1611,7 +1611,7 @@ function Fab_load_wad(def)
 
     angle = math.clamp(0, angle, 300)
 
-    return 112 + math.round(angle * 16 / 45)
+    return 112 + math.floor(angle * 16 / 45)
   end
 
 
@@ -2249,7 +2249,7 @@ function Fab_replacements(LEVEL, fab)
     -- adjust X offset for split edges
 
     if C.u1 and C.u1 ~= "" and C.u1_along then
-      C.u1 = C.u1 + math.round(C.u1_along)
+      C.u1 = C.u1 + math.floor(C.u1_along)
       C.u1_along = nil
     end
   end
@@ -2637,11 +2637,11 @@ function Fab_find_matches(LEVEL, reqs, match_state)
     end
 
     -- prefab definition defaults to 1
-    local sw = math.round(def.seed_w or 1)
-    local sh = math.round(def.seed_h or 1)
+    local sw = math.floor(def.seed_w or 1)
+    local sh = math.floor(def.seed_h or 1)
 
-    local req_w = math.round(reqs.seed_w or 1)
-    local req_h = math.round(reqs.seed_h or 1)
+    local req_w = math.floor(reqs.seed_w or 1)
+    local req_h = math.floor(reqs.seed_h or 1)
 
     -- "diagonal" prefabs need an exact same square
     if def.where == "diagonal" then

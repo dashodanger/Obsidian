@@ -805,12 +805,12 @@ function OTEX_PROC_MODULE.synthesize_procedural_themes()
   end
   local scenic_fence_tab = table.copy(OTEX_SPECIAL_RESOURCES.rail_scenic_fences)
   for fence,prob in pairs(scenic_fence_tab.tech) do
-    GAME.THEMES.tech.scenic_fences[fence] = math.round(prob * 0.75)
-    GAME.THEMES.urban.scenic_fences[fence] = math.round(prob * 0.75)
+    GAME.THEMES.tech.scenic_fences[fence] = math.floor(prob * 0.75)
+    GAME.THEMES.urban.scenic_fences[fence] = math.floor(prob * 0.75)
   end
   for fence,prob in pairs(scenic_fence_tab.gothic) do
-    GAME.THEMES.hell.scenic_fences[fence] = math.round(prob * 0.75)
-    GAME.THEMES.urban.scenic_fences[fence] = math.round(prob * 0.75)
+    GAME.THEMES.hell.scenic_fences[fence] = math.floor(prob * 0.75)
+    GAME.THEMES.urban.scenic_fences[fence] = math.floor(prob * 0.75)
   end
 
   -- create liquid attachments

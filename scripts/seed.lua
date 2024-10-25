@@ -364,8 +364,8 @@ function SEED_CLASS.calc_mid_point(S)
     my = (S.y2 + my) / 2
   end
 
-  S.mid_x = math.round(mx)
-  S.mid_y = math.round(my)
+  S.mid_x = math.floor(mx)
+  S.mid_y = math.floor(my)
 end
 
 
@@ -561,8 +561,8 @@ function Seed_init(LEVEL)
   BASE_X = 32
   BASE_Y = 32
 
-  BASE_X = 32 - math.round(SEED_W / 2) * SEED_SIZE
-  BASE_Y = 32 - math.round(SEED_H / 2) * SEED_SIZE
+  BASE_X = 32 - math.floor(SEED_W / 2) * SEED_SIZE
+  BASE_Y = 32 - math.floor(SEED_H / 2) * SEED_SIZE
 
   for sx = 1, SEED_W do
   for sy = 1, SEED_H do
@@ -581,7 +581,7 @@ function Seed_init(LEVEL)
   local depot_y = BASE_Y + SEED_H * SEED_SIZE
 
   for row = 0, 2 do
-  for col = 0, math.round(SEED_W / 3) - 1 do
+  for col = 0, math.floor(SEED_W / 3) - 1 do
     local x = depot_x + col * 3 * SEED_SIZE
     local y = depot_y + row * 6 * SEED_SIZE + 64
 
@@ -985,7 +985,7 @@ function Seed_draw_minimap(SEEDS, LEVEL)
     y1 = (y1 - min_y + ofs_y) * map_H / size
     y2 = (y2 - min_y + ofs_y) * map_H / size
 
-    gui.minimap_draw_line(math.round(x1),math.round(y1), math.round(x2),math.round(y2), color)
+    gui.minimap_draw_line(math.floor(x1),math.floor(y1), math.floor(x2),math.floor(y2), color)
   end
 
 

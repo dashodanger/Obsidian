@@ -1083,11 +1083,11 @@ function Grower_decide_extents(LEVEL)
     end
   end
 
-  assert(math.round(LEVEL.map_W) < SEED_W)
-  assert(math.round(LEVEL.map_H) < SEED_H)
+  assert(math.floor(LEVEL.map_W) < SEED_W)
+  assert(math.floor(LEVEL.map_H) < SEED_H)
 
-  local map_x1 = 1 + math.round((SEED_W - LEVEL.map_W) / 2)
-  local map_y1 = 1 + math.round((SEED_H - LEVEL.map_H) / 2)
+  local map_x1 = 1 + math.floor((SEED_W - LEVEL.map_W) / 2)
+  local map_y1 = 1 + math.floor((SEED_H - LEVEL.map_H) / 2)
 
   local map_x2 = map_x1 + LEVEL.map_W - 1
   local map_y2 = map_y1 + LEVEL.map_H - 1
@@ -1142,17 +1142,17 @@ function Grower_decide_extents(LEVEL)
 
   local base = (LEVEL.map_W - 12) * 0.72
 
-  LEVEL.min_rooms = math.max(3, math.round(base / 3))
-  LEVEL.max_rooms = math.max(6, math.round(base))
+  LEVEL.min_rooms = math.max(3, math.floor(base / 3))
+  LEVEL.max_rooms = math.max(6, math.floor(base))
 
   -- add extra rooms based on extra size and area multiplier
 
   if LEVEL.size_multiplier then
     if LEVEL.size_multiplier < 1 then
-      LEVEL.max_rooms = math.round(LEVEL.max_rooms * ((1 - LEVEL.size_multiplier)+1) * 2/3)
+      LEVEL.max_rooms = math.floor(LEVEL.max_rooms * ((1 - LEVEL.size_multiplier)+1) * 2/3)
     end
     if LEVEL.area_multiplier < 1 then
-      LEVEL.max_rooms = math.round(LEVEL.max_rooms * ((1 - LEVEL.area_multiplier)+1) * 2/3)
+      LEVEL.max_rooms = math.floor(LEVEL.max_rooms * ((1 - LEVEL.area_multiplier)+1) * 2/3)
     end
   end
 
@@ -1173,7 +1173,7 @@ function Grower_decide_extents(LEVEL)
 
   -- calculate the coverage target
 
-  LEVEL.min_coverage = math.round(LEVEL.map_W * LEVEL.map_H * 0.65)
+  LEVEL.min_coverage = math.floor(LEVEL.map_W * LEVEL.map_H * 0.65)
 
   if LEVEL.has_streets then
     gui.printf("--==| Streets Mode activated! |==--\n\n")
@@ -1188,7 +1188,7 @@ function Grower_decide_extents(LEVEL)
     if PARAM.linear_start ~= "default" then
       if PARAM.linear_start == "all" then
         LEVEL.has_linear_start = true
-      elseif rand.odds(math.round(PARAM.linear_start)) then
+      elseif rand.odds(math.floor(PARAM.linear_start)) then
         LEVEL.has_linear_start = true
       end
     end
@@ -2079,11 +2079,11 @@ stderrf("prelim_conn %s --> %s : S=%s dir=%d\n", c_out.R1.name, c_out.R2.name, S
 
   local function get_iteration_range(T)
     if is_create then
-      local dx = math.min(10, math.round(SEED_W / 4))
-      local dy = math.min(10, math.round(SEED_H / 4))
+      local dx = math.min(10, math.floor(SEED_W / 4))
+      local dy = math.min(10, math.floor(SEED_H / 4))
 
-      local mx = math.round(SEED_W / 2)
-      local my = math.round(SEED_H / 2)
+      local mx = math.floor(SEED_W / 2)
+      local my = math.floor(SEED_H / 2)
 
       -- the exit room is alway placed near top of map
       if cur_rule.absolute_pos == "top" or cur_rule.absolute_pos == "corner" then
@@ -3161,9 +3161,9 @@ end
 
     -- check that it straddles at right spot
     if T.transpose then
-      if by1 ~= R.symmetry.y - math.round((W-1) / 2) then return false end
+      if by1 ~= R.symmetry.y - math.floor((W-1) / 2) then return false end
     else
-      if bx1 ~= R.symmetry.x - math.round((W-1) / 2) then return false end
+      if bx1 ~= R.symmetry.x - math.floor((W-1) / 2) then return false end
     end
 
     if match_or_install_pat_raw(what, T) then
@@ -4051,7 +4051,7 @@ function Grower_sprout_room(SEEDS, LEVEL, R)
     Grower_grammatical_room(SEEDS, LEVEL, R, "sprout")
   end
 
-  if R.is_street and R:prelim_conn_num(LEVEL) < math.clamp(1, math.round(R.svolume/64), 10) then
+  if R.is_street and R:prelim_conn_num(LEVEL) < math.clamp(1, math.floor(R.svolume/64), 10) then
     Grower_grammatical_room(SEEDS, LEVEL, R, "sprout")
   end
 
