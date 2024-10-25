@@ -667,6 +667,7 @@ Glow
     FLTTELE3
     FLTTELE4
 
+    GLOWFLTS
   }
 
 //  Texture "FLTWAWA1", 0a0ac4, 128
