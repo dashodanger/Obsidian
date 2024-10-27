@@ -1715,7 +1715,7 @@ softrestart:;
                                     FL_MENU_TOGGLE | (randomize_misc ? FL_MENU_VALUE : 0));
             if (all_addons.size() == 0)
             {
-                main_win->menu_bar->add(_("Addons/No folders or *.oaf files"), nullptr, nullptr, nullptr,
+                main_win->menu_bar->add(_("Addons/No folders or *.zip files"), nullptr, nullptr, nullptr,
                                         FL_MENU_INACTIVE);
                 main_win->menu_bar->add(_("Addons/found in the \\/addons directory!"), nullptr, nullptr, nullptr,
                                         FL_MENU_INACTIVE);

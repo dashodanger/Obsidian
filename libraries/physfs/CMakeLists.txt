@@ -109,7 +109,7 @@ if(NOT PHYSFS_ARCHIVE_ZIP)
     add_definitions(-DPHYSFS_SUPPORTS_ZIP=0)
 endif()
 
-option(PHYSFS_ARCHIVE_7Z "Enable 7zip support" TRUE)
+option(PHYSFS_ARCHIVE_7Z "Enable 7zip support" OFF)
 if(NOT PHYSFS_ARCHIVE_7Z)
     add_definitions(-DPHYSFS_SUPPORTS_7Z=0)
 endif()

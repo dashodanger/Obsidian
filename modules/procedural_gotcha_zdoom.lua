@@ -1429,7 +1429,7 @@ function PROCEDURAL_GOTCHA_FINE_TUNE_ZDOOM.grab_random_trait(btype, etraits)
         if einfo == info.name then
           stack = stack + 1
         if PARAM.boss_gen_tmult < 0 then
-          tprob = math.round(tprob * 0.25)
+          tprob = math.floor(tprob * 0.25)
         elseif PARAM.boss_gen_tmult > 1 then
           tprob = tprob * 2
         end
@@ -1632,7 +1632,7 @@ function PROCEDURAL_GOTCHA_FINE_TUNE_ZDOOM.all_done()
       else mult=1.0 end
     end
 
-    hpcalc = math.round(rand.pick({5000,5200,5400,5600,5800,6000})*mult*PARAM.float_boss_gen_mult)
+    hpcalc = math.floor(rand.pick({5000,5200,5400,5600,5800,6000})*mult*PARAM.float_boss_gen_mult)
 
     if batk == "hitscan" and PARAM.boss_gen_dmult<3.0 then hpcalc = hpcalc*0.75 end
 
@@ -1640,7 +1640,7 @@ function PROCEDURAL_GOTCHA_FINE_TUNE_ZDOOM.all_done()
 
     local sumcalc
 
-    sumcalc = math.round(rand.pick({400,450,500,550,600})*PARAM.boss_gen_rmult)
+    sumcalc = math.floor(rand.pick({400,450,500,550,600})*PARAM.boss_gen_rmult)
     bsummon = PROCEDURAL_GOTCHA_FINE_TUNE_ZDOOM.syntaxize(bsummon,sumcalc)
 
   end

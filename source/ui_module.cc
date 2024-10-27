@@ -39,6 +39,7 @@ UI_Module::UI_Module(int X, int Y, int W, int H, const std::string &id, const st
     box(box_style);
 
     id_name = id;
+    og_label = label;
 
     if ((red >= 0) && (green >= 0) && (blue >= 0))
     {
@@ -115,7 +116,7 @@ void UI_Module::AddHeader(const std::string &opt, const std::string &label, int 
 
     if (!mod_button->value())
     {
-        rhead->hide();
+        rhead->deactivate();
     }
 
     add(rhead);
@@ -145,7 +146,7 @@ void UI_Module::AddUrl(const std::string &opt, const std::string &label, const s
 
     if (!mod_button->value())
     {
-        rurl->hide();
+        rurl->deactivate();
     }
 
     add(rurl);
@@ -211,7 +212,7 @@ void UI_Module::AddOption(const std::string &opt, const std::string &label, cons
 
     if (!mod_button->value())
     {
-        rch->hide();
+        rch->deactivate();
     }
 
     add(rch);
@@ -230,7 +231,6 @@ void UI_Module::AddSliderOption(const std::string &opt, std::string &label, cons
                                 const std::string &randomize_group, const std::string &default_value)
 {
     int nw = this->parent()->w();
-    //    int nh = KromulentHeight(30);
 
     int nx = x() + KromulentWidth(6);
     int ny = y() + cur_opt_y - KromulentHeight(15);
@@ -401,7 +401,7 @@ void UI_Module::AddSliderOption(const std::string &opt, std::string &label, cons
 
     if (!mod_button->value())
     {
-        rsl->hide();
+        rsl->deactivate();
     }
 
     add(rsl);
@@ -466,7 +466,7 @@ void UI_Module::AddButtonOption(const std::string &opt, const std::string &label
 
     if (!mod_button->value())
     {
-        rbt->hide();
+        rbt->deactivate();
     }
 
     add(rbt);
@@ -481,18 +481,18 @@ void UI_Module::AddButtonOption(const std::string &opt, const std::string &label
 
 int UI_Module::CalcHeight() const
 {
-    if (mod_button->value())
-    {
-        return cur_opt_y + KromulentHeight(6);
-    }
-    else
-    {
-        return KromulentHeight(34);
-    }
+    return cur_opt_y + KromulentHeight(6);
 }
 
 void UI_Module::update_Enable()
 {
+    if (!Is_UI())
+    {
+        if (mod_button->value())
+            heading->copy_label(og_label.c_str());
+        else
+            heading->copy_label(StringFormat("%s (DISABLED)", og_label.c_str()).c_str());
+    }
 
     std::map<std::string, UI_RChoice *>::const_iterator IT;
     std::map<std::string, UI_RSlide *>::const_iterator  IT2;
@@ -506,11 +506,11 @@ void UI_Module::update_Enable()
 
         if (mod_button->value())
         {
-            M->show();
+            M->activate();
         }
         else
         {
-            M->hide();
+            M->deactivate();
         }
     }
 
@@ -520,11 +520,11 @@ void UI_Module::update_Enable()
 
         if (mod_button->value())
         {
-            M->show();
+            M->activate();
         }
         else
         {
-            M->hide();
+            M->deactivate();
         }
     }
 
@@ -533,11 +533,11 @@ void UI_Module::update_Enable()
         UI_RButton *M = IT3->second;
         if (mod_button->value())
         {
-            M->show();
+            M->activate();
         }
         else
         {
-            M->hide();
+            M->deactivate();
         }
     }
 
@@ -546,11 +546,11 @@ void UI_Module::update_Enable()
         UI_RHeader *M = IT4->second;
         if (mod_button->value())
         {
-            M->show();
+            M->activate();
         }
         else
         {
-            M->hide();
+            M->deactivate();
         }
     }
 
@@ -559,11 +559,11 @@ void UI_Module::update_Enable()
         UI_RLink *M = IT5->second;
         if (mod_button->value())
         {
-            M->show();
+            M->activate();
         }
         else
         {
-            M->hide();
+            M->deactivate();
         }
     }
 }
@@ -1266,11 +1266,16 @@ bool UI_CustomMods::ShowModule(const std::string &id, bool new_shown)
         return true;
     }
 
-    // visibility definitely changed
-
     if (new_shown)
     {
         M->show();
+        if (!M->Is_UI())
+        {
+            if (M->mod_button->value())
+                M->heading->copy_label(M->og_label.c_str());
+            else
+                M->heading->copy_label(StringFormat("%s (DISABLED)", M->og_label.c_str()).c_str());
+        }
     }
     else
     {

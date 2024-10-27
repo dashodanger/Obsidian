@@ -6004,8 +6004,8 @@ function HERETIC.factory_setup()
         error("Prefab not a multiple of four: " .. tostring(P.name))
       end
 
-      P.long = math.round(f_long / 4)
-      P.deep = math.round(f_deep / 4)
+      P.long = math.floor(f_long / 4)
+      P.deep = math.floor(f_deep / 4)
     else
       error("Unsupported scale " .. tostring(P.scale) .. " in prefab: " .. tostring(P.name))
     end

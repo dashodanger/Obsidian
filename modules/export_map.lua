@@ -136,7 +136,7 @@ function EXPORT_MAP.add_entity(ent, model)
   end
 
   if origin then
-    export_printf("\"origin\" \"%d %d %d\"\n", math.round(origin.x) or 0, math.round(origin.y) or 0, math.round(origin.z) or 0)
+    export_printf("\"origin\" \"%d %d %d\"\n", math.floor(origin.x) or 0, math.floor(origin.y) or 0, math.floor(origin.z) or 0)
   end
 
   if light then

@@ -196,7 +196,7 @@ function Level_determine_map_size(LEV)
       end
     end
 
-    ob_size = math.clamp(low, math.round(rand.irange(low, high) * result_skew), high)
+    ob_size = math.clamp(low, math.floor(rand.irange(low, high) * result_skew), high)
   end
 
   if ob_size == gui.gettext("Episodic") or 
@@ -223,7 +223,7 @@ function Level_determine_map_size(LEV)
     local def_large = PARAM.float_level_upper_bound - def_small or 42
 
     -- this basically ramps up
-    W = math.round(def_small + along * def_large)
+    W = math.floor(def_small + along * def_large)
   else
 
     -- Single Size --
@@ -244,7 +244,7 @@ function Level_determine_map_size(LEV)
 
   gui.printf("Initial size for " .. LEV.name .. ": " .. W .. "\n")
 
-  local H = 1 + math.round(W * 0.8)
+  local H = 1 + math.floor(W * 0.8)
 
   return W, H
 end
@@ -1200,7 +1200,7 @@ function Episode_plan_weapons()
     end
 
     quota = quota * (PARAM.weapon_factor or 1)
-    quota = math.round(quota)
+    quota = math.floor(quota)
 
     if quota < 1 then quota = 1 end
 
@@ -1352,7 +1352,7 @@ function Episode_plan_weapons()
 
       if rand.odds(30) then lev_idx = lev_idx + 1 end
 
-      lev_idx = math.round(lev_idx * rand.pick({ 1.0, 1.3, 1.6 }))
+      lev_idx = math.floor(lev_idx * rand.pick({ 1.0, 1.3, 1.6 }))
     end
 
     -- ensure it is valid
@@ -1515,7 +1515,7 @@ function Episode_plan_weapons()
   local function reduce_weapon_gaps(level_list)
     local max_gap = 2
 
-    max_gap = max_gap + math.round(#level_list / 20)
+    max_gap = max_gap + math.floor(#level_list / 20)
 
     if OB_CONFIG.weapons == "very_late" then max_gap = max_gap + 2 end
     if OB_CONFIG.weapons == "later"     then max_gap = max_gap + 1 end
@@ -2328,14 +2328,14 @@ function Level_choose_darkness(LEVEL)
     --prob = style_sel("darkness", 0, 10, 30, 90) --Original
   end
 
-  LEVEL.sky_light  = math.round(rand.pick(SKY_LIGHT_NORMAL) * PARAM.float_overall_lighting_mult)
+  LEVEL.sky_light  = math.floor(rand.pick(SKY_LIGHT_NORMAL) * PARAM.float_overall_lighting_mult)
   LEVEL.sky_shadow = 32
 
   if rand.odds(prob) then
     gui.printf("Level is dark.\n")
 
     LEVEL.is_dark = true
-    LEVEL.sky_light = math.round(rand.pick(SKY_LIGHT_DARK) * PARAM.float_overall_lighting_mult)
+    LEVEL.sky_light = math.floor(rand.pick(SKY_LIGHT_DARK) * PARAM.float_overall_lighting_mult)
     LEVEL.sky_shadow = 32
   end
 

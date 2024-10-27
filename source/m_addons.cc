@@ -225,7 +225,7 @@ void VFS_ScanForAddons()
             continue;
         }
 
-        if (statter.filetype == PHYSFS_FILETYPE_DIRECTORY || (statter.filetype == PHYSFS_FILETYPE_REGULAR && GetExtension(*p) == ".oaf"))
+        if (statter.filetype == PHYSFS_FILETYPE_DIRECTORY || (statter.filetype == PHYSFS_FILETYPE_REGULAR && GetExtension(*p) == ".zip"))
         {
             addon_info_t info;
 
