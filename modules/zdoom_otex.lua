@@ -96,17 +96,17 @@ OTEX_DIRECT_REMOVALS =
     {
       "OMRBLA90",
       "OMRBLA91",
-      "OMBRLA92",
-      "OMBRLA93",
-      "OMBRLA94",
+      "OMRBLA92",
+      "OMRBLA93",
+      "OMRBLA94",
   
-      "OMBRLC90",
+      "OMRBLC90",
   
-      "OMBRLF29",
-      "OMBRLF38",
-      "OMBRLF90",
+      "OMRBLF29",
+      "OMRBLF38",
+      "OMRBLF90",
   
-      "OMBRLG90",
+      "OMRBLG90",
   
       "OMRBLI92",
       "OMRBLI93",
@@ -119,11 +119,11 @@ OTEX_DIRECT_REMOVALS =
       "OMRBLO28",
       "OMRBLO29",
   
-      "OMBRLP90",
-      "OMBRLP91",
+      "OMRBLP90",
+      "OMRBLP91",
   
-      "OMBRLR90",
-      "OMBRLR94"  
+      "OMRBLR90",
+      "OMRBLR94"
     }
   },
 
