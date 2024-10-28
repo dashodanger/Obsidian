@@ -520,7 +520,7 @@ OTEX_SPECIAL_RESOURCES =
 
 OTEX_GLOWING_FLATS =
 [[
-    OBLODA01
+OBLODA01
     OGOOPY01
     OICYWA01
     OLAVAA01
@@ -546,7 +546,6 @@ end
 
 function OTEX_PROC_MODULE.synthesize_procedural_themes()
   local resource_tab = {}
-  local r
 
   local function pick_unique_texture(table, tex_group, total_tries)
     local tex
@@ -856,7 +855,7 @@ end
 
 
 function OTEX_PROC_MODULE.all_done()
-  string.gsub(
+  GAME.RESOURCES.GLOWING_FLATS_GLDEFS = string.gsub(
     GAME.RESOURCES.GLOWING_FLATS_GLDEFS,
     "GLOWFLTS",
     OTEX_GLOWING_FLATS
