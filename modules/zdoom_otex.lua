@@ -887,7 +887,7 @@ OB_MODULES["otex_proc_module"] =
   },
 
   tooltip = _("If enabled, generates room themes using OTEX based on a resource table. ".. 
-  "OTEX must be manually loaded in the sourceport. " ..
+  "OTEX WAD (not pk3 version) must be manually loaded in the sourceport. " ..
   "Includes textures and flats only, no patches.\n\n" ..
   "Currently does not make any kind of sensibly curated room themes."),
 
