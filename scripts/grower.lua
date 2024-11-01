@@ -1184,14 +1184,10 @@ function Grower_decide_extents(LEVEL)
   end
 
   -- linear start code
-  if PARAM.linear_start then
-    if PARAM.linear_start ~= "default" then
-      if PARAM.linear_start == "all" then
-        LEVEL.has_linear_start = true
-      elseif rand.odds(math.floor(PARAM.linear_start)) then
-        LEVEL.has_linear_start = true
-      end
-    end
+  if PARAM.linear_start 
+  and PARAM.linear_start ~= "default"
+  and PARAM.linear_start == "all" then
+    LEVEL.has_linear_start = true
   end
 
   if LEVEL.has_linear_start then
@@ -1523,9 +1519,6 @@ end
 
 
 function Grower_kill_room(SEEDS, LEVEL, R)
-
-  local hallway_neighbor
-
   gui.debugf("Killing " .. R.id .. "\n")
 
   local function turn_joiner_into_closet(R2, chunk)
@@ -3626,7 +3619,7 @@ end
 
     -- SUCCESS --
 
-    gui.debugf("APPLIED rule: " .. cur_rule.name .. " in ROOM_" .. R.id.. "\n")
+    gui.debugf("ROOM_" .. R.id .. " APPLIED rule: " .. cur_rule.name .. "\n")
 
     if pass == "grow" then
       if R.shapes_applied then
@@ -3989,14 +3982,17 @@ function Grower_grow_room(SEEDS, LEVEL, R)
     Grower_grammatical_room(SEEDS, LEVEL, R, "grow")
 
     if is_too_small(R) then
+
       if R.grow_parent and R.grow_parent.is_start 
       and R.small_room then
         return 
       end
+
       if R.prelim_conn_num == 1 then
         Grower_kill_room(SEEDS, LEVEL, R)
         return
       end
+
     end
   end
 
@@ -4418,17 +4414,17 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
         end
       end
 
-    --[[if R.prelim_conn_num(R, LEVEL) == 1 and R.areas[1].svolume <= 8
-    and #R.areas == 1 and not R.is_start then
-      gui.printf("Prelim conn num: " .. R.prelim_conn_num(R, LEVEL) .. "\n")
-      gui.printf(table.tostr(R, 2))
-      local hallway_parent
-      if R.parent_R and R.parent_R.is_hallway then
-        hallway_parent = R.parent_R
-      end
-      Grower_kill_room(SEEDS, LEVEL, R)
-      if hallway_parent then Grower_kill_room(SEEDS, LEVEL, hallway_parent) end
-    end]]
+      --[[if R.prelim_conn_num(R, LEVEL) == 1 and R.areas[1].svolume <= 8
+      and #R.areas == 1 and not R.is_start then
+        gui.printf("Prelim conn num: " .. R.prelim_conn_num(R, LEVEL) .. "\n")
+        gui.printf(table.tostr(R, 2))
+        local hallway_parent
+        if R.parent_R and R.parent_R.is_hallway then
+          hallway_parent = R.parent_R
+        end
+        Grower_kill_room(SEEDS, LEVEL, R)
+        if hallway_parent then Grower_kill_room(SEEDS, LEVEL, hallway_parent) end
+      end]]
 
     end
   end
@@ -4498,9 +4494,8 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
       Grower_grammatical_room(SEEDS, LEVEL, R, "sprout", "is_emergency")
     end
 
-    if not R.emergency_sprout_attempts then
-      return "oof"
-    elseif R.emergency_sprout_attempts > 1 then
+    if not R.emergency_sprout_attempts 
+    or (R.emergency_sprout_attempts and R.emergency_sprout_attempts > 1) then
       return "oof"
     end
     return "yas queen"
@@ -4552,16 +4547,23 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
     expand_limits()
     emergency_sprouts()
 
-    if not LEVEL.is_procedural_gotcha
-    and (#LEVEL.rooms < ((LEVEL.min_rooms + LEVEL.max_rooms) / 2)) then
-      if emergency_linear_sprouts() == "oof" then
-        emergency_teleport_break(LEVEL)
+    if not LEVEL.is_procedural_gotcha then
+
+      -- levels that don't reach at least 
+      -- half the amount of expected maximum rooms
+      if (#LEVEL.rooms < ((LEVEL.min_rooms + LEVEL.max_rooms) / 2)) then
+        if emergency_linear_sprouts() == "oof" then
+          emergency_teleport_break(LEVEL)
+        end
       end
-    elseif #LEVEL.rooms <= 3 and not LEVEL.is_procedural_gotcha
-    and LEVEL.cur_coverage <= LEVEL.min_coverage then
-      if emergency_linear_sprouts() == "oof" then
-        emergency_teleport_break(LEVEL)
+
+      -- levels that don't reach the prefered coverage
+      if (LEVEL.cur_coverage <= LEVEL.min_coverage ) then
+        if emergency_linear_sprouts() == "oof" then
+          emergency_teleport_break(LEVEL)
+        end
       end
+
     end
 
     --[[if LEVEL.cur_coverage <= LEVEL.min_coverage / 4
@@ -4604,6 +4606,18 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
         Grower_sprout_room(SEEDS, LEVEL, R)
         Grower_sprout_room(SEEDS, LEVEL, R)
       end
+    end
+  end
+
+  -- remove ungrown teleporter trunks
+  for _,R in pairs(LEVEL.rooms) do
+    if R.is_root and R.is_grown and #R.trunk.rooms == 1 
+    and R:calc_walk_vol() <= 24 and not R.is_start then
+      gui.printf("Killed teleporter ROOM_" .. R.id .. "\n")
+      gui.printf(table.tostr(R.trunk.rooms,1) .. "\n")
+      gui.printf(table.tostr(R,2) .. "\n")
+      Grower_kill_room(SEEDS, LEVEL, R)
+      --Grower_kill_a_trunk(LEVEL, R.trunk)
     end
   end
 
