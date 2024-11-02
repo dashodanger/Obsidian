@@ -4492,6 +4492,7 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
 
       gui.printf("Oh noes! Attempting emergency sprout in ROOM_" .. R.id .. "!!!\n")
       Grower_grammatical_room(SEEDS, LEVEL, R, "sprout", "is_emergency")
+      Grower_grow_room(SEEDS, LEVEL, R)
     end
 
     if not R.emergency_sprout_attempts 
@@ -4577,6 +4578,7 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
     end]]
   end
 
+  -- force grow child rooms from start rooms
   if #LEVEL.rooms == 2 then
     gui.printf("BALLS! " .. MAX_LOOP .. "\n")
     for _,R in pairs(LEVEL.rooms) do

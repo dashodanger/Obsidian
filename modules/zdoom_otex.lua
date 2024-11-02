@@ -438,15 +438,15 @@ OTEX_SPECIAL_RESOURCES =
     otex_goop = { mat="OGOOPY01", special=0},
     otex_ice = { mat="OICYWA01", special=0},
    
-    otex_lavaA1 = { mat="OLAVAA01", light_add=24, special=5, damage=10},
-    otex_lavaA2 = { mat="OLAVAA02", light_add=24, special=5, damage=10},
-    otex_lavaB1 = { mat="OLAVAB01", light_add=24, special=5, damage=10},
-    otex_lavaC1 = { mat="OLAVAC01", light_add=24, special=5, damage=10},
-    otex_lavaD1 = { mat="OLAVAD01", light_add=24, special=5, damage=10},
-    otex_lavaE1 = { mat="OLAVAE01", light_add=24, special=5, damage=10},
-    otex_lavaF1 = { mat="OLAVAF01", light_add=24, special=5, damage=10},
+    otex_lavaA1 = { mat="OLAVAA01", light_add=56, special=5, damage=10},
+    otex_lavaA2 = { mat="OLAVAA02", light_add=56, special=5, damage=10},
+    otex_lavaB1 = { mat="OLAVAB01", light_add=56, special=5, damage=10},
+    otex_lavaC1 = { mat="OLAVAC01", light_add=56, special=5, damage=10},
+    otex_lavaD1 = { mat="OLAVAD01", light_add=56, special=5, damage=10},
+    otex_lavaE1 = { mat="OLAVAE01", light_add=56, special=5, damage=10},
+    otex_lavaF1 = { mat="OLAVAF01", light_add=56, special=5, damage=10},
   
-    otex_nukage = { mat="ONUKEA01", light_add=16, special=7, damage=5},
+    otex_nukage = { mat="ONUKEA01", light_add=24, special=7, damage=5},
    
     otex_sludge = { mat="OSLUDG01", special=0},
     otex_poop = { mat="OPOOPY01", special=0},
