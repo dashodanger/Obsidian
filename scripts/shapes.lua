@@ -6599,7 +6599,7 @@ GROW_CAUSEWAY_WATERLOCKED_CROSSED_OUT =
 
 GROW_CAUSEWAY_WATERLOCKED_CENTER_PILLAR =
 {
-  prob = 35,
+  prob = 45,
   skip_prob = 80,
 
   structure =

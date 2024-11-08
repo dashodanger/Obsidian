@@ -435,8 +435,8 @@ OTEX_SPECIAL_RESOURCES =
   liquid_defs =
   {
     otex_blood = { mat="OBLODA01", special=0},
-    otex_goop = { mat="OGOOPY01", special=0},
-    otex_ice = { mat="OICYWA01", special=0},
+    otex_goop = { mat="OGOOPY01", light_add=16, special=0},
+    otex_ice = { mat="OICYWA01", light_add=8, special=0},
    
     otex_lavaA1 = { mat="OLAVAA01", light_add=56, special=5, damage=10},
     otex_lavaA2 = { mat="OLAVAA02", light_add=56, special=5, damage=10},
@@ -521,20 +521,118 @@ OTEX_SPECIAL_RESOURCES =
 OTEX_GLOWING_FLATS =
 [[
 OBLODA01
+    OBLODA02
+    OBLODA03
+    OBLODA04
+    OBLODA05
+    OBLODA06
+    OBLODA07
+    OBLODA08
+
     OGOOPY01
+    OGOOPY02
+    OGOOPY03
+    OGOOPY04
+    OGOOPY05
+    OGOOPY06
+    OGOOPY07
+    OGOOPY08
+
     OICYWA01
+    OICYWA02
+    OICYWA03
+    OICYWA04
+    OICYWA05
+    OICYWA06
+    OICYWA07
+    OICYWA08
+  
     OLAVAA01
     OLAVAA02
     OLAVAB01
+
     OLAVAC01
+    OLAVAC02
+    OLAVAC03
+    OLAVAC04
+    OLAVAC05
+    OLAVAC06
+    OLAVAC07
+    OLAVAC08
+
     OLAVAD01
+    OLAVAD02
+    OLAVAD03
+    OLAVAD04
+    OLAVAD05
+    OLAVAD06
+    OLAVAD07
+    OLAVAD08
+
     OLAVAE01
+    OLAVAE02
+    OLAVAE03
+    OLAVAE04
+    OLAVAE05
+    OLAVAE06
+    OLAVAE07
+    OLAVAE08
+
     OLAVAF01
+    OLAVAF02
+    OLAVAF03
+    OLAVAF04
+    OLAVAF05
+    OLAVAF06
+    OLAVAF07
+    OLAVAF08
+    OLAVAF09
+    OLAVAF10
+
     ONUKEA01
+    ONUKEA02
+    ONUKEA03
+    ONUKEA04
+    ONUKEA05
+    ONUKEA06
+    ONUKEA07
+    ONUKEA08
+
     OSLUDG01
+    OSLUDG02
+    OSLUDG03
+    OSLUDG04
+    OSLUDG05
+    OSLUDG06
+    OSLUDG07
+    OSLUDG08
+
     OPOOPY01
+    OPOOPY02
+    OPOOPY03
+    OPOOPY04
+    OPOOPY05
+    OPOOPY06
+    OPOOPY07
+    OPOOPY08
+
     OTAR__01
+    OTAR__02
+    OTAR__03
+    OTAR__04
+    OTAR__05
+    OTAR__06
+    OTAR__07
+    OTAR__08
+
     OWATER01
+    OWATER02
+    OWATER03
+    OWATER04
+    OWATER05
+    OWATER06
+    OWATER07
+    OWATER08
 ]]
 
 function OTEX_PROC_MODULE.setup(self)
