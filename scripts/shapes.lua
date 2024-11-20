@@ -14547,6 +14547,58 @@ GROW_SKULL_P1_STEEPNESS_HALF =
   }
 },
 
+GROW_X_SHIFTED =
+{
+  prob = 7,
+  skip_prob = 80,
+  
+  structure =
+  {
+    "xxxx11xx..","xxxx11xx11",
+    "xxxx..xx..","xxxx11xx11",
+    "xxxx..x...","xxxx11x/11",
+    "x.........","x/1111111/",
+    ".........x","/1111111/x",
+    "...x..xxxx","11/x11xxxx",
+    "..xx..xxxx","11xx11xxxx",
+    "..xx..xxxx","11xx11xxxx",
+  },
+
+  diagonals =
+  {
+    ".1",
+    ".1","1.",
+    ".1","1.",
+    "1."
+  }
+},
+
+GROW_X_SHIFTED_NEW_AREA =
+{
+  prob = 10,
+  skip_prob = 75,
+  
+  structure =
+  {
+    "xxxx11xx..","xxxx11xxAA",
+    "xxxx..xx..","xxxx11xxAA",
+    "xxxx..x...","xxxx11x/AA",
+    "x.........","x/AAAAAAA/",
+    ".........x","/AAAAAAA/x",
+    "...x..xxxx","AA/x11xxxx",
+    "..xx..xxxx","AAxx11xxxx",
+    "..xx..xxxx","AAxx11xxxx",
+  },
+
+  diagonals =
+  {
+    ".A",
+    ".A","A.",
+    ".A","A.",
+    "A."
+  }
+},
+
 -- other shapes
 
 GROW_DIAGONAL_STALK =
