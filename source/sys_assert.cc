@@ -22,6 +22,8 @@
 #include "main.h"
 #include "sys_macro.h"
 
+#include <stdarg.h>
+
 //----------------------------------------------------------------------------
 
 void AssertFail(const char *msg, ...)

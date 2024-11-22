@@ -696,9 +696,11 @@ void Main::SetupFLTK()
         Fl::get_color(GRADIENT_COLOR, gradient_red, gradient_green, gradient_blue);
         Fl::get_color(BUTTON_COLOR, button_red, button_green, button_blue);
     }
+#if FL_MINOR_VERSION > 3
     Fl::set_boxtype(FL_OXY_UP_BOX, coxy_up_box, 2, 2, 4, 4);
     Fl::set_boxtype(FL_OXY_THIN_UP_BOX, coxy_up_box, 1, 1, 2, 2);
     Fl::set_boxtype(FL_OXY_DOWN_BOX, coxy_down_box, 2, 2, 4, 4);
+#endif
     Fl::set_boxtype(FL_GLEAM_UP_BOX, cgleam_up_box, 2, 2, 4, 4);
     Fl::set_boxtype(FL_GLEAM_THIN_UP_BOX, cgleam_thin_up_box, 2, 2, 4, 4);
     Fl::set_boxtype(FL_GLEAM_DOWN_BOX, cgleam_down_box, 2, 2, 4, 4);
@@ -768,9 +770,11 @@ void Main::SetupFLTK()
         case 3:
             box_style = FL_PLASTIC_DOWN_BOX;
             break;
+#if FL_MINOR_VERSION > 3
         case 4:
             box_style = FL_OXY_DOWN_BOX;
             break;
+#endif
         default:
             box_style = FL_GTK_DOWN_BOX;
             break;
@@ -791,9 +795,11 @@ void Main::SetupFLTK()
         case 3:
             box_style = FL_PLASTIC_THIN_UP_BOX;
             break;
+#if FL_MINOR_VERSION > 3
         case 4:
             box_style = FL_OXY_THIN_UP_BOX;
             break;
+#endif
         default:
             box_style = FL_GTK_THIN_UP_BOX;
             break;
@@ -821,9 +827,11 @@ void Main::SetupFLTK()
         case 3:
             button_style = FL_PLASTIC_DOWN_BOX;
             break;
+#if FL_MINOR_VERSION > 3
         case 4:
             button_style = FL_OXY_DOWN_BOX;
             break;
+#endif
         default:
             button_style = FL_GTK_DOWN_BOX;
             break;
@@ -844,9 +852,11 @@ void Main::SetupFLTK()
         case 3:
             button_style = FL_PLASTIC_UP_BOX;
             break;
+#if FL_MINOR_VERSION > 3
         case 4:
             button_style = FL_OXY_UP_BOX;
             break;
+#endif
         default:
             button_style = FL_GTK_UP_BOX;
             break;

@@ -21,6 +21,7 @@
 
 #include "sys_debug.h"
 
+#include <stdarg.h>
 #include <time.h>
 
 #include "lib_util.h"

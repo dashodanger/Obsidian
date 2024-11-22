@@ -23,7 +23,6 @@
 
 #ifndef _WIN32
 #include <dirent.h>
-#include <ftw.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -32,6 +31,7 @@
 #include <sys/stat.h>
 #endif
 
+#include <stdarg.h>
 #include <stdint.h>
 
 #include <algorithm>

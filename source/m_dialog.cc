@@ -24,6 +24,8 @@
 #include <FL/fl_ask.H>
 #include <FL/fl_utf8.h>
 
+#include <stdarg.h>
+
 #include <limits>
 #include <stdexcept>
 #include <string>
@@ -318,19 +320,33 @@ std::string DLG_OutputFilename(const char *ext, const char *preset)
 
 void DLG_EditSeed(void)
 {
-    ;
+    std::string user_buf;
 
+#if FL_MINOR_VERSION > 3
     int         user_response;
-    std::string user_buf =
+    user_buf =
         fl_input_str(user_response, 0 /* limit */, "%s",
                      string_seed.empty() ? std::to_string(next_rand_seed).c_str() : string_seed.c_str(),
                      _("Enter New Seed Number or Phrase:"));
-
     // cancelled?
     if (user_response < 0)
     {
         return;
     }
+#else
+    const char *fl_buf =
+        fl_input(_("Enter New Seed Number or Phrase:"), 
+                     string_seed.empty() ? std::to_string(next_rand_seed).c_str() : string_seed.c_str());
+    // cancelled?
+    if (!fl_buf)
+    {
+        return;
+    }
+    else
+    {
+        user_buf = fl_buf;
+    }
+#endif
 
     std::string word = {user_buf.c_str(), static_cast<size_t>(user_buf.size())};
     try
