@@ -59,7 +59,7 @@ public:
   void add_child(Fl_Type*, Fl_Type*) FL_OVERRIDE;
   void move_child(Fl_Type*, Fl_Type*) FL_OVERRIDE;
   void remove_child(Fl_Type*) FL_OVERRIDE;
-  int is_parent() const FL_OVERRIDE {return 1;}
+  int can_have_children() const FL_OVERRIDE {return 1;}
   ID id() const FL_OVERRIDE { return ID_Group; }
   bool is_a(ID inID) const FL_OVERRIDE { return (inID==ID_Group) ? true : super::is_a(inID); }
   Fl_Widget *enter_live_mode(int top=0) FL_OVERRIDE;
@@ -118,6 +118,7 @@ public:
   void read_property(Fd_Project_Reader &f, const char *) FL_OVERRIDE;
   Fl_Widget *enter_live_mode(int top=0) FL_OVERRIDE;
   void copy_properties() FL_OVERRIDE;
+  void copy_properties_for_children() FL_OVERRIDE;
   void postprocess_read() FL_OVERRIDE;
   void write_code2(Fd_Code_Writer& f) FL_OVERRIDE;
 //  void add_child(Fl_Type*, Fl_Type*) FL_OVERRIDE;

@@ -1,7 +1,7 @@
 //
 // FLUID undo support for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2021 by Bill Spitzak and others.
+// Copyright 1998-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -53,6 +53,7 @@ int undo_last = 0;                      // Last undo level in buffer
 int undo_max = 0;                       // Maximum undo level used
 int undo_save = -1;                     // Last undo level that was saved
 static int undo_paused = 0;             // Undo checkpointing paused?
+int undo_once_type = 0;                 // Suspend further undos of the same type
 
 
 // Return the undo filename.
@@ -80,6 +81,7 @@ static char *undo_filename(int level) {
 void redo_cb(Fl_Widget *, void *) {
   // int undo_item = main_menubar->find_index(undo_cb);
   // int redo_item = main_menubar->find_index(redo_cb);
+  undo_once_type = 0;
 
   if (undo_current >= undo_last) {
     fl_beep();
@@ -120,6 +122,7 @@ void redo_cb(Fl_Widget *, void *) {
 void undo_cb(Fl_Widget *, void *) {
   // int undo_item = main_menubar->find_index(undo_cb);
   // int redo_item = main_menubar->find_index(redo_cb);
+  undo_once_type = 0;
 
   if (undo_current <= 0) {
     fl_beep();
@@ -133,19 +136,23 @@ void undo_cb(Fl_Widget *, void *) {
   undo_suspend();
   // Undo first deletes all widgets which resets the widget_tree browser.
   // Save the current scroll position, so we don't scroll back to 0 at undo.
+  // TODO: make the scroll position part of the .fl project file
   if (widget_browser) widget_browser->save_scroll_position();
   int reload_panel = (the_panel && the_panel->visible());
   if (!read_file(undo_filename(undo_current - 1), 0)) {
     // Unable to read checkpoint file, don't undo...
     widget_browser->rebuild();
     g_project.update_settings_dialog();
+    set_modflag(0, 0);
     undo_resume();
     return;
   }
   if (reload_panel) {
     for (Fl_Type *t = Fl_Type::first; t; t=t->next) {
-      if (t->is_widget() && t->selected)
+      if (t->is_widget() && t->selected) {
         t->open();
+        break;
+      }
     }
   }
   // Restore old browser position.
@@ -165,6 +172,16 @@ void undo_cb(Fl_Widget *, void *) {
   undo_resume();
 }
 
+void undo_checkpoint_once(int type) {
+  if (undo_paused) return;
+  if (undo_once_type != type) {
+    undo_checkpoint();
+    undo_once_type = type;
+  } else {
+    // do not add more checkpoints for the same undo typw
+  }
+}
+
 // Save current file to undo buffer
 void undo_checkpoint() {
   //  printf("undo_checkpoint(): undo_current=%d, undo_paused=%d, modflag=%d\n",
@@ -175,6 +192,7 @@ void undo_checkpoint() {
 
   // int undo_item = main_menubar->find_index(undo_cb);
   // int redo_item = main_menubar->find_index(redo_cb);
+  undo_once_type = 0;
 
   // Save the current UI to a checkpoint file...
   const char *filename = undo_filename(undo_current);

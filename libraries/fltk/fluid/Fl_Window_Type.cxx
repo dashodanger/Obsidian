@@ -5,7 +5,7 @@
 // for interacting with the overlay, which allows the user to
 // select, move, and resize the children widgets.
 //
-// Copyright 1998-2023 by Bill Spitzak and others.
+// Copyright 1998-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -108,7 +108,7 @@ void show_settings_cb(Fl_Widget *, void *) {
 
 Fl_Menu_Item window_type_menu[] = {
   {"Single",0,0,(void*)FL_WINDOW},
-  {"Double",0,0,(void*)(FL_WINDOW+1)},
+  {"Double",0,0,(void*)(FL_DOUBLE_WINDOW)},
   {0}};
 
 static int overlays_invisible;
@@ -227,8 +227,13 @@ int Overlay_Window::handle(int e) {
  \return new node
  */
 Fl_Type *Fl_Window_Type::make(Strategy strategy) {
-  Fl_Type *p = Fl_Type::current;
-  while (p && (!p->is_code_block() || p->is_a(ID_Widget_Class))) p = p->parent;
+  Fl_Type *anchor = Fl_Type::current, *p = anchor;
+  if (p && (strategy == kAddAfterCurrent)) p = p->parent;
+  while (p && (!p->is_code_block() || p->is_a(ID_Widget_Class))) {
+    anchor = p;
+    strategy = kAddAfterCurrent;
+    p = p->parent;
+  }
   if (!p) {
     fl_message("Please select a function");
     return 0;
@@ -245,7 +250,7 @@ Fl_Type *Fl_Window_Type::make(Strategy strategy) {
   w->size_range(10, 10);
   w->window = myo;
   myo->o = w;
-  myo->add(p, strategy);
+  myo->add(anchor, strategy);
   myo->modal = 0;
   myo->non_modal = 0;
   return myo;
@@ -408,7 +413,12 @@ Fl_Window_Type Fl_Window_type;
 
 // Resize from window manager...
 void Overlay_Window::resize(int X,int Y,int W,int H) {
-  Fl_Widget* t = resizable(); resizable(0);
+  undo_checkpoint_once(kUndoWindowResize);
+
+  Fl_Widget* t = resizable();
+  if (Fl_Type::allow_layout == 0) {
+    resizable(0);
+  }
 
   // do not set the mod flag if the window was not resized. In FLUID, all
   // windows are opened without a given x/y position, so modifying x/y
@@ -1358,8 +1368,13 @@ Fl_Widget_Class_Type *current_widget_class = 0;
  \return new node
  */
 Fl_Type *Fl_Widget_Class_Type::make(Strategy strategy) {
-  Fl_Type *p = Fl_Type::current;
-  while (p && (!p->is_decl_block() || (p->is_widget() && p->is_class()))) p = p->parent;
+  Fl_Type *anchor = Fl_Type::current, *p = anchor;
+  if (p && (strategy == kAddAfterCurrent)) p = p->parent;
+  while (p && (!p->is_decl_block() || (p->is_widget() && p->is_class()))) {
+    anchor = p;
+    strategy = kAddAfterCurrent;
+    p = p->parent;
+  }
   Fl_Widget_Class_Type *myo = new Fl_Widget_Class_Type();
   myo->name("UserInterface");
 
@@ -1374,7 +1389,7 @@ Fl_Type *Fl_Widget_Class_Type::make(Strategy strategy) {
   w->size_range(10, 10);
   w->window = myo;
   myo->o = w;
-  myo->add(p, strategy);
+  myo->add(anchor, strategy);
   myo->modal = 0;
   myo->non_modal = 0;
   myo->wc_relative = 0;
@@ -1530,6 +1545,9 @@ void Fl_Window_Type::leave_live_mode() {
  copy all properties from the edit widget to the live widget
  */
 void Fl_Window_Type::copy_properties() {
+  Fl_Window *self = static_cast<Fl_Window*>(o);
+  Fl_Window *live = static_cast<Fl_Window*>(live_widget);
+  if (self->resizable() == self)
+    live->resizable(live);
   Fl_Widget_Type::copy_properties();
-  /// \todo copy resizing constraints over
 }

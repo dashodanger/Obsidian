@@ -433,6 +433,7 @@ public:
   void wrap_mode(int wrap, int wrap_margin);
 
   virtual void recalc_display();
+  virtual void display_needs_recalc();
   void resize(int X, int Y, int W, int H) FL_OVERRIDE;
 
   /**
@@ -571,7 +572,10 @@ protected:
   int mCursorPreferredXPos;     /* Pixel position for vert. cursor movement */
   int mNVisibleLines;           /* # of visible (displayed) lines. This is
                                    also the size of the mLineStarts[] array. */
-  int mNBufferLines;            /* # of newlines in the buffer */
+  int mNBufferLines;            /* # of newlines in the buffer, or number of
+                                   wraps if line wrapping is enabled. Note that
+                                   partial lines at the end of the buffer are
+                                   not counted, so you may want to add 1. */
   Fl_Text_Buffer* mBuffer;      /* Contains text to be displayed */
   Fl_Text_Buffer* mStyleBuffer; /* Optional parallel buffer containing
                                  color and font information */
@@ -627,6 +631,9 @@ protected:
                                  value is calculated as needed (lazy eval); it
                                  needs to be mutable so that it can be calculated
                                  within a method marked as "const" */
+
+  bool display_needs_recalc_;  /* Set to true when the display needs
+                                 to be recalculated. */
 
   Fl_Color mCursor_color;
 

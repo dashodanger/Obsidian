@@ -85,16 +85,23 @@ set(FL_ABI_VERSION ${FLTK_ABI_VERSION})
 #  Note: this might be handled better by the 'MSVC_RUNTIME_LIBRARY'
 #  target property for each target rather than setting a global
 #  CMake variable - but this version does the latter.
+#  This also applies when using LLVM/clang on Windows (#1058).
 #######################################################################
 
-if(MSVC)
+if(WIN32 AND NOT MINGW AND NOT MSYS)
   option(FLTK_MSVC_RUNTIME_DLL "use MSVC Runtime-DLL (/MDx)" ON)
   if(FLTK_MSVC_RUNTIME_DLL)
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
   else()
     set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
   endif()
-endif(MSVC)
+else(WIN32 AND NOT MINGW AND NOT MSYS)
+  # suppress CMake warning if the user sets FLTK_MSVC_RUNTIME_DLL on other platforms
+  if(DEFINED FLTK_MSVC_RUNTIME_DLL)
+    unset(FLTK_MSVC_RUNTIME_DLL)
+    unset(FLTK_MSVC_RUNTIME_DLL CACHE)
+  endif()
+endif(WIN32 AND NOT MINGW AND NOT MSYS)
 
 #######################################################################
 
@@ -111,15 +118,21 @@ endif(APPLE)
 #  Bundled Library Options
 #######################################################################
 
-option(FLTK_USE_SYSTEM_LIBJPEG "use system libjpeg" OFF)
-option(FLTK_USE_SYSTEM_LIBPNG  "use system libpng"  OFF)
-option(FLTK_USE_SYSTEM_ZLIB    "use system zlib"    OFF)
+if(WIN32 OR (APPLE AND NOT FLTK_BACKEND_X11))
+  option(FLTK_USE_SYSTEM_LIBJPEG "use system libjpeg" OFF)
+  option(FLTK_USE_SYSTEM_LIBPNG  "use system libpng"  OFF)
+  option(FLTK_USE_SYSTEM_ZLIB    "use system zlib"    OFF)
+else()
+  option(FLTK_USE_SYSTEM_LIBJPEG "use system libjpeg" ON)
+  option(FLTK_USE_SYSTEM_LIBPNG  "use system libpng"  ON)
+  option(FLTK_USE_SYSTEM_ZLIB    "use system zlib"    ON)
+endif()
 
 # Set default values of internal build options
 
-set(FLTK_USE_BUNDLED_JPEG TRUE)
-set(FLTK_USE_BUNDLED_PNG  TRUE)
-set(FLTK_USE_BUNDLED_ZLIB TRUE)
+set(FLTK_USE_BUNDLED_JPEG FALSE)
+set(FLTK_USE_BUNDLED_PNG  FALSE)
+set(FLTK_USE_BUNDLED_ZLIB FALSE)
 
 # Collect libraries to build fltk_images (starting empty)
 
@@ -418,7 +431,7 @@ option(FLTK_USE_POLL "use poll if available" OFF)
 mark_as_advanced(FLTK_USE_POLL)
 
 if(FLTK_USE_POLL)
-  check_function_exists(poll USE_POLL)
+  check_symbol_exists(poll   "poll.h"   USE_POLL)
 endif(FLTK_USE_POLL)
 
 #######################################################################
@@ -605,7 +618,7 @@ endif(FLTK_OPTION_SVG)
 
 #######################################################################
 
-# FIXME: GL libs have already been searched in resources.cmake
+# FIXME: GLU libs have already been searched in resources.cmake
 
 set(HAVE_GL LIB_GL OR LIB_MesaGL)
 set(FLTK_USE_GL FALSE)
@@ -675,8 +688,8 @@ set(FLTK_GL_FOUND FALSE)
 
 if(OPENGL_FOUND)
   set(FLTK_GL_FOUND TRUE)
-  find_path(OPENGL_GLU_INCLUDE_DIR NAMES GL/glu.h OpenGL/glu.h HINTS ${OPENGL_INCLUDE_DIR} ${X11_INCLUDE_DIR})
-  set(CMAKE_REQUIRED_INCLUDES ${OPENGL_INCLUDE_DIR}/GL ${OPENGL_GLU_INCLUDE_DIR})
+  find_path(FLTK_OPENGL_GLU_INCLUDE_DIR NAMES GL/glu.h OpenGL/glu.h HINTS ${OPENGL_INCLUDE_DIR} ${X11_INCLUDE_DIR})
+  set(CMAKE_REQUIRED_INCLUDES ${OPENGL_INCLUDE_DIR}/GL ${FLTK_OPENGL_GLU_INCLUDE_DIR})
 
   if(WIN32)
     list(APPEND GLLIBS -lglu32 -lopengl32)
@@ -693,7 +706,7 @@ if(OPENGL_FOUND)
   # check if function glXGetProcAddressARB exists
   set(TEMP_REQUIRED_LIBRARIES ${CMAKE_REQUIRED_LIBRARIES})
   set(CMAKE_REQUIRED_LIBRARIES ${OPENGL_LIBRARIES})
-  check_function_exists(glXGetProcAddressARB HAVE_GLXGETPROCADDRESSARB)
+  check_symbol_exists(glXGetProcAddressARB  "glx.h"   HAVE_GLXGETPROCADDRESSARB)
   set(CMAKE_REQUIRED_LIBRARIES ${TEMP_REQUIRED_LIBRARIES})
   unset(TEMP_REQUIRED_LIBRARIES)
 endif(OPENGL_FOUND)

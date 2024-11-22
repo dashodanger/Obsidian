@@ -417,7 +417,7 @@ void run_autodoc(const Fl_String &target_dir) {
   main_window->size(350, 320);
   fl_snapshot((target_dir + "main_window.png").c_str(), main_window, win_margin, win_blend);
   fl_snapshot((target_dir + "main_menubar.png").c_str(), main_menubar, row_margin, row_blend);
-  fl_snapshot((target_dir + "main_browser.png").c_str(), widget_browser, FL_SNAP_AREA_CLEAR, 
+  fl_snapshot((target_dir + "main_browser.png").c_str(), widget_browser, FL_SNAP_AREA_CLEAR,
               Fl_Rect(0, 30, FL_SNAP_TO_WINDOW, 100), row_blend, 2.0);
 
 
@@ -437,7 +437,8 @@ void run_autodoc(const Fl_String &target_dir) {
   // explain widgets types an their dnd option
   // explain menu arrays
   // list exceptions (subwindow, scroll)
-  if (!widgetbin_panel) make_widgetbin();
+  Fl::wait(0.2);
+  Fl::flush();
   fl_snapshot((target_dir + "widgetbin_panel.png").c_str(), widgetbin_panel, win_margin, win_blend);
 
   // ---- code view
@@ -446,8 +447,13 @@ void run_autodoc(const Fl_String &target_dir) {
   // show various tabs
   // explain find and locate
   if (!codeview_panel) make_codeview();
-  update_codeview_cb(NULL, NULL);
+  codeview_panel->show();
+  Fl::wait(0.2);
+  Fl::flush();
+  update_codeview_cb(NULL, NULL); // must be visible on screen for this to work
   cv_tab->value(cv_source_tab);
+  codeview_panel->redraw();
+  Fl::flush();
   fl_snapshot((target_dir + "codeview_panel.png").c_str(), codeview_panel, win_margin, win_blend);
   fl_snapshot((target_dir + "cv_find_row.png").c_str(), cv_find_row, row_margin, row_blend);
   fl_snapshot((target_dir + "cv_settings_row.png").c_str(), cv_settings_row, row_margin, row_blend);

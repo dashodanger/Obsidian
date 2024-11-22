@@ -106,11 +106,6 @@ int G_debug = 0;
 char G_external_editor_command[512];
 
 
-/// If set, if the `current` node is a group, and a new group is added, it will
-/// be added as sibling to the first group instead of inside the group.
-/// \todo Needs to be verified.
-int force_parent = 0;
-
 /// This is set to create different labels when creating new widgets.
 /// \todo Details unclear.
 int reading_file = 0;
@@ -1360,6 +1355,7 @@ void copy_cb(Fl_Widget*, void*) {
     fl_beep();
     return;
   }
+  flush_text_widgets();
   ipasteoffset = 10;
   if (!write_file(cutfname(),1)) {
     fl_message("Can't write %s: %s", cutfname(), strerror(errno));
@@ -1375,6 +1371,7 @@ void cut_cb(Fl_Widget *, void *) {
     fl_beep();
     return;
   }
+  flush_text_widgets();
   if (!write_file(cutfname(),1)) {
     fl_message("Can't write %s: %s", cutfname(), strerror(errno));
     return;
@@ -1409,15 +1406,25 @@ void delete_cb(Fl_Widget *, void *) {
 
 /**
  User chose to paste the widgets from the cut buffer.
+
+ This function will paste the widgets in the cut buffer after the currently
+ selected widget. If the currently selected widget is a group widget and
+ it is not folded, the new widgets will be added inside the group.
  */
 void paste_cb(Fl_Widget*, void*) {
-  //if (ipasteoffset) force_parent = 1;
   pasteoffset = ipasteoffset;
   undo_checkpoint();
   undo_suspend();
   Strategy strategy = kAddAfterCurrent;
-  if (Fl_Type::current && Fl_Type::current->is_a(ID_Group))
-    strategy = kAddAsLastChild;
+  if (Fl_Type::current && Fl_Type::current->can_have_children()) {
+    if (Fl_Type::current->folded_ == 0) {
+      // If the current widget is a group widget and it is not folded,
+      // add the new widgets inside the group.
+      strategy = kAddAsLastChild;
+      // The following alternative also works quite nicely
+      //strategy = kAddAsFirstChild;
+    }
+  }
   if (!read_file(cutfname(), 1, strategy)) {
     widget_browser->rebuild();
     fl_message("Can't read %s: %s", cutfname(), strerror(errno));
@@ -1427,11 +1434,14 @@ void paste_cb(Fl_Widget*, void*) {
   widget_browser->rebuild();
   pasteoffset = 0;
   ipasteoffset += 10;
-  force_parent = 0;
 }
 
 /**
  Duplicate the selected widgets.
+
+ This code is a bit complex because it needs to find the last selected
+ widget with the lowest level, so that the new widgets are inserted after
+ this one.
  */
 void duplicate_cb(Fl_Widget*, void*) {
   if (!Fl_Type::current) {
@@ -1439,16 +1449,31 @@ void duplicate_cb(Fl_Widget*, void*) {
     return;
   }
 
+  // flush the text widgets to make sure the user's changes are saved:
   flush_text_widgets();
 
+  // find the last selected node with the lowest level:
+  int lowest_level = 9999;
+  Fl_Type *new_insert = NULL;
+  if (Fl_Type::current->selected) {
+    for (Fl_Type *t = Fl_Type::first; t; t = t->next) {
+      if (t->selected && (t->level <= lowest_level)) {
+        lowest_level = t->level;
+        new_insert = t;
+      }
+    }
+  }
+  if (new_insert)
+    Fl_Type::current = new_insert;
+
+  // write the selected widgets to a file:
   if (!write_file(cutfname(1),1)) {
     fl_message("Can't write %s: %s", cutfname(1), strerror(errno));
     return;
   }
 
+  // read the file and add the widgets after the current one:
   pasteoffset  = 0;
-  force_parent = 1;
-
   undo_checkpoint();
   undo_suspend();
   if (!read_file(cutfname(1), 1, kAddAfterCurrent)) {
@@ -1458,8 +1483,6 @@ void duplicate_cb(Fl_Widget*, void*) {
   widget_browser->display(Fl_Type::current);
   widget_browser->rebuild();
   undo_resume();
-
-  force_parent = 0;
 }
 
 /**
@@ -1637,7 +1660,8 @@ static void menu_file_new_from_template_cb(Fl_Widget *, void *) { new_project_fr
 static void menu_file_open_cb(Fl_Widget *, void *) { open_project_file(""); }
 static void menu_file_insert_cb(Fl_Widget *, void *) { merge_project_file(""); }
 static void menu_file_open_history_cb(Fl_Widget *, void *v) { open_project_file(Fl_String((const char*)v)); }
-
+static void menu_layout_sync_resize_cb(Fl_Menu_ *m, void*) {
+  if (m->mvalue()->value()) Fl_Type::allow_layout = 1; else Fl_Type::allow_layout = 0; }
 /**
  This is the main Fluid menu.
 
@@ -1722,10 +1746,11 @@ Fl_Menu_Item Main_Menu[] = {
     {"&Height",0,(Fl_Callback *)align_widget_cb,(void*)31},
     {"&Both",0,(Fl_Callback *)align_widget_cb,(void*)32},
     {0},
-  {"&Center In Group",0,0,0,FL_SUBMENU|FL_MENU_DIVIDER},
+  {"&Center In Group",0,0,0,FL_SUBMENU},
     {"&Horizontal",0,(Fl_Callback *)align_widget_cb,(void*)40},
     {"&Vertical",0,(Fl_Callback *)align_widget_cb,(void*)41},
     {0},
+  {"Synchronized Resize", 0, (Fl_Callback*)menu_layout_sync_resize_cb, NULL, FL_MENU_TOGGLE|FL_MENU_DIVIDER },
   {"&Grid and Size Settings...",FL_COMMAND+'g',show_grid_cb, NULL, FL_MENU_DIVIDER},
   {"Presets", 0, layout_suite_marker, (void*)main_layout_submenu_, FL_SUBMENU_POINTER },
   {"Application", 0, select_layout_preset_cb, (void*)0, FL_MENU_RADIO|FL_MENU_VALUE },

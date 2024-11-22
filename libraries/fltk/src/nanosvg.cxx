@@ -40,12 +40,6 @@ static float nsvg__roundf(float x);     // prototype (see nanosvgrast.h)
 
 // End of GitHub Issue #937. Remove this entire block when upstream is patched.
 
-#if !defined(HAVE_LONG_LONG)
-static double strtoll(const char *str, char **endptr, int base) {
-  return (double)strtol(str, endptr, base);
-}
-#endif
-
 #ifdef _MSC_VER
 #pragma warning (disable: 4244)         // Switch off conversion warnings
 #endif

@@ -35,9 +35,11 @@ Fl_Check_Button *scaling  = NULL;
 
 // Text in the headline and after clearing the terminal buffer. For alignment ...
 //          1         2         3         4         5         6         7         8
-// 12345678901234567890123456789012345678901234567890123456789012345678901234567890
+// 1234567890123456789012345678901234567890123456789012345678901234567890123456789012345
 static const char *headline_text =
-  "[nnn] Event       Key     Name,  Flags: C A S M N L  Text  Unicode   UTF-8/hex";
+  "[nnn] Event           Key     Name,  Flags: C A S M N L  Text  Unicode   UTF-8/hex";
+
+static const int lkn = 14; // length of key name field
 
 // Tooltip for headline and terminal widgets
 static const char *tt =
@@ -101,22 +103,21 @@ struct keycode_table {
 
 const char *get_keyname(int k, int &lg) {
   static char buffer[32];
+  lg = 0;
   if (!k) {
+    lg = 1;
     return "0";
   }
   else if (k < 32) {  // control character
-    sprintf(buffer, "^%c", (char)(k + 64));
-    lg = 2;
+    lg = sprintf(buffer, "^%c", (char)(k + 64));
   }
   else if (k < 128) { // ASCII
-    snprintf(buffer, sizeof(buffer), "'%c'", k);
-    lg = 3;
+    lg = snprintf(buffer, sizeof(buffer), "'%c'", k);
   } else if (k >= 0xa0 && k <= 0xff) { // ISO-8859-1 (international keyboards)
     char key[8];
     int kl = fl_utf8encode((unsigned)k, key);
     key[kl] = '\0';
-    snprintf(buffer, sizeof(buffer), "'%s'", key);
-    lg = 3;
+    lg = snprintf(buffer, sizeof(buffer), "'%s'", key);
   } else if (k > FL_F && k <= FL_F_Last) {
     lg = snprintf(buffer, sizeof(buffer), "FL_F+%d", k - FL_F);
   } else if (k >= FL_KP && k <= FL_KP_Last) {
@@ -197,12 +198,15 @@ int app::print_event(int ev) {
   switch(ev) {
     case FL_KEYBOARD:
       if (!keydown->value()) return 0;
+      tty->textfgcolor(FL_BLACK);
       break;
     case FL_KEYUP:
       if (!keyup->value()) return 0;
+      tty->textfgcolor(FL_BLUE);
       break;
     case FL_SHORTCUT:
       if (!shortcut->value()) return 0;
+      tty->textfgcolor(0x00aa0000);   // dark green
       break;
     default:
       return 0;
@@ -224,18 +228,23 @@ int app::handle(int ev) {
   const char *etxt = Fl::event_text();
   int ekey    = Fl::event_key();
   int elen    = Fl::event_length();
-  char ctrl   = (Fl::event_state() & FL_COMMAND)   ? 'C' : '.';
+  char ctrl   = (Fl::event_state() & FL_CTRL)      ? 'C' : '.';
   char alt    = (Fl::event_state() & FL_ALT)       ? 'A' : '.';
   char shift  = (Fl::event_state() & FL_SHIFT)     ? 'S' : '.';
   char meta   = (Fl::event_state() & FL_META)      ? 'M' : '.';
   char numlk  = (Fl::event_state() & FL_NUM_LOCK)  ? 'N' : '.';
   char capslk = (Fl::event_state() & FL_CAPS_LOCK) ? 'L' : '.';
 
-  tty->printf("%06x  ", ekey); // event key number (hex)
   int lg = 0;
+  char ekns[12];                  // event key (hex) as string
+  sprintf(ekns, "0x%04x", ekey);  // may be up to 10 chars
+  tty->printf("%10s  ", ekns);    // event key number (hex)
+
   tty->printf("%s", get_keyname(ekey, lg));
-  for (int i = lg; i < 14; i++) {
-    tty->printf(" ");
+  if (lg < lkn) {
+    for (int i = 0; i < lkn - lg; i++) {
+      tty->append_ascii(" ");
+    }
   }
 
   tty->printf("%c %c %c %c %c %c  ", ctrl, alt, shift, meta, numlk, capslk);
@@ -254,6 +263,7 @@ int app::handle(int ev) {
   } else {
     tty->printf("'' ");
   }
+  tty->textfgcolor(FL_BLACK);
   tty->printf("\n");
   return res;
 } // app::handle()
@@ -302,6 +312,12 @@ void toggle_cb(Fl_Widget *w, void *) {
 void toggle_scaling(Fl_Widget *w, void *v) {
   int toggle = ((Fl_Button*)w)->value() ? 1 : 0;
   Fl::keyboard_screen_scaling(toggle);
+  if (toggle) {
+    Terminal *tty = ((app *)w->window())->tty;
+    int simple_zoom = Fl::option(Fl::OPTION_SIMPLE_ZOOM_SHORTCUT);
+    tty->printf("GUI-Scaling = %s, OPTION_SIMPLE_ZOOM_SHORTCUT = %s\n",
+                toggle ? "ON" : "OFF", simple_zoom ? "ON" : "OFF");
+  }
   toggle_cb(w, v); // give focus to 'app'
 }
 
@@ -316,21 +332,24 @@ void close_cb(Fl_Widget *win, void *) {
 
 int main(int argc, char **argv) {
 
-// Set an appropriate font for Wine on Linux (test only).
-// This is very likely not necessary on a real Windows system
-
-#if (1) // test/experimental for wine on Linux (maybe missing fonts)
 #ifdef _WIN32
-  // Fl::set_font(FL_COURIER, " DejaVu Sans Mono");     // DejaVu Mono
-  // Fl::set_font(FL_COURIER, "BNimbus Mono PS");       // Nimbus Mono PS bold
-  Fl::set_font(FL_COURIER, " Liberation Mono");         // Liberation Mono
+  // Set an appropriate font for Wine on Linux (test only).
+  // This is very likely not necessary on a real Windows system.
+  // Set environment variable FLTK_USING_WINE to a non-empty string
+  // to enable this feature, e.g. (in bash) `export FLTK_USING_WINE=1`.
+  const char *using_wine = fl_getenv("FLTK_USING_WINE");
+  printf("FLTK_USING_WINE = %s\n", using_wine ? using_wine : "");
+  if (using_wine && *using_wine) {
+    // Fl::set_font(FL_COURIER, " DejaVu Sans Mono");     // DejaVu Mono
+    Fl::set_font(FL_COURIER, " Liberation Mono");         // Liberation Mono
+  }
 #endif
-#endif // test
 
   const int WW = 700, WH = 400;
   app *win = new app(0, 0, WW, WH);
   win->tty->box(FL_DOWN_BOX);
   win->tty->show_unknown(true);
+  win->tty->textfgcolor(FL_BLACK);
   win->tty->printf("Please press any key ...\n");
 
   Fl_Grid *grid = new Fl_Grid(0, WH - 75, WW, 75);

@@ -2,7 +2,7 @@
 #
 # FLTK configuration utility.
 #
-# Copyright 2000-2023 by Bill Spitzak and others.
+# Copyright 2000-2024 by Bill Spitzak and others.
 # Original version Copyright 2000 by James Dean Palmer
 # Adapted by Vincent Penne and Michael Sweet
 #
@@ -44,12 +44,12 @@ CAIROFLAGS="@CAIROFLAGS@"
 # otherwise it is an empty string
 BINARY_DIR=@BINARY_DIR@
 
-prefix=@prefix@
-exec_prefix=@exec_prefix@
+prefix="@prefix@"
+exec_prefix="@exec_prefix@"
 exec_prefix_set=no
-includedir=@includedir@
-libdir=@libdir@
-srcdir=@srcdir@
+includedir="@includedir@"
+libdir="@libdir@"
+srcdir="@srcdir@"
 
 # BEGIN fltk-config code
 
@@ -88,7 +88,7 @@ fi
 
 # Check bundled image libraries in installation folder.
 # Note: jpeg, png, and zlib headers are installed in FL/images
-if test -d $includedir/FL/images; then
+if test -d "$includedir/FL/images"; then
     CFLAGS="-I$includedir/FL/images $CFLAGS"
     CXXFLAGS="-I$includedir/FL/images $CXXFLAGS"
 fi
@@ -254,7 +254,7 @@ do
 done
 
 if test "$includedir" != /usr/include; then
-    includes=-I$includedir
+    includes="-I$includedir"
 else
     includes=
 fi
@@ -265,7 +265,7 @@ if test -n "$BINARY_DIR"; then
 fi
 
 if test "$libdir" != /usr/lib -a "$libdir" != /usr/lib32; then
-    libs=-L$libdir
+    libs="-L$libdir"
 else
     libs=
 fi
@@ -392,10 +392,10 @@ fi
 
 if test "$echo_ldflags" = "yes"; then
     my_libs=
-    libdirs=$libs
+    libdirs="$libs"
 
     for i in $LDLIBS ; do
-        if test $i != -L$libdir ; then
+        if test $i != "-L$libdir" ; then
             if test -z "$my_libs" ; then
                 my_libs="$i"
             else
@@ -425,7 +425,7 @@ if test "$echo_libs" = "yes"; then
         USELIBS="$libdir/libfltk_images.a $USELIBS"
 
         for lib in fltk_jpeg fltk_png fltk_z; do
-            if test -f $libdir/lib$lib.a; then
+            if test -f "$libdir/lib$lib.a"; then
                 USELIBS="$libdir/lib$lib.a $USELIBS"
             fi
         done

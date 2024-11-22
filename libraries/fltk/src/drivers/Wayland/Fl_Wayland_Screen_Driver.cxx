@@ -300,13 +300,21 @@ static void pointer_button(void *data,
   int b = 0;
   // Fl::e_state &= ~FL_BUTTONS;    // DO NOT reset the mouse button state!
   if (state == WL_POINTER_BUTTON_STATE_PRESSED) {
-    if (button == BTN_LEFT) { Fl::e_state |= FL_BUTTON1; b = 1; }
-    else if (button == BTN_RIGHT) { Fl::e_state |= FL_BUTTON3; b = 3; }
-    else if (button == BTN_MIDDLE) { Fl::e_state |= FL_BUTTON2; b = 2; }
+    if (button == BTN_LEFT)         { Fl::e_state |= FL_BUTTON1; b = 1; }
+    else if (button == BTN_RIGHT)   { Fl::e_state |= FL_BUTTON3; b = 3; }
+    else if (button == BTN_MIDDLE)  { Fl::e_state |= FL_BUTTON2; b = 2; }
+    else if (button == BTN_BACK)    { Fl::e_state |= FL_BUTTON4; b = 4; } // ?
+    else if (button == BTN_SIDE)    { Fl::e_state |= FL_BUTTON4; b = 4; } // OK: Debian 12
+    else if (button == BTN_FORWARD) { Fl::e_state |= FL_BUTTON5; b = 5; } // ?
+    else if (button == BTN_EXTRA)   { Fl::e_state |= FL_BUTTON5; b = 5; } // OK: Debian 12
   } else { // must be WL_POINTER_BUTTON_STATE_RELEASED
-    if (button == BTN_LEFT) { Fl::e_state &= ~FL_BUTTON1; b = 1; }
-    else if (button == BTN_RIGHT) { Fl::e_state &= ~FL_BUTTON3; b = 3; }
-    else if (button == BTN_MIDDLE) { Fl::e_state &= ~FL_BUTTON2; b = 2; }
+    if (button == BTN_LEFT)         { Fl::e_state &= ~FL_BUTTON1; b = 1; }
+    else if (button == BTN_RIGHT)   { Fl::e_state &= ~FL_BUTTON3; b = 3; }
+    else if (button == BTN_MIDDLE)  { Fl::e_state &= ~FL_BUTTON2; b = 2; }
+    else if (button == BTN_BACK)    { Fl::e_state &= ~FL_BUTTON4; b = 4; } // ?
+    else if (button == BTN_SIDE)    { Fl::e_state &= ~FL_BUTTON4; b = 4; } // OK: Debian 12
+    else if (button == BTN_FORWARD) { Fl::e_state &= ~FL_BUTTON5; b = 5; } // ?
+    else if (button == BTN_EXTRA)   { Fl::e_state &= ~FL_BUTTON5; b = 5; } // OK: Debian 12
   }
   Fl::e_keysym = FL_Button + b;
   Fl::e_dx = Fl::e_dy = 0;
@@ -583,21 +591,19 @@ static void wl_keyboard_enter(void *data, struct wl_keyboard *wl_keyboard,
 
 
 struct key_repeat_data_t {
-  uint32_t time;
+  uint32_t serial;
   Fl_Window *window;
 };
-
+static uint32_t last_keydown_serial = 0; // serial of last keydown event
 
 #define KEY_REPEAT_DELAY 0.5 // sec
 #define KEY_REPEAT_INTERVAL 0.05 // sec
 
 
 static void key_repeat_timer_cb(key_repeat_data_t *key_repeat_data) {
-  if ((Fl::event() == FL_KEYDOWN || (Fl_Window_Driver::menu_parent() &&
-          Fl::event() == FL_ENTER)) && wld_event_time == key_repeat_data->time) {
+  if (last_keydown_serial == key_repeat_data->serial) {
     Fl::handle(FL_KEYDOWN, key_repeat_data->window);
-    Fl::add_timeout(KEY_REPEAT_INTERVAL, (Fl_Timeout_Handler)key_repeat_timer_cb,
-                    key_repeat_data);
+    Fl::add_timeout(KEY_REPEAT_INTERVAL, (Fl_Timeout_Handler)key_repeat_timer_cb, key_repeat_data);
   }
   else delete key_repeat_data;
 }
@@ -680,7 +686,12 @@ int Fl_Wayland_Screen_Driver::compose(int& del) {
   // letter+modifier key
   int condition = (Fl::e_state & (FL_ALT | FL_META | FL_CTRL)) && ascii < 128 ;
   // pressing modifier key
-  condition |= (Fl::e_keysym >= FL_Shift_L && Fl::e_keysym <= FL_Alt_R);
+  // FL_Shift_L, FL_Shift_R, FL_Control_L, FL_Control_R, FL_Caps_Lock
+  // FL_Meta_L, FL_Meta_R, FL_Alt_L, FL_Alt_R
+  condition |= ((Fl::e_keysym >= FL_Shift_L && Fl::e_keysym <= FL_Alt_R) ||
+                Fl::e_keysym == FL_Alt_Gr);
+  // FL_Home FL_Left FL_Up FL_Right FL_Down FL_Page_Up FL_Page_Down FL_End
+  // FL_Print FL_Insert FL_Menu FL_Help and more
   condition |= (Fl::e_keysym >= FL_Home && Fl::e_keysym <= FL_Help);
   condition |= Fl::e_keysym == FL_Tab;
 //fprintf(stderr, "compose: condition=%d e_state=%x ascii=%d\n", condition, Fl::e_state, ascii);
@@ -772,10 +783,8 @@ static void wl_keyboard_key(void *data, struct wl_keyboard *wl_keyboard,
       key_vector.push_back(for_key_vector);
     }
   } else {
+    last_keydown_serial = 0;
     remove_int_vector(key_vector, for_key_vector);
-    // Under KDE, the time value received doesn't change at each keystroke as it should,
-    // so we remove any key repeat timer at each FL_KEYUP event.
-    Fl::remove_timeout((Fl_Timeout_Handler)key_repeat_timer_cb);
   }
   Fl::e_text = buf;
   Fl::e_length = (int)strlen(buf);
@@ -824,9 +833,19 @@ static void wl_keyboard_key(void *data, struct wl_keyboard *wl_keyboard,
   }
   if (event == FL_KEYDOWN && status == XKB_COMPOSE_NOTHING &&
       !(sym >= FL_Shift_L && sym <= FL_Alt_R)) {
+    // Handling of key repeats :
+    // Use serial argument rather than time to detect repeated keys because
+    // serial value changes at each key up or down in all tested OS and compositors,
+    // whereas time value changes in Ubuntu24.04 KDE/Plasma 5.27.11 and Ubuntu22.04 KDE/Plasma 5.24.7
+    // but not in Debian-testing KDE/Plasma 5.27.10.
+    // Unexplained difference in behaviors of KDE/Plasma compositor:
+    // Consider KDE settings -> input -> keyboard -> when a key is held: repeat/do nothing.
+    // This setting (repeat) has key-down wayland events repeated when key is held under Debian/KDE
+    // but not under Ubuntu/KDE !
     key_repeat_data_t *key_repeat_data = new key_repeat_data_t;
-    key_repeat_data->time = time;
+    key_repeat_data->serial = serial;
     key_repeat_data->window = win;
+    last_keydown_serial = serial;
     Fl::add_timeout(KEY_REPEAT_DELAY, (Fl_Timeout_Handler)key_repeat_timer_cb,
                     key_repeat_data);
   }
@@ -838,6 +857,7 @@ static void wl_keyboard_leave(void *data, struct wl_keyboard *wl_keyboard,
   struct Fl_Wayland_Screen_Driver::seat *seat = (struct Fl_Wayland_Screen_Driver::seat*)data;
 //fprintf(stderr, "keyboard leave fl_win=%p\n", Fl_Wayland_Window_Driver::surface_to_window(surface));
   seat->keyboard_surface = NULL;
+  last_keydown_serial = 0;
   Fl_Window *win = Fl_Wayland_Window_Driver::surface_to_window(surface);
   if (!win && Fl::focus()) win = Fl::focus()->top_window();
   if (win) Fl::handle(FL_UNFOCUS, win);
@@ -1323,7 +1343,11 @@ static const struct wl_registry_listener registry_listener = {
 };
 
 
+extern int fl_send_system_handlers(void *);
+
+
 static void wayland_socket_callback(int fd, struct wl_display *display) {
+  if (fl_send_system_handlers(NULL)) return;
   struct pollfd fds = (struct pollfd) { fd, POLLIN, 0 };
   do {
     if (wl_display_dispatch(display) == -1) {

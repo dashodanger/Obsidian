@@ -60,6 +60,8 @@ protected:
   uchar *mask_bitmap_;
   uchar **mask_bitmap() FL_OVERRIDE {return &mask_bitmap_;}
   POINT *long_point;
+  bool is_solid_;
+  int style_;
 public:
   Fl_GDI_Graphics_Driver();
   ~Fl_GDI_Graphics_Driver() FL_OVERRIDE;
@@ -109,6 +111,7 @@ protected:
   void fixloop() FL_OVERRIDE;
   void point(int x, int y) FL_OVERRIDE;
   void focus_rect(int x, int y, int w, int h) FL_OVERRIDE;
+  void rect_unscaled(int x, int y, int w, int h) FL_OVERRIDE;
   void rectf_unscaled(int x, int y, int w, int h) FL_OVERRIDE;
 #if USE_COLORMAP
   void colored_rectf(int x, int y, int w, int h, uchar r, uchar g, uchar b) FL_OVERRIDE;

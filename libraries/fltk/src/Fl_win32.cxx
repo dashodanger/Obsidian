@@ -1,7 +1,7 @@
 //
 // Windows-specific code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2023 by Bill Spitzak and others.
+// Copyright 1998-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -88,6 +88,12 @@ void fl_cleanup_dc_list(void);
 
 #if defined(__GNUC__)
 # include <wchar.h>
+#endif
+
+// old versions of MinGW lack definition of GET_XBUTTON_WPARAM:
+
+#ifndef GET_XBUTTON_WPARAM
+#define GET_XBUTTON_WPARAM(wParam) (HIWORD(wParam))
 #endif
 
 static bool is_dpi_aware = false;
@@ -1044,9 +1050,12 @@ static int mouse_event(Fl_Window *window, int what, int button,
   if (wParam & MK_SHIFT) state |= FL_SHIFT;
   if (wParam & MK_CONTROL) state |= FL_CTRL;
 #endif
-  if (wParam & MK_LBUTTON) state |= FL_BUTTON1;
-  if (wParam & MK_MBUTTON) state |= FL_BUTTON2;
-  if (wParam & MK_RBUTTON) state |= FL_BUTTON3;
+  if (wParam & MK_LBUTTON)  state |= FL_BUTTON1;  // left
+  if (wParam & MK_MBUTTON)  state |= FL_BUTTON2;  // right
+  if (wParam & MK_RBUTTON)  state |= FL_BUTTON3;  // middle
+  if (wParam & MK_XBUTTON1) state |= FL_BUTTON4;  // side button 1 (back)
+  if (wParam & MK_XBUTTON2) state |= FL_BUTTON5;  // side button 2 (forward)
+
   Fl::e_state = state;
 
   switch (what) {
@@ -1147,7 +1156,7 @@ static const struct {
   {VK_LAUNCH_MAIL,      FL_Mail},
 #endif
   {0xba,        ';'},
-  {0xbb,        '='},
+  {0xbb,        '='},   // 0xbb == VK_OEM_PLUS (see #1086)
   {0xbc,        ','},
   {0xbd,        '-'},
   {0xbe,        '.'},
@@ -1347,6 +1356,21 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
       case WM_RBUTTONUP:
         mouse_event(window, 2, 3, wParam, lParam);
         return 0;
+      case WM_XBUTTONDOWN: {
+        int xbutton = GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? 4 : 5;
+        mouse_event(window, 0, xbutton, wParam, lParam);
+        return 0;
+      }
+      case WM_XBUTTONDBLCLK: {
+        int xbutton = GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? 4 : 5;
+        mouse_event(window, 1, xbutton, wParam, lParam);
+        return 0;
+      }
+      case WM_XBUTTONUP: {
+        int xbutton = GET_XBUTTON_WPARAM(wParam) == XBUTTON1 ? 4 : 5;
+        mouse_event(window, 2, xbutton, wParam, lParam);
+        return 0;
+      }
 
       case WM_MOUSEMOVE:
 #ifdef USE_TRACK_MOUSE
@@ -1439,6 +1463,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
       case WM_SYSKEYUP:
         // save the keysym until we figure out the characters:
         Fl::e_keysym = Fl::e_original_keysym = ms2fltk(wParam, lParam & (1 << 24));
+        // Kludge to allow recognizing ctrl+'-' on keyboards with digits in uppercase positions (e.g. French)
+        if (Fl::e_keysym == '6' && (VkKeyScanA('-') & 0xff) == '6') {
+          Fl::e_keysym = '-';
+        }
         // See if TranslateMessage turned it into a WM_*CHAR message:
         if (PeekMessageW(&fl_msg, hWnd, WM_CHAR, WM_SYSDEADCHAR, PM_REMOVE)) {
           uMsg = fl_msg.message;
@@ -1545,6 +1573,47 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 #endif
         }
         Fl::e_text = buffer;
+
+        // Kludge to process the +-containing key in cross-platform way when used with Ctrl
+/* Table of how Windows processes the '+'-containing key by keyboard layout
+  key  virtual
+content  key    keyboard layout
+  =|+   0xbb    US/UK/Fr/Arabic/Chinese/Hebrew/Brazil/Russian/Vietnam/Japan/Korean/Persian
+  +|*   0xbb    German/Spanish/Italy/Greek/Portugal
+  +|?   0xbb    Swedish/Finish/Norway
+  +|±   0xbb    Dutch
+  1|+   '1'     Swiss/Luxemburg
+  3|+   '3'     Hungarian
+  4|+   '4'     Turkish
+*/
+        if ((Fl::e_state & FL_CTRL) && !(GetAsyncKeyState(VK_MENU) >> 15)) {
+          // extra processing necessary only when Ctrl is down and Alt is up
+          int vk_plus_key = (VkKeyScanA('+') & 0xff); // virtual key of '+'-containing key
+          bool plus_shift_pos = ((VkKeyScanA('+') & 0x100) != 0); // true means '+' in shifted position
+          int plus_other_char;  // the other char on same key as '+'
+          if (plus_shift_pos) plus_other_char = ms2fltk(vk_plus_key, 0);
+          else if ((VkKeyScanA('*') & 0xff) == vk_plus_key) plus_other_char = '*'; // German
+          else if ((VkKeyScanA('?') & 0xff) == vk_plus_key) plus_other_char = '?'; // Swedish
+          else if ((VkKeyScanW(L'±') & 0xff) == vk_plus_key) plus_other_char = L'±'; // Dutch
+          else plus_other_char = '='; // fallback
+//fprintf(stderr, "plus_shift_pos=%d plus_other_char='%c' vk+=0x%x\n", plus_shift_pos,
+//        plus_other_char, vk_plus_key);
+          if ( (vk_plus_key == 0xbb && Fl::e_keysym == '=') || // the '+'-containing key is down
+                (plus_shift_pos && Fl::e_keysym == plus_other_char) ) {
+            Fl::e_keysym = (plus_shift_pos ? plus_other_char : '+');
+            static char plus_other_char_utf8[4];
+            int lutf8 = fl_utf8encode(plus_other_char, plus_other_char_utf8);
+            plus_other_char_utf8[lutf8] = 0;
+            if (plus_shift_pos) {
+              Fl::e_text = ( (Fl::e_state & FL_SHIFT) ? (char*)"+" : plus_other_char_utf8 );
+            } else {
+              Fl::e_text = ( (Fl::e_state & FL_SHIFT) ? plus_other_char_utf8 : (char*)"+" );
+            }
+            Fl::e_length = strlen(Fl::e_text);
+          }
+        }
+        // end of processing of the +-containing key
+
         if (lParam & (1 << 31)) { // key up events.
           if (Fl::handle(FL_KEYUP, window))
             return 0;
@@ -1630,7 +1699,16 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         Fl_WinAPI_Screen_Driver *sd = (Fl_WinAPI_Screen_Driver *)Fl::screen_driver();
         Fl_WinAPI_Window_Driver *wd = Fl_WinAPI_Window_Driver::driver(window);
         int olds = wd->screen_num();
-        int news = sd->screen_num_unscaled(nx + int(window->w() * scale / 2), ny + int(window->h() * scale / 2));
+        // Issue #1097: when a fullscreen window is restored to its size, it receives first a WM_MOVE
+        // and then a WM_SIZE, so it still has its fullscreen size at the WM_MOVE event, which defeats
+        // using window->w()|h() to compute the center of the (small) window. We detect this situation
+        // with condition: !window->fullscreen_active() && *wd->no_fullscreen_w()
+        // and use *wd->no_fullscreen_w()|h() instead of window->w()|h().
+        int trueW = window->w(), trueH = window->h();
+        if (!window->fullscreen_active() && *wd->no_fullscreen_w()) {
+          trueW = *wd->no_fullscreen_w(); trueH = *wd->no_fullscreen_h();
+        }
+        int news = sd->screen_num_unscaled(nx + int(trueW * scale / 2), ny + int(trueH * scale / 2));
         if (news == -1)
           news = olds;
         float s = sd->scale(news);

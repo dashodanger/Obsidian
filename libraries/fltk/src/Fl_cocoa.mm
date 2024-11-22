@@ -1,7 +1,7 @@
 //
 // macOS-Cocoa specific code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2023 by Bill Spitzak and others.
+// Copyright 1998-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -49,6 +49,9 @@ extern "C" {
 #include <pwd.h>
 
 #import <Cocoa/Cocoa.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_15_0
+# import <ScreenCaptureKit/ScreenCaptureKit.h>
+#endif
 
 // #define DEBUG_SELECT         // UNCOMMENT FOR SELECT()/THREAD DEBUGGING
 #ifdef DEBUG_SELECT
@@ -1043,7 +1046,7 @@ static void cocoaMagnifyHandler(NSEvent *theEvent)
  */
 static void cocoaMouseHandler(NSEvent *theEvent)
 {
-  static int keysym[] = { 0, FL_Button+1, FL_Button+3, FL_Button+2 };
+  static int keysym[] = { 0, FL_Button+1, FL_Button+3, FL_Button+2, FL_Button+4, FL_Button+5 };
   static int px, py;
 
   fl_lock_function();
@@ -1053,13 +1056,11 @@ static void cocoaMouseHandler(NSEvent *theEvent)
     fl_unlock_function();
     return;
   }
-  Fl_Window *first = Fl::first_window();
-  if (first != window && !(first->modal() || first->non_modal())) Fl::first_window(window);
   NSPoint pos = [theEvent locationInWindow];
   float s = Fl::screen_driver()->scale(0);
   pos.x /= s; pos.y /= s;
   pos.y = window->h() - pos.y;
-  NSInteger btn = [theEvent buttonNumber]  + 1;
+  NSInteger btn = [theEvent buttonNumber] + 1;
   NSUInteger mods = [theEvent modifierFlags];
   int sendEvent = 0;
 
@@ -1069,13 +1070,17 @@ static void cocoaMouseHandler(NSEvent *theEvent)
     if (btn == 1) Fl::e_state |= FL_BUTTON1;
     else if (btn == 3) Fl::e_state |= FL_BUTTON2;
     else if (btn == 2) Fl::e_state |= FL_BUTTON3;
+    else if (btn == 4) Fl::e_state |= FL_BUTTON4;
+    else if (btn == 5) Fl::e_state |= FL_BUTTON5;
   }
   else if (etype == NSEventTypeLeftMouseUp || etype == NSEventTypeRightMouseUp ||
            etype == NSEventTypeOtherMouseUp) {
     if (btn == 1) Fl::e_state &= ~FL_BUTTON1;
     else if (btn == 3) Fl::e_state &= ~FL_BUTTON2;
     else if (btn == 2) Fl::e_state &= ~FL_BUTTON3;
-    }
+    else if (btn == 4) Fl::e_state &= ~FL_BUTTON4;
+    else if (btn == 5) Fl::e_state &= ~FL_BUTTON5;
+  }
 
   switch ( etype ) {
     case NSEventTypeLeftMouseDown:
@@ -2384,7 +2389,7 @@ static FLTextInputContext* fltextinputcontext_instance = nil;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_14
       if (views_use_CA && !window->as_gl_window() ) {
         [self reset_aux_bitmap];
-        [self display];
+        window->redraw();
       }
 #endif
     }
@@ -2533,9 +2538,9 @@ static FLTextInputContext* fltextinputcontext_instance = nil;
   // We have to have at least one cursor rect for invalidateCursorRectsForView
   // to work, hence the "else" clause.
   if (Fl_Cocoa_Window_Driver::driver(w)->cursor)
-    [self addCursorRect:[self visibleRect] cursor:Fl_Cocoa_Window_Driver::driver(w)->cursor];
+    [self addCursorRect:[self frame] cursor:Fl_Cocoa_Window_Driver::driver(w)->cursor];
   else
-    [self addCursorRect:[self visibleRect] cursor:[NSCursor arrowCursor]];
+    [self addCursorRect:[self frame] cursor:[NSCursor arrowCursor]];
 }
 - (void)mouseUp:(NSEvent *)theEvent {
   cocoaMouseHandler(theEvent);
@@ -3277,7 +3282,10 @@ void Fl_Cocoa_Window_Driver::fullscreen_on() {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
   if (fl_mac_os_version >= 100700 && pWindow->border()) {
 #  if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-    FLWindow *nswin = fl_xid(pWindow);
+    NSWindow *nswin = fl_xid(pWindow);
+#    if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_13
+       if (fl_mac_os_version >= 101300) nswin = [[nswin tabGroup] selectedWindow];
+#    endif
     [nswin toggleFullScreen:nil];
 #  endif
   } else if (fl_mac_os_version >= 100600) {
@@ -3323,12 +3331,14 @@ void Fl_Cocoa_Window_Driver::fullscreen_on() {
 
 
 void Fl_Cocoa_Window_Driver::maximize() {
-  [fl_xid(pWindow) performZoom:nil];
+  if (border()) [fl_xid(pWindow) performZoom:nil];
+  else Fl_Window_Driver::maximize();
 }
 
 
 void Fl_Cocoa_Window_Driver::un_maximize() {
-  [fl_xid(pWindow) performZoom:nil];
+  if (border()) [fl_xid(pWindow) performZoom:nil];
+  else Fl_Window_Driver::un_maximize();
 }
 
 
@@ -3363,9 +3373,11 @@ void Fl_Cocoa_Window_Driver::fullscreen_off(int X, int Y, int W, int H) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
   if (fl_mac_os_version >= 100700 && pWindow->border()) {
 #  if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_7
-    FLWindow *nswin = fl_xid(pWindow);
+    NSWindow *nswin = fl_xid(pWindow);
+#    if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_13
+       if (fl_mac_os_version >= 101300) nswin = [[nswin tabGroup] selectedWindow];
+#    endif
     [nswin toggleFullScreen:nil];
-    pWindow->resize(*no_fullscreen_x(), *no_fullscreen_y(), *no_fullscreen_w(), *no_fullscreen_h());
 #  endif
   } else if (fl_mac_os_version >= 100600) {
     FLWindow *nswin = fl_xid(pWindow);
@@ -3383,6 +3395,7 @@ void Fl_Cocoa_Window_Driver::fullscreen_off(int X, int Y, int W, int H) {
     [nswin setStyleMask:calc_win_style(pWindow)]; //10.6
     restore_window_title_and_icon(pWindow, icon_image);
     pWindow->resize(X, Y, W, H);
+    if (pWindow->maximize_active()) Fl_Window_Driver::maximize();
     if (has_focus) [nswin makeKeyAndOrderFront:nil];
     else [nswin orderFront:nil];
   } else
@@ -3399,6 +3412,17 @@ void Fl_Cocoa_Window_Driver::use_border() {
   if (!shown() || pWindow->parent()) return;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
   if (fl_mac_os_version >= 100600) {
+    if (pWindow->fullscreen_active() || pWindow->maximize_active()) {
+      // prevent changing border while window is fullscreen or maximized
+      static bool active = false;
+      if (!active) {
+        active = true;
+        bool b = !border();
+        pWindow->border(b);
+        active = false;
+      }
+      return;
+    }
     [fl_xid(pWindow) setStyleMask:calc_win_style(pWindow)]; // 10.6
     if (border()) restore_window_title_and_icon(pWindow, icon_image);
     pWindow->redraw();
@@ -4607,28 +4631,134 @@ int Fl_Cocoa_Window_Driver::decorated_h()
   return h() + bt/s;
 }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_15_0
+
+// Requires -weak_framework ScreenCaptureKit and used by FLTK for macOS ≥ 15.0
+static CGImageRef capture_decorated_window_SCK(NSWindow *nswin) {
+  if (@available(macOS 15.0, *)) {
+    __block CGImageRef capture = NULL;
+    __block BOOL capture_err = NO;
+    void (^block_to_stop_main_loop)(void) = ^{ CFRunLoopStop(CFRunLoopGetMain()); };
+    // Fix for bug in ScreenCaptureKit that modifies a window's styleMask the first time
+    // it captures a non-resizable window. We memorize each non-resizable window's styleMask,
+    // and we restore modified styleMasks later, after the screen capture.
+    NSMutableArray *xid_array = [NSMutableArray arrayWithCapacity:2];
+    NSMutableArray *mask_array = [NSMutableArray arrayWithCapacity:2];
+    Fl_Window *win = Fl::first_window();
+    while (win) {
+      if (!win->parent() && win->border()) {
+        FLWindow *xid = fl_mac_xid(win);
+        if (xid && !([xid styleMask] & NSWindowStyleMaskResizable)) {
+          [xid_array addObject:xid];
+          NSUInteger mask = [xid styleMask];
+          [mask_array addObject:[NSData dataWithBytes:&mask length:sizeof(NSUInteger)]];
+        }
+      }
+      win = Fl::next_window(win);
+    }
+    CGWindowID target_id = [nswin windowNumber];
+    NSRect r = [nswin frame];
+    int W = r.size.width, H = r.size.height;
+    [SCShareableContent getCurrentProcessShareableContentWithCompletionHandler: // macOS 14.4
+     ^(SCShareableContent *shareableContent, NSError *error) {
+      SCWindow *scwin = nil;
+      if (!error) {
+        NSEnumerator *enumerator = [[shareableContent windows] objectEnumerator];
+        while ((scwin = (SCWindow*)[enumerator nextObject]) != nil) {
+          if ([scwin windowID] == target_id) {
+            break;
+          }
+        }
+      }
+      if (!scwin) {
+        capture_err = YES;
+        dispatch_async(dispatch_get_main_queue(), block_to_stop_main_loop);
+        return;
+      }
+      SCContentFilter *filter = [[[SCContentFilter alloc] initWithDesktopIndependentWindow:scwin] autorelease];
+      int s = (int)[filter pointPixelScale];
+      SCStreamConfiguration *config = [[[SCStreamConfiguration alloc] init] autorelease];
+      [config setIgnoreShadowsSingleWindow:YES];
+      [config setWidth:W*s];
+      [config setHeight:H*s];
+      [config setIncludeChildWindows:NO]; // macOS 14.2
+      [SCScreenshotManager captureImageWithFilter:filter
+                                    configuration:config
+                                completionHandler:^(CGImageRef sampleBuffer, NSError *error) {
+        if (error) capture_err = YES;
+        else {
+          capture = sampleBuffer;
+          CGImageRetain(capture);
+        }
+        dispatch_async(dispatch_get_main_queue(), block_to_stop_main_loop);
+      }
+      ];
+    }
+    ];
+    // run the main loop until the 1 or 2 blocks above have completed and have stopped the loop
+    while (!capture_err && !capture) CFRunLoopRun();
+    if (capture_err) return NULL;
+    // ScreenCaptureKit bug cont'd: restore modified styleMasks.
+    for (int i = 0, count = [xid_array count]; i < count; i++) {
+      NSUInteger mask;
+      [(NSData*)[mask_array objectAtIndex:i] getBytes:&mask length:sizeof(NSUInteger)];
+      NSWindow *xid = (NSWindow*)[xid_array objectAtIndex:i];
+      if (mask != [xid styleMask]) [xid setStyleMask:mask];
+    }
+    return capture;
+  } else return NULL;
+}
+#endif //MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_15_0
+
+
+CGImageRef Fl_Cocoa_Window_Driver::capture_decorated_window_10_6(NSWindow *nswin) {
+  // usable with 10.6 and above
+  CGImageRef img = NULL;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5
+#  if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_VERSION_15_0
+  if (fl_mac_os_version >= 150000)
+      img = capture_decorated_window_SCK(nswin);
+  else
+#endif
+    {
+#  if MAC_OS_X_VERSION_MIN_REQUIRED < MAC_OS_VERSION_15_0
+      NSInteger win_id = [nswin windowNumber];
+      CFArrayRef array = CFArrayCreate(NULL, (const void**)&win_id, 1, NULL);
+      img = CGWindowListCreateImageFromArray(CGRectNull, array, kCGWindowImageBoundsIgnoreFraming); // 10.5
+      CFRelease(array);
+#  endif
+    }
+#endif // >= MAC_OS_X_VERSION_10_5
+  return img;
+}
+
+
+static CGImageRef capture_window_titlebar(Fl_Window *win, Fl_Cocoa_Window_Driver *cocoa_dr) {
+  CGImageRef img;
+  if (fl_mac_os_version >= 100600) { // verified OK from 10.6
+    FLWindow *nswin = fl_xid(win);
+    CGImageRef img_full = Fl_Cocoa_Window_Driver::capture_decorated_window_10_6(nswin);
+    int bt =  [nswin frame].size.height - [[nswin contentView] frame].size.height;
+    int s = CGImageGetWidth(img_full) / [nswin frame].size.width;
+    CGRect cgr = CGRectMake(0, 0, CGImageGetWidth(img_full), bt * s);
+    img = CGImageCreateWithImageInRect(img_full, cgr);
+    CGImageRelease(img_full);
+  } else {
+    int w = win->w(), h = win->decorated_h() - win->h();
+    Fl_Graphics_Driver::default_driver().scale(1);
+    img = cocoa_dr->CGImage_from_window_rect(0, -h, w, h, false);
+    Fl_Graphics_Driver::default_driver().scale(Fl::screen_driver()->scale(win->screen_num()));
+  }
+  return img;
+}
+
+
 void Fl_Cocoa_Window_Driver::draw_titlebar_to_context(CGContextRef gc, int w, int h)
 {
   FLWindow *nswin = fl_xid(pWindow);
   if ([nswin canBecomeMainWindow]) [nswin makeMainWindow];
   [NSApp nextEventMatchingMask:NSEventMaskAny untilDate:nil inMode:NSDefaultRunLoopMode dequeue:NO];
-  CGImageRef img;
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_5
-  if (fl_mac_os_version >= 100600) { // verified OK from 10.6
-    NSInteger win_id = [nswin windowNumber];
-    CFArrayRef array = CFArrayCreate(NULL, (const void**)&win_id, 1, NULL);
-    CGRect rr = NSRectToCGRect([nswin frame]);
-    rr.origin.y = CGDisplayBounds(CGMainDisplayID()).size.height - (rr.origin.y + rr.size.height);
-    rr.size.height = h;
-    img = CGWindowListCreateImageFromArray(rr, array, kCGWindowImageBoundsIgnoreFraming); // 10.5
-    CFRelease(array);
-  } else
-#endif
-  {
-    Fl_Graphics_Driver::default_driver().scale(1);
-    img = CGImage_from_window_rect(0, -h, w, h, false);
-    Fl_Graphics_Driver::default_driver().scale(Fl::screen_driver()->scale(screen_num()));
-  }
+  CGImageRef img = capture_window_titlebar(pWindow, this);
   if (img) {
     CGContextSaveGState(gc);
     if (fl_mac_os_version < 100600) clip_to_rounded_corners(gc, w, h);

@@ -413,10 +413,7 @@ class FL_EXPORT Fl_Scalable_Graphics_Driver : public Fl_Graphics_Driver {
   Fl_Fontsize fontsize_; // scale-independent font size value
 public:
   Fl_Scalable_Graphics_Driver();
-  // This function aims to compute accurately int(x * s) in
-  // presence of rounding errors existing with floating point numbers
-  // and that sometimes differ between 32 and 64 bits.
-  static inline int floor(int x, float s) { return int(x * s + 0.001f); }
+  static int floor(int x, float s);
   inline int floor(int x) { return Fl_Scalable_Graphics_Driver::floor(x, scale()); }
 protected:
   int line_width_;
@@ -426,6 +423,7 @@ protected:
   virtual void point_unscaled(float x, float y);
   void rect(int x, int y, int w, int h) FL_OVERRIDE;
   void rectf(int x, int y, int w, int h) FL_OVERRIDE;
+  virtual void rect_unscaled(int x, int y, int w, int h);
   virtual void rectf_unscaled(int x, int y, int w, int h);
   void line(int x, int y, int x1, int y1) FL_OVERRIDE;
   virtual void line_unscaled(int x, int y, int x1, int y1);

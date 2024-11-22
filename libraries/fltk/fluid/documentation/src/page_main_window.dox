@@ -51,7 +51,7 @@
  project windows.
  The *New From Template* item opens a dialog that provides access to a small
  number of sample projects. More projects can be added using *Save as Template*.
- 
+
  Use *Write Code* to write the header and source code files, and *Write Strings*
  to write the translation file if one of the internationalization options
  is active.
@@ -257,10 +257,11 @@ __Edit > Later (F3)__: Move all of the selected widgets one later in order
 among the children of their parent (if possible).
 
 __Edit > Group (F7)__: Create a new Fl_Group and make all the currently
-selected widgets children of it.
+selected widgets children of that group.
 
-__Edit > Ungroup (F8)__: Delete the parent group if all the children of a
-group are selected.
+__Edit > Ungroup (F8)__: Move the selected children of a group out of the
+group and up one level in the hierarchy. If all children of a group are
+selected and moved, the remaining empty group is deleted.
 
 __Edit > Show or Hide Overlays (Ctrl+Shift+O)__: Toggle the display of the
 red overlays off, without changing the selection. This makes it easier to see
@@ -344,6 +345,11 @@ the first selected widget.
 
 __Layout > Center in Group > ...__: Center all selected widgets relative to
 their parent widget
+
+__Layout > Synchronized Resize__: If unchecked, groups and windows can be
+resized without resizing their children. If set, the layout of the children
+is changed according to their `resize()` settings. Try __Live Resize__ to
+verify the effects before permanently modifying the layout.
 
 __Layout > Grid and Size Settings... (Ctrl+g)__: Display the grid settings
 panel. See \ref setting_layout .

@@ -61,7 +61,10 @@ public:
   void read_property(Fd_Project_Reader &f, const char *) FL_OVERRIDE;
   void write_parent_properties(Fd_Project_Writer &f, Fl_Type *child, bool encapsulate) FL_OVERRIDE;
   void read_parent_property(Fd_Project_Reader &f, Fl_Type *child, const char *property) FL_OVERRIDE;
+  Fl_Widget *enter_live_mode(int top=0) FL_OVERRIDE;
+  void leave_live_mode() FL_OVERRIDE;
   void copy_properties() FL_OVERRIDE;
+  void copy_properties_for_children() FL_OVERRIDE;
   void write_code1(Fd_Code_Writer& f) FL_OVERRIDE;
   void write_code2(Fd_Code_Writer& f) FL_OVERRIDE;
   void add_child(Fl_Type*, Fl_Type*) FL_OVERRIDE;

@@ -98,8 +98,13 @@ protected:
   /** Stores the last window that was made current. See current() const */
   static Fl_Window *current_;
   void draw() FL_OVERRIDE;
+
+public:
+
   /** Forces the window to be drawn, this window is also made current and calls draw(). */
   virtual void flush();
+
+protected:
 
   /**
     Sets an internal flag that tells FLTK and the window manager to
@@ -212,7 +217,9 @@ public:
   */
   void resize(int X,int Y,int W,int H) FL_OVERRIDE;
   /** Sets whether or not the window manager border is around the window.
-  The default value is true. <I>With some X window
+  The default value is true. The macOS platform ignores requests to change the
+  border state of a fullscreen or maximized window.
+   <I>With some X window
   managers, this does not work after show() has been called.</I>
   */
   void border(int b);
@@ -629,9 +636,9 @@ public:
   static char show_next_window_iconic() {
     return show_next_window_iconic_;
   }
-  
+
   void allow_expand_outside_parent();
-  
+
 };
 
 #endif

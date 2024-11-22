@@ -751,11 +751,21 @@ Fl_Scalable_Graphics_Driver::Fl_Scalable_Graphics_Driver() : Fl_Graphics_Driver(
 void Fl_Scalable_Graphics_Driver::rect(int x, int y, int w, int h)
 {
   if (w > 0 && h > 0) {
-    xyline(x, y, x+w-1);
-    yxline(x, y, y+h-1);
-    yxline(x+w-1, y, y+h-1);
-    xyline(x, y+h-1, x+w-1);
+    int s = (int)scale();
+    int d = s / 2;
+    rect_unscaled(this->floor(x) + d, this->floor(y) + d,
+                  this->floor(x + w) - this->floor(x) - s,
+                  this->floor(y + h) - this->floor(y) - s);
   }
+}
+
+// This function aims to compute accurately int(x * s) in
+// presence of rounding errors existing with floating point numbers
+// and that sometimes differ between 32 and 64 bits.
+int Fl_Scalable_Graphics_Driver::floor(int x, float s) {
+  if (s == 1) return x;
+  int retval = int(abs(x) * s + 0.001f);
+  return (x >= 0 ? retval : -retval);
 }
 
 void Fl_Scalable_Graphics_Driver::rectf(int x, int y, int w, int h)
@@ -794,6 +804,7 @@ void Fl_Scalable_Graphics_Driver::xyline(int x, int y, int x1) {
   } else {
     y = this->floor(y);
     if (line_width_ <= s_int) y += int(s/2.f);
+    else y += s_int/2;
     xyline_unscaled(this->floor(xx), y, this->floor(xx1+1) - 1);
   }
 }
@@ -813,6 +824,7 @@ void Fl_Scalable_Graphics_Driver::yxline(int x, int y, int y1) {
   } else {
     x = this->floor(x);
     if (line_width_ <= s_int) x += int(s/2.f);
+    else x += s_int/2;
     yxline_unscaled(x, this->floor(yy), this->floor(yy1+1) - 1);
   }
 }
@@ -1074,14 +1086,13 @@ Fl_Region Fl_Scalable_Graphics_Driver::scale_clip(float f) { return 0; }
 
 void Fl_Scalable_Graphics_Driver::point_unscaled(float x, float y) {}
 
+void Fl_Scalable_Graphics_Driver::rect_unscaled(int x, int y, int w, int h) {}
+
 void Fl_Scalable_Graphics_Driver::rectf_unscaled(int x, int y, int w, int h) {}
 
 void Fl_Scalable_Graphics_Driver::line_unscaled(int x, int y, int x1, int y1) {}
 
-void Fl_Scalable_Graphics_Driver::line_unscaled(int x, int y, int x1, int y1, int x2, int y2) {
-  line_unscaled(x, y, x1, y1);
-  line_unscaled(x1, y1, x2, y2);
-}
+void Fl_Scalable_Graphics_Driver::line_unscaled(int x, int y, int x1, int y1, int x2, int y2) {}
 
 void Fl_Scalable_Graphics_Driver::xyline_unscaled(int x, int y, int x1) {}
 

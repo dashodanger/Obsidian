@@ -223,8 +223,11 @@ inline void fl_point(int x, int y) {
   If you change this it is your responsibility to set it back to the default
   using \c fl_line_style(0).
 
-  \param[in] style A bitmask which is a bitwise-OR of a line style, a cap
-    style, and a join style. If you don't specify a dash type you
+  \image html  fl_line_style.png "fl_line_style() styles"
+  \image latex fl_line_style.png "fl_line_style() styles" width=12cm
+
+  \param[in] style A bitmask which is a bitwise-OR of \ref LineStyles "Line Styles",
+    a cap style, and a join style. If you don't specify a dash type you
     will get a solid line. If you don't specify a cap or join type
     you will get a system-defined default of whatever value is fastest.
   \param[in] width The thickness of the lines in pixels. Zero results in the
@@ -249,12 +252,18 @@ inline void fl_point(int x, int y) {
 inline void fl_line_style(int style, int width = 0, char *dashes = 0) {
   fl_graphics_driver->line_style(style, width, dashes);
 }
+
+/// \anchor LineStyles
+///
+///  \image html  fl_line_style.png "fl_line_style() styles"
+///  \image latex fl_line_style.png "fl_line_style() styles" width=12cm
+///
 enum {
-  FL_SOLID      = 0,      ///< line style: <tt>___________</tt>
-  FL_DASH       = 1,      ///< line style: <tt>_ _ _ _ _ _</tt>
-  FL_DOT        = 2,      ///< line style: <tt>. . . . . .</tt>
-  FL_DASHDOT    = 3,      ///< line style: <tt>_ . _ . _ .</tt>
-  FL_DASHDOTDOT = 4,      ///< line style: <tt>_ . . _ . .</tt>
+  FL_SOLID      = 0,      ///< line style: solid line
+  FL_DASH       = 1,      ///< line style: 75% dashed line
+  FL_DOT        = 2,      ///< line style: 50% pixel dotted
+  FL_DASHDOT    = 3,      ///< line style: dash / dot pattern
+  FL_DASHDOTDOT = 4,      ///< line style: dash / two dot pattern
 
   FL_CAP_FLAT   = 0x100,  ///< cap style: end is flat
   FL_CAP_ROUND  = 0x200,  ///< cap style: end is round
@@ -411,7 +420,7 @@ inline void fl_loop(int x, int y, int x1, int y1, int x2, int y2, int x3, int y3
 
 // filled polygons
 /**
-  Fill a 3-sided polygon. The polygon must be convex.
+  Fill a 3-sided polygon.
 */
 inline void fl_polygon(int x, int y, int x1, int y1, int x2, int y2) {
   fl_graphics_driver->polygon(x, y, x1, y1, x2, y2);
@@ -623,7 +632,7 @@ inline void fl_curve(double X0, double Y0, double X1, double Y1, double X2, doub
 }
 /**
   Add a series of points to the current path on the arc of a circle.
- 
+
   The arc is drawn counter-clockwise from 3 o'clock. If \p end is less than
   \p start then it draws the arc in a clockwise direction. To draw an arc across
   the 3 o'clock line, \p start and \p end can be greater than 360 or less than 0.
@@ -966,10 +975,49 @@ inline void fl_rtl_draw(const char *str, int n, int x, int y) {
   fl_graphics_driver->rtl_draw(str, n, x, y);
 }
 FL_EXPORT void fl_measure(const char *str, int &x, int &y, int draw_symbols = 1);
-FL_EXPORT void fl_draw(const char *str, int x, int y, int w, int h, Fl_Align align, Fl_Image *img = 0,
-                       int draw_symbols = 1);
+/**
+  Fancy string drawing function which is used to draw all the labels.
+
+  The string is formatted and aligned inside the passed box.
+  Handles '\\t' and '\\n', expands all other control characters to '^X',
+  and aligns inside or against the edges of the box.
+  See Fl_Widget::align() for values of \p align. The value FL_ALIGN_INSIDE
+  is ignored, as this function always prints inside the box.
+  If \p img is provided and is not \p NULL, the image is drawn above or
+  below the text as specified by the \p align value.
+  The \p draw_symbols argument specifies whether or not to look for symbol
+  names starting with the '\@' character'
+
+ \param[in] str UTF-8 string, can start and end with an '\@sym' symbol,
+            can contain '\\n'
+ \param[in] x,y,w,h bounding box
+ \param[in] align label and image alignment in bounding box
+ \param[in] img pointer to image
+ \param[in] draw_symbols if true, interprete leading and trailing '\@sym'
+            as graphical symbols
+ \param[in] spacing spacing between text and image
+ */
+FL_EXPORT void fl_draw(const char *str, int x, int y, int w, int h,
+                       Fl_Align align, Fl_Image *img = 0,
+                       int draw_symbols = 1, int spacing = 0);
+/**
+ The same as fl_draw(const char*,int,int,int,int,Fl_Align,Fl_Image*,int) with
+ the addition of the \p callthis parameter, which is a pointer to a text drawing
+ function such as fl_draw(const char*, int, int, int) to do the real work.
+
+ \param[in] str UTF-8 string, can start and end with an '\@sym' symbol,
+ can contain '\\n'
+ \param[in] x,y,w,h bounding box
+ \param[in] align label and image alignment in bounding box
+ \param[in] callthis pointer to text drawing function
+ \param[in] img pointer to image
+ \param[in] draw_symbols if true, interprete leading and trailing '\@sym'
+ as graphical symbols
+ \param[in] spacing spacing between text and image
+ */
 FL_EXPORT void fl_draw(const char *str, int x, int y, int w, int h, Fl_Align align,
-                       void (*callthis)(const char *, int, int, int), Fl_Image *img = 0, int draw_symbols = 1);
+                       void (*callthis)(const char *, int, int, int),
+                       Fl_Image *img = 0, int draw_symbols = 1, int spacing = 0);
 
 // boxtypes:
 

@@ -1,6 +1,6 @@
 //
 //
-// Copyright 1998-2023 by Bill Spitzak and others.
+// Copyright 1998-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -174,21 +174,22 @@ void double_cb(Fl_Widget *o, void *p) {
 void double_cb(Fl_Widget *, void *) {}
 #endif
 
-void border_cb(Fl_Widget *o, void *p) {
-  Fl_Window *w = (Fl_Window *)p;
-  int d = ((Fl_Button *)o)->value();
+
+void border_cb(Fl_Button *b, Fl_Window *w) {
+  int d = b->value();
   w->border(d);
+  // border change may have been refused (e.g. with fullscreen window)
+  if ((int)w->border() != d) b->value(w->border());
 }
 
 
-void maximize_cb(Fl_Widget *o, void *p) {
-  Fl_Window *w = (Fl_Window *)p;
+void maximize_cb(Fl_Button *b, Fl_Window *w) {
   if (w->maximize_active()) {
     w->un_maximize();
-    //((Fl_Button*)o)->set();
+    if (w->maximize_active()) b->set();
   } else {
     w->maximize();
-    //((Fl_Button*)o)->clear();
+    if (!w->maximize_active()) b->clear();
   }
 }
 
@@ -337,7 +338,7 @@ int main(int argc, char **argv) {
   y+=30;
 
   Fl_Toggle_Light_Button b2(50,y,window.w()-60,30,"Border");
-  b2.callback(border_cb,w);
+  b2.callback((Fl_Callback*)border_cb,w);
   b2.set();
   border_button = &b2;
   y+=30;
@@ -347,7 +348,7 @@ int main(int argc, char **argv) {
   y+=30;
 
   window.b3_maxi = new Fl_Toggle_Light_Button(50,y,window.w()-60,30,"Maximize");
-  window.b3_maxi->callback(maximize_cb,w);
+  window.b3_maxi->callback((Fl_Callback*)maximize_cb,w);
   y+=30;
 
   window.b4 = new Fl_Toggle_Light_Button(50,y,window.w()-60,30,"All Screens");

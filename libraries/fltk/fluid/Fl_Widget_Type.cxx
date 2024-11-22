@@ -1,7 +1,7 @@
 //
 // Widget type code for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 1998-2023 by Bill Spitzak and others.
+// Copyright 1998-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -54,12 +54,17 @@ int Fl_Widget_Type::is_widget() const {return 1;}
 int Fl_Widget_Type::is_public() const {return public_;}
 
 const char* subclassname(Fl_Type* l) {
+  if (l->is_a(ID_Menu_Bar)) {
+    Fl_Menu_Bar_Type *mb = static_cast<Fl_Menu_Bar_Type*>(l);
+    if (mb->is_sys_menu_bar())
+      return mb->sys_menubar_name();
+  }
   if (l->is_widget()) {
     Fl_Widget_Type* p = (Fl_Widget_Type*)l;
     const char* c = p->subclass();
     if (c) return c;
     if (l->is_class()) return "Fl_Group";
-    if (p->o->type() == FL_WINDOW+1) return "Fl_Double_Window";
+    if (p->o->type() == FL_DOUBLE_WINDOW) return "Fl_Double_Window";
     if (p->id() == ID_Input) {
       if (p->o->type() == FL_FLOAT_INPUT) return "Fl_Float_Input";
       if (p->o->type() == FL_INT_INPUT) return "Fl_Int_Input";
@@ -82,19 +87,20 @@ Fl_Widget_Type::ideal_size(int &w, int &h) {
  \return new node
  */
 Fl_Type *Fl_Widget_Type::make(Strategy strategy) {
-  // Find the current widget, or widget to copy:
-  Fl_Type *qq = Fl_Type::current;
-  while (qq && (!qq->is_true_widget() || !qq->is_parent())) qq = qq->parent;
-  if (!qq) {
+  Fl_Type *anchor = Fl_Type::current, *pp = anchor;
+  if (pp && (strategy == kAddAfterCurrent)) pp = pp->parent;
+  while (pp && !pp->is_a(ID_Group)) {
+    anchor = pp;
+    strategy = kAddAfterCurrent;
+    pp = pp->parent;
+  }
+  if (!pp || !pp->is_true_widget() || !anchor->is_true_widget()) {
     fl_message("Please select a group widget or window");
     return 0;
   }
-  Fl_Widget_Type* q = (Fl_Widget_Type*)qq;
-  // find the parent widget:
-  Fl_Widget_Type* p = q;
-  if ((force_parent || !p->is_a(ID_Group)) && p->parent && p->parent->is_widget())
-    p = (Fl_Widget_Type*)(p->parent);
-  force_parent = 0;
+
+  Fl_Widget_Type* p = (Fl_Widget_Type*)pp;
+  Fl_Widget_Type* q = (Fl_Widget_Type*)anchor;
 
   // Figure out a border between widget and window:
   int B = p->o->w()/2; if (p->o->h()/2 < B) B = p->o->h()/2; if (B>25) B = 25;
@@ -141,7 +147,7 @@ Fl_Type *Fl_Widget_Type::make(Strategy strategy) {
   // Put it in the parent:
   //  ((Fl_Group *)(p->o))->add(t->o); (done by Fl_Type::add())
   // add to browser:
-  t->add(p, strategy);
+  t->add(anchor, strategy);
   t->redraw();
   return t;
 }
@@ -1962,6 +1968,93 @@ void textcolor_menu_cb(Fl_Menu_Button* i, void* v) {
   }
 }
 
+void image_spacing_cb(Fl_Value_Input* i, void* v) {
+  int s;
+  if (v == LOAD) {
+    if (!current_widget->is_true_widget()) {
+      i->deactivate();
+      i->value(0);
+    } else {
+      i->activate();
+      i->value(((Fl_Widget_Type*)current_widget)->o->label_image_spacing());
+    }
+  } else {
+    int mod = 0;
+    s = int(i->value());
+    for (Fl_Type *o = Fl_Type::first; o; o = o->next) {
+      if (o->selected && o->is_true_widget()) {
+        Fl_Widget_Type* q = (Fl_Widget_Type*)o;
+        if (q->o->label_image_spacing() != s) {
+          q->o->label_image_spacing(s);
+          if (!(q->o->align() & FL_ALIGN_INSIDE) && q->o->window())
+            q->o->window()->damage(FL_DAMAGE_EXPOSE); // outside labels
+          q->o->redraw();
+          mod = 1;
+        }
+      }
+    }
+    if (mod) set_modflag(1);
+  }
+}
+
+void h_label_margin_cb(Fl_Value_Input* i, void* v) {
+  int s;
+  if (v == LOAD) {
+    if (!current_widget->is_true_widget()) {
+      i->deactivate();
+      i->value(0);
+    } else {
+      i->activate();
+      i->value(((Fl_Widget_Type*)current_widget)->o->horizontal_label_margin());
+    }
+  } else {
+    int mod = 0;
+    s = int(i->value());
+    for (Fl_Type *o = Fl_Type::first; o; o = o->next) {
+      if (o->selected && o->is_true_widget()) {
+        Fl_Widget_Type* q = (Fl_Widget_Type*)o;
+        if (q->o->horizontal_label_margin() != s) {
+          q->o->horizontal_label_margin(s);
+          if (!(q->o->align() & FL_ALIGN_INSIDE) && q->o->window())
+            q->o->window()->damage(FL_DAMAGE_EXPOSE); // outside labels
+          q->o->redraw();
+          mod = 1;
+        }
+      }
+    }
+    if (mod) set_modflag(1);
+  }
+}
+
+void v_label_margin_cb(Fl_Value_Input* i, void* v) {
+  int s;
+  if (v == LOAD) {
+    if (!current_widget->is_true_widget()) {
+      i->deactivate();
+      i->value(0);
+    } else {
+      i->activate();
+      i->value(((Fl_Widget_Type*)current_widget)->o->vertical_label_margin());
+    }
+  } else {
+    int mod = 0;
+    s = int(i->value());
+    for (Fl_Type *o = Fl_Type::first; o; o = o->next) {
+      if (o->selected && o->is_true_widget()) {
+        Fl_Widget_Type* q = (Fl_Widget_Type*)o;
+        if (q->o->vertical_label_margin() != s) {
+          q->o->vertical_label_margin(s);
+          if (!(q->o->align() & FL_ALIGN_INSIDE) && q->o->window())
+            q->o->window()->damage(FL_DAMAGE_EXPOSE); // outside labels
+          q->o->redraw();
+          mod = 1;
+        }
+      }
+    }
+    if (mod) set_modflag(1);
+  }
+}
+
 ////////////////////////////////////////////////////////////////
 // Kludges to the panel for subclasses:
 
@@ -2929,7 +3022,7 @@ void Fl_Widget_Type::write_code1(Fd_Code_Writer& f) {
   f.varused = wused;
 
   if (!name() && !f.varused) {
-    f.varused |= is_parent();
+    f.varused |= can_have_children();
 
     if (!f.varused) {
       f.varused_test = 1;
@@ -2991,6 +3084,12 @@ void Fl_Widget_Type::write_code1(Fd_Code_Writer& f) {
       f.write_c("new %s(0, 0, %d, %d", t, o->w(), o->h());
     else
       f.write_c("new %s(%d, %d", t, o->w(), o->h());
+  } else if (is_a(ID_Menu_Bar)
+             && ((Fl_Menu_Bar_Type*)this)->is_sys_menu_bar()
+             && is_in_class()) {
+    f.write_c("(%s*)new %s(%d, %d, %d, %d",
+              t, ((Fl_Menu_Bar_Type*)this)->sys_menubar_proxy_name(),
+              o->x(), o->y(), o->w(), o->h());
   } else {
     f.write_c("new %s(%d, %d, %d, %d", t, o->x(), o->y(), o->w(), o->h());
   }
@@ -3178,6 +3277,12 @@ void Fl_Widget_Type::write_widget_code(Fd_Code_Writer& f) {
     f.write_c("%s%s->labelsize(%d);\n", f.indent(), var, o->labelsize());
   if (o->labelcolor() != tplate->labelcolor() || subclass())
     write_color(f, "labelcolor", o->labelcolor());
+  if (o->horizontal_label_margin() != tplate->horizontal_label_margin())
+    f.write_c("%s%s->horizontal_label_margin(%d);\n", f.indent(), var, o->horizontal_label_margin());
+  if (o->vertical_label_margin() != tplate->vertical_label_margin())
+    f.write_c("%s%s->vertical_label_margin(%d);\n", f.indent(), var, o->vertical_label_margin());
+  if (o->label_image_spacing() != tplate->label_image_spacing())
+    f.write_c("%s%s->label_image_spacing(%d);\n", f.indent(), var, o->label_image_spacing());
   if (is_a(ID_Valuator_)) {
     Fl_Valuator* v = (Fl_Valuator*)o;
     Fl_Valuator* t = (Fl_Valuator*)(tplate);
@@ -3357,6 +3462,12 @@ void Fl_Widget_Type::write_properties(Fd_Project_Writer &f) {
     f.write_string("labelcolor %d", o->labelcolor());
   if (o->align()!=tplate->align())
     f.write_string("align %d", o->align());
+  if (o->horizontal_label_margin()!=tplate->horizontal_label_margin())
+    f.write_string("h_label_margin %d", o->horizontal_label_margin());
+  if (o->vertical_label_margin()!=tplate->vertical_label_margin())
+    f.write_string("v_label_margin %d", o->vertical_label_margin());
+  if (o->label_image_spacing()!=tplate->label_image_spacing())
+    f.write_string("image_spacing %d", o->label_image_spacing());
   if (o->when() != tplate->when())
     f.write_string("when %d", o->when());
   if (is_a(ID_Valuator_)) {
@@ -3526,6 +3637,12 @@ void Fl_Widget_Type::read_property(Fd_Project_Reader &f, const char *c) {
     if (sscanf(f.read_word(),"%d",&x) == 1) o->labelcolor(x);
   } else if (!strcmp(c,"align")) {
     if (sscanf(f.read_word(),"%d",&x) == 1) o->align(x);
+  } else if (!strcmp(c,"h_label_margin")) {
+    if (sscanf(f.read_word(),"%d",&x) == 1) o->horizontal_label_margin(x);
+  } else if (!strcmp(c,"v_label_margin")) {
+    if (sscanf(f.read_word(),"%d",&x) == 1) o->vertical_label_margin(x);
+  } else if (!strcmp(c,"image_spacing")) {
+    if (sscanf(f.read_word(),"%d",&x) == 1) o->label_image_spacing(x);
   } else if (!strcmp(c,"when")) {
     if (sscanf(f.read_word(),"%d",&x) == 1) o->when(x);
   } else if (!strcmp(c,"minimum")) {
@@ -3717,6 +3834,8 @@ Fl_Widget* Fl_Widget_Type::propagate_live_mode(Fl_Group* grp) {
     }
   }
   grp->end();
+  live_widget = grp;
+  copy_properties_for_children();
   return live_widget;
 }
 

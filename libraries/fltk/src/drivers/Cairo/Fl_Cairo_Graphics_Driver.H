@@ -49,6 +49,7 @@ protected:
   cairo_t *cairo_;
   PangoContext *pango_context_;
   PangoLayout *pango_layout_;
+  static Fl_Font font_count_;
 public:
   Fl_Cairo_Graphics_Driver();
   ~Fl_Cairo_Graphics_Driver() FL_OVERRIDE;
@@ -65,6 +66,7 @@ public:
   PangoLayout *pango_layout() {return pango_layout_;}
   void set_cairo(cairo_t *c, float f = 0);
   static cairo_pattern_t *calc_cairo_mask(const Fl_RGB_Image *rgb);
+  static const char *clean_utf8(const char* str, int &n);
 
   void check_status(void);
 
@@ -123,7 +125,6 @@ public:
   void restore_clip() FL_OVERRIDE;
   int not_clipped(int x, int y, int w, int h) FL_OVERRIDE;
 
-  void begin_points() FL_OVERRIDE;
   void begin_line() FL_OVERRIDE;
   void begin_loop() FL_OVERRIDE;
   void begin_polygon() FL_OVERRIDE;

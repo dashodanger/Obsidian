@@ -375,6 +375,8 @@ Fl_Group::Fl_Group(int X,int Y,int W,int H,const char *l)
   \internal If the Fl_Group widget contains the Fl::focus() or the
   Fl::pushed() widget these are set to sensible values (other widgets
   or the Fl_Group widget itself).
+
+  \see Fl_Group::remove(int), Fl_Group::delete_child(int), Fl_Group::~Fl_Group()
 */
 void Fl_Group::clear() {
   savedfocus_ = 0;

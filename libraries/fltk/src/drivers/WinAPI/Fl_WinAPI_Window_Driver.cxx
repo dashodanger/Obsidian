@@ -580,47 +580,57 @@ void Fl_WinAPI_Window_Driver::fullscreen_on() {
 void Fl_WinAPI_Window_Driver::fullscreen_off(int X, int Y, int W, int H) {
   pWindow->_clear_fullscreen();
   DWORD style = GetWindowLong(fl_xid(pWindow), GWL_STYLE);
+  if (pWindow->border()) style |= WS_THICKFRAME | WS_SYSMENU | WS_MAXIMIZEBOX | WS_CAPTION;
   // Remove the xid temporarily so that Fl_WinAPI_Window_Driver::fake_X_wm() behaves like it
   // does in Fl_WinAPI_Window_Driver::makeWindow().
   HWND xid = fl_xid(pWindow);
   Fl_X::flx(pWindow)->xid = 0;
   int wx, wy, bt, bx, by;
-  switch (fake_X_wm(wx, wy, bt, bx, by)) {
+  switch (fake_X_wm(wx, wy, bt, bx, by, style)) {
     case 0:
       break;
     case 1:
       style |= WS_CAPTION;
       break;
     case 2:
-      if (border()) {
+      /*if (border()) {
         style |= WS_THICKFRAME | WS_CAPTION;
-      }
+      }*/
       break;
   }
   Fl_X::flx(pWindow)->xid = (fl_uintptr_t)xid;
-  // compute window position and size in scaled units
-  float s = Fl::screen_driver()->scale(screen_num());
-  int scaledX = int(ceil(X*s)), scaledY= int(ceil(Y*s)), scaledW = int(ceil(W*s)), scaledH = int(ceil(H*s));
-  // Adjust for decorations (but not if that puts the decorations
-  // outside the screen)
-  if ((X != x()) || (Y != y())) {
-    scaledX -= bx;
-    scaledY -= by+bt;
-  }
-  scaledW += bx*2;
-  scaledH += by*2+bt;
   SetWindowLong(fl_xid(pWindow), GWL_STYLE, style);
-  SetWindowPos(fl_xid(pWindow), 0, scaledX, scaledY, scaledW, scaledH,
-               SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+  if (!pWindow->maximize_active()) {
+    // compute window position and size in scaled units
+    float s = Fl::screen_driver()->scale(screen_num());
+    int scaledX = int(ceil(X*s)), scaledY= int(ceil(Y*s)), scaledW = int(ceil(W*s)), scaledH = int(ceil(H*s));
+    // Adjust for decorations (but not if that puts the decorations
+    // outside the screen)
+    if ((X != x()) || (Y != y())) {
+      scaledX -= bx;
+      scaledY -= by+bt;
+    }
+    scaledW += bx*2;
+    scaledH += by*2+bt;
+    SetWindowPos(fl_xid(pWindow), 0, scaledX, scaledY, scaledW, scaledH,
+                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+  } else {
+    int WX, WY, WW, WH;
+    ((Fl_WinAPI_Screen_Driver*)Fl::screen_driver())->screen_xywh_unscaled(WX, WY, WW, WH, screen_num());
+    SetWindowPos(fl_xid(pWindow), 0, WX, WY, WW, WH,
+                 SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
+  }
   Fl::handle(FL_FULLSCREEN, pWindow);
 }
 
 
 void Fl_WinAPI_Window_Driver::maximize() {
+  if (!border()) return Fl_Window_Driver::maximize();
   ShowWindow(fl_xid(pWindow), SW_SHOWMAXIMIZED);
 }
 
 void Fl_WinAPI_Window_Driver::un_maximize() {
+  if (!border()) return Fl_Window_Driver::un_maximize();
   ShowWindow(fl_xid(pWindow), SW_SHOWNORMAL);
 }
 

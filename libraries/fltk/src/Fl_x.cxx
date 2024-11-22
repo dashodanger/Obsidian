@@ -580,7 +580,6 @@ void open_display_i(Display* d) {
   fl_XdndStatus         = XInternAtom(d, "XdndStatus",          0);
   fl_XdndActionCopy     = XInternAtom(d, "XdndActionCopy",      0);
   fl_XdndFinished       = XInternAtom(d, "XdndFinished",        0);
-  fl_XdndEnter          = XInternAtom(d, "XdndEnter",           0);
   fl_XdndURIList        = XInternAtom(d, "text/uri-list",       0);
   fl_Xatextplainutf     = XInternAtom(d, "text/plain;charset=UTF-8",0);
   fl_Xatextplainutf2    = XInternAtom(d, "text/plain;charset=utf-8",0); // Firefox/Thunderbird needs this - See STR#2930
@@ -973,6 +972,41 @@ char fl_key_vector[32]; // used by Fl::get_key()
 static int px, py;
 static ulong ptime;
 
+// Citation from XButtonEvent and XKeyEvent docs:
+//  "The state member is set to indicate the logical state of the pointer buttons
+//   and modifier keys just prior to the event, which is the bitwise inclusive OR
+//   of one or more of the button or modifier key masks:
+//   Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask,
+//   ShiftMask, LockMask, ControlMask,
+//   Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, and Mod5Mask."
+//
+// Actual values in Debian Bookworm as of July 2024 (pseudo code):
+//   static int states[] = {
+//     ShiftMask, LockMask, ControlMask,                                 // 1<<0 .. 1<<2
+//     Mod1Mask, Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask,                 // 1<<3 .. 1<<7
+//     Button1Mask, Button2Mask, Button3Mask, Button4Mask, Button5Mask   // 1<<8 .. 1<<12
+//   };
+//
+// Note: some more (undefined?) state bits *may* be set if the user uses a keyboard
+// other than the primary one (the top-most in keyboard settings). Therefore we must
+// take care not to use these undefined bits (found by accident).
+// These undefined bits are ignored and not set in Fl::event_state(), otherwise we
+// might overwrite other valid bits (since FLTK 1.4.0, Sep 2024 or later).
+// See definition of FL_BUTTONS in FL/Enumerations.H:
+// there are only five "sticky" mouse buttons as of Sep 27, 2024.
+
+static unsigned int xbutton_state = 0; // extended button state (back, forward)
+
+// Define the state bits we're interested in for Fl::event_state().
+// Note that we ignore Button4Mask and Button5Mask (vertical scroll wheel).
+// X11 doesn't define masks for Button6 and Button7 (horizontal scroll wheel)
+// and any higher button numbers.
+
+static const unsigned int event_state_mask =
+  ShiftMask | LockMask | ControlMask |
+  Mod1Mask | Mod2Mask | Mod3Mask | Mod4Mask | Mod5Mask |
+  Button1Mask | Button2Mask | Button3Mask;
+
 static void set_event_xy(Fl_Window *win) {
 #  if FLTK_CONSOLIDATE_MOTION
   send_motion = 0;
@@ -985,7 +1019,7 @@ static void set_event_xy(Fl_Window *win) {
   Fl::e_x       = fl_xevent->xbutton.x/s;
   Fl::e_y_root  = fl_xevent->xbutton.y_root/s;
   Fl::e_y       = fl_xevent->xbutton.y/s;
-  Fl::e_state   = fl_xevent->xbutton.state << 16;
+  Fl::e_state   = ((fl_xevent->xbutton.state & event_state_mask) << 16) | xbutton_state;
   fl_event_time = fl_xevent->xbutton.time;
 #  ifdef __sgi
   // get the meta key off PC keyboards:
@@ -1471,13 +1505,19 @@ int fl_handle(const XEvent& thisevent)
     }
     Fl::e_number = old_event;
     // Detect if this paste is due to Xdnd by the property name (I use
-    // XA_SECONDARY for that) and send an XdndFinished message. It is not
-    // clear if this has to be delayed until now or if it can be done
-    // immediately after calling XConvertSelection.
-    if (fl_xevent->xselection.property == XA_SECONDARY &&
-        fl_dnd_source_window) {
-      fl_sendClientMessage(fl_dnd_source_window, fl_XdndFinished,
-                           fl_xevent->xselection.requestor);
+    // XA_SECONDARY for that) and send an XdndFinished message.
+    // This has to be delayed until now rather than sending it immediately
+    // after calling XConvertSelection because we need to send the success
+    // status (retval) and the performed action to the sender - at least
+    // since XDND protocol version 5 (see docs).
+    // [FIXME: is the condition below really correct?]
+
+    if (fl_xevent->xselection.property == XA_SECONDARY && fl_dnd_source_window) {
+      fl_sendClientMessage(fl_dnd_source_window,            // send to window
+                           fl_XdndFinished,                 // XdndFinished message
+                           fl_xevent->xselection.requestor, // data.l[0] target window
+                           retval ? 1 : 0,                  // data.l[1] Bit 0: 1 = success
+                           retval ? fl_dnd_action : None);  // data.l[2] action performed
       fl_dnd_source_window = 0; // don't send a second time
     }
     return 1;
@@ -1591,22 +1631,22 @@ int fl_handle(const XEvent& thisevent)
        - data.l[0] contains the XID of the source window.
        - data.l[1]:
            Bit 0 is set if the source supports more than three data types.
-           The high byte contains the protocol version to use (minimum of the source's and 
+           The high byte contains the protocol version to use (minimum of the source's and
            target's highest supported versions). The rest of the bits are reserved for future use.
        - data.l[2,3,4] contain the first three types that the source supports. Unused slots are set
            to None. The ordering is arbitrary.
-       
+
        If the Source supports more than three data types, bit 0 of data.l[1] is set. This tells the
          Target to check the property XdndTypeList on the Source window for the list of available
          types. This property should contain all the available types.
-       
+
        BUT wayland gnome apps (e.g., gnome-text-editor) set bit 0 of data.l[1]
        even though their source supports 2 data types (UTF8 text + a gnome-specific type)
        and put None (==0) in each of data.l[2,3,4].
        The same gnome apps run in X11 mode (GDK_BACKEND=x11) clear bit 0 of data.l[1]
        and support only UTF8 text announced in data.l[2].
        FLTK wayland apps set bit 0 of data.l[1] and support only UTF8 text.
-       
+
        Overall, the correct procedure is
        if (bit 0 of data.l[1] is set) {
          get the XdndTypeList property
@@ -1988,26 +2028,56 @@ int fl_handle(const XEvent& thisevent)
     Fl::e_is_click = 0; }
     break;
 
-  case ButtonPress:
-    Fl::e_keysym = FL_Button + xevent.xbutton.button;
+  // Mouse button "press" event:
+  // ---------------------------
+  // X11 uses special conventions for mouse "button" numbers:
+  //  1-3:  standard mouse buttons left, middle, right in this order
+  //  4-5:  scroll wheel up, down    - not reflected in Fl::event_state()
+  //  6-7:  scroll wheel left, right - not reflected in Fl::event_state()
+  //  8-9:  side buttons back, forward - mapped to 4-5, see below
+  // Since X11 pseudo button numbers 4-7 are useless for Fl::event_state() we map
+  // real button numbers 8 and 9 to 4 and 5, respectively in FLTK's button numbers
+  // and in the event state (Fl::event_state()).
+  // Variable `xbutton_state` is used internally to store the status of the extra
+  // mouse buttons 4 (back) and 5 (forward) since X11 doesn't keep their status.
+
+  case ButtonPress: {
+    int mb = xevent.xbutton.button; // mouse button
+    if (mb < 1 || mb > 9) return 0; // unknown or unsupported button, ignore
+
+    // FIXME(?): here we set some event related variables although we *might*
+    // ignore an event sent by X because we don't know or want it. This may lead to
+    // inconsistencies in Fl::event_key(), Fl::event_state() and more (see set_event_xy).
+    // For now we ignore this fact though, it's likely that it never happens.
+    // Albrecht, Sep 27, 2024
+
+    Fl::e_keysym = 0;       // init: not used (zero) for scroll wheel events
     set_event_xy(window);
     Fl::e_dx = Fl::e_dy = 0;
-    if (xevent.xbutton.button == Button4 && !Fl::event_shift()) {
-      Fl::e_dy = -1; // Up
+
+    if (mb == Button4 && !Fl::event_shift()) {
+      Fl::e_dy = -1;                            // up
       event = FL_MOUSEWHEEL;
-    } else if (xevent.xbutton.button == Button5 && !Fl::event_shift()) {
-      Fl::e_dy = +1; // Down
+    } else if (mb == Button5 && !Fl::event_shift()) {
+      Fl::e_dy = +1;                            // down
       event = FL_MOUSEWHEEL;
-    } else if (xevent.xbutton.button == 6 || (xevent.xbutton.button == Button4 && Fl::event_shift())) {
-        Fl::e_dx = -1; // Left
-        event = FL_MOUSEWHEEL;
-    } else if (xevent.xbutton.button == 7 || (xevent.xbutton.button == Button5 && Fl::event_shift())) {
-        Fl::e_dx = +1; // Right
-        event = FL_MOUSEWHEEL;
-    } else {
-      Fl::e_state |= (FL_BUTTON1 << (xevent.xbutton.button-1));
+    } else if (mb == 6 || (mb == Button4 && Fl::event_shift())) {
+      Fl::e_dx = -1;                            // left
+      event = FL_MOUSEWHEEL;
+    } else if (mb == 7 || (mb == Button5 && Fl::event_shift())) {
+      Fl::e_dx = +1;                            // right
+      event = FL_MOUSEWHEEL;
+    } else if (mb < 4 || mb > 7) {              // real mouse *buttons*, not scroll wheel
+      if (mb > 7)                               // 8 = back, 9 = forward
+        mb -= 4;                                // map to 4 and 5, resp.
+      Fl::e_keysym = FL_Button + mb;
+      Fl::e_state |= (FL_BUTTON1 << (mb-1));    // set button state
+      if (mb == 4) xbutton_state |= FL_BUTTON4; // save extra button state internally
+      if (mb == 5) xbutton_state |= FL_BUTTON5; // save extra button state internally
       event = FL_PUSH;
       checkdouble();
+    } else { // unknown button or shift combination
+      return 0;
     }
 
 #if FLTK_CONSOLIDATE_MOTION
@@ -2015,6 +2085,38 @@ int fl_handle(const XEvent& thisevent)
 #endif // FLTK_CONSOLIDATE_MOTION
     in_a_window = true;
     break;
+  } // ButtonPress
+
+  // Mouse button release event: for details see ButtonPress above
+
+  case ButtonRelease: {
+    int mb = xevent.xbutton.button; // mouse button
+    switch (mb) {                   // figure out which real button this is
+      case 1:                       // left
+      case 2:                       // middle
+      case 3:                       // right
+        break;                      // continue
+      case 8:                       // side button 1 (back)
+      case 9:                       // side button 2 (forward)
+        mb -= 4;                    // map to 4 and 5, respectively
+        break;                      // continue
+      default:                      // unknown button or scroll wheel:
+        return 0;                   // don't send FL_RELEASE event
+    }
+    Fl::e_keysym = FL_Button + mb;  // == FL_BUTTON1 .. FL_BUTTON5
+    set_event_xy(window);
+
+    Fl::e_state &= ~(FL_BUTTON1 << (mb-1));
+    if (mb == 4) xbutton_state &= ~FL_BUTTON4; // clear internal button state
+    if (mb == 5) xbutton_state &= ~FL_BUTTON5; // clear internal button state
+    event = FL_RELEASE;
+
+#if FLTK_CONSOLIDATE_MOTION
+    fl_xmousewin = window;
+#endif // FLTK_CONSOLIDATE_MOTION
+    in_a_window = true;
+    break;
+  } // ButtonRelease
 
   case PropertyNotify:
     if (xevent.xproperty.atom == fl_NET_WM_STATE) {
@@ -2057,20 +2159,6 @@ int fl_handle(const XEvent& thisevent)
     event = FL_MOVE;
     break;
 #  endif
-
-  case ButtonRelease:
-    Fl::e_keysym = FL_Button + xevent.xbutton.button;
-    set_event_xy(window);
-    Fl::e_state &= ~(FL_BUTTON1 << (xevent.xbutton.button-1));
-    if (xevent.xbutton.button == Button4 ||
-        xevent.xbutton.button == Button5) return 0;
-    event = FL_RELEASE;
-
-#if FLTK_CONSOLIDATE_MOTION
-    fl_xmousewin = window;
-#endif // FLTK_CONSOLIDATE_MOTION
-    in_a_window = true;
-    break;
 
   case EnterNotify:
     if (xevent.xcrossing.detail == NotifyInferior) break;
@@ -2686,7 +2774,7 @@ void Fl_X::make_xid(Fl_Window* win, XVisualInfo *visual, Colormap colormap)
     }
 
     // Make it receptive to DnD:
-    long version = 4;
+    Atom version = 5; // max. XDND protocol version we understand
     XChangeProperty(fl_display, xp->xid, fl_XdndAware,
                     XA_ATOM, sizeof(int)*8, 0, (unsigned char*)&version, 1);
 

@@ -72,7 +72,7 @@ should run with a Wayland-enabled FLTK 1.4 library with this single change.
 
 Note 1: this may require some linker flags to enable exporting symbols
 from *executable* programs which FLTK uses to "read" the global symbol
-'fl_disable_wayland'. For for GNU `ld` or any GNU compiler this would
+'fl_disable_wayland'. For GNU `ld` or any GNU compiler this would
 be "-rdynamic".
 
 
@@ -85,15 +85,16 @@ the following techniques:
 
 Option 1: Set target property 'ENABLE_EXPORTS' on all executable
           targets that require to disable the Wayland backend.
-          This is the preferred solution.
+          This is the preferred solution because it works per target.
 
           CMake example:
 
           set_target_properties(myprog PROPERTIES ENABLE_EXPORTS TRUE)
 
-Option 2: Set CMake policy CMP0065 to 'OLD' (to pre-3.4 behavior)
+Option 2: Set CMake policy CMP0065 to 'OLD' (i.e. pre-3.4 behavior)
           This is a quick solution but discouraged because setting
           CMake policies to 'OLD' is "deprecated by definition".
+          CMake may issue warnings or ignore this in the future.
 
           CMake code:
 
@@ -171,6 +172,10 @@ Feedback for other writing systems would be helpful.
 * Using OpenGL inside Wayland windows doesn't seem to work on RaspberryPi hardware,
 although it works inside X11 windows on the same hardware.
 
+* Drag-and-drop initiation from a subwindow doesn't work under the KDE/Plasma desktop.
+That is most probably a KWin bug because no such problem occurs with 3 other
+Wayland compositors (Mutter, Weston, Sway). A workaround is proposed in issue #997
+of the FLTK github repository (https://github.com/fltk/fltk/issues/997).
 
 3 Platform Specific Notes
 =========================

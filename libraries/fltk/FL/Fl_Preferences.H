@@ -32,10 +32,10 @@
 /**
  \brief Fl_Preferences store user settings between application starts.
 
- Fl_Preferences are similar to the Registry on Windows and Preferences on MacOS,
- providing a simple method to store customizable user settings between app
- launches, for instance the previous window position or a history of previously
- used documents.
+ FLTK Preferences are similar to the Registry on Windows and Preferences on
+ MacOS, providing a simple method to store customizable user settings between
+ application launches. A typical use is storing the last window position or a
+ history of previously used documents.
 
  Preferences are organized in a hierarchy of groups. Every group can contain
  more groups and any number of key/value pairs. Keys can be text strings
@@ -43,29 +43,31 @@
  in a key name are treated as subgroups, i.e. the key 'window/width' would
  actually refer to the key 'width' inside the group 'window'.
 
- Keys usually have a unique name within their group. Duplicate keys are
- possible though and can be accessed using the index based functions.
-
- A value can be an UTF-8 string. Control characters and UTF-8 sequences are
- stored as octal values. Long strings are wrapped at the line ending and will
- be reassembled when reading the file back.
+ Keys have a unique name within their group. A value can be any string including
+ control characters 0x00 to 0x1f, 0x7f, and UTF-8 octets.
 
  Several methods allow setting and getting numerical values and binary data.
 
- Preferences are stored in text files that can be edited manually if needed.
- The file format is easy to read and relatively forgiving. Preference files are
- the same on all platforms. User comments in preference files are preserved.
- Filenames are unique for each application by using a vendor/application naming
- scheme. The user must provide default values for all entries to ensure proper
- operation should preferences be corrupted or not yet exist.
+ Preferences files are the same across platforms. User comments in preference
+ files are preserved. Filenames are unique for each application by using a
+ vendor/application naming scheme. The developer app must provide default values
+ for all entries to ensure proper operation should preferences be corrupted
+ or not yet exist.
 
- FLTK preferences are not meant to replace a fully features database. No merging
+ \note The format of preferences files is not part of the FLTK specification
+ and intentionally undocumented. The only valid way to read or write prefs
+ files is via the API from your app. The fact that the current
+ implementation looks like human-readable text is purely coincidental and
+ may change at any time. Preferences files are not meant to be created
+ or edited "by hand."
+
+ FLTK preferences are not meant to replace a fully featured database. No merging
  of data takes place. If several instances of an app access the same database at
  the same time, only the most recent changes will persist.
 
- Preferences should no be used to store document data. The .prefs file should
+ Preferences should not be used to store document data. The .prefs file should
  be kept small for performance reasons. One application can have multiple
- preference files. Extensive binary data however should be stored in separate
+ preferences files. Extensive binary data however should be stored in separate
  files: see \a Fl_Preferences::get_userdata_path() .
 
  Fl_Preferences are not thread-safe. They can temporarily change the locale
@@ -97,13 +99,12 @@
 
  \see Fl_Preferences::Fl_Preferences(Root root, const char *vendor, const char *application)
 
- As a special case, Fl_Preferences can be memory mapped and not be associated
- with a file on disk.
+ \see As a special case, Fl_Preferences can be memory mapped and not be associated
+ with a file on disk. See
+ Fl_Preferences::Fl_Preferences(Fl_Preferences *parent, const char *group)
+ and Fl_Preferences::MEMORY for more details on memory mapped preferences.
 
- \see Fl_Preferences::Fl_Preferences(Fl_Preferences *parent, const char *group)
- for more details on memory mapped preferences.
-
-   \note Starting with FLTK 1.3, preference databases are expected to
+   \note Starting with FLTK 1.3, preferences databases are expected to
      be in UTF-8 encoding. Previous databases were stored in the
      current character set or code page which renders them incompatible
      for text entries using international characters.
@@ -134,9 +135,9 @@ public:
     MEMORY,                            ///< Returned if querying memory mapped preferences
     ROOT_MASK     = 0x00FF,            ///< Mask for the values above
     CORE          = 0x0100,            ///< OR'd by FLTK to read and write core library preferences and options
-    C_LOCALE      = 0x1000,            ///< This flag should always be set, it makes sure that floating point
+    C_LOCALE      = 0x1000,            ///< This flag should always be set to ensure that floating point values
+                                       ///< are written and read correctly independently of the current locale
     CLEAR         = 0x2000,            ///< Don't read a possibly existing database. Instead, start with an empty set of preferences.
-                                       ///< values are written correctly independently of the current locale
     SYSTEM_L      = SYSTEM | C_LOCALE, ///< Preferences are used system-wide, locale independent
     USER_L        = USER | C_LOCALE,   ///< Preferences apply only to the current user, locale independent
     CORE_SYSTEM_L = CORE | SYSTEM_L,   ///< Same as CORE | SYSTEM | C_LOCALE
@@ -202,7 +203,7 @@ public:
   Fl_Preferences( ID id );
   virtual ~Fl_Preferences();
 
-  FL_DEPRECATED("in 1.4.0 - use Fl_Preferences(path, vendor, application, flags) instead",
+  FL_DEPRECATED("since 1.4.0 - use Fl_Preferences(path, vendor, application, flags) instead",
                 Fl_Preferences( const char *path, const char *vendor, const char *application ) );
 
   Root filename( char *buffer, size_t buffer_size);

@@ -766,7 +766,22 @@ AS_IF([test x$enable_localzlib != xyes], [
 # but only, if the builtin lib is not requested
 syspnglib_ok=no
 syspnginc_ok=no
-AS_IF([test x$enable_localpng != xyes], [
+AS_IF([test x$enable_localpng != xyes -a x$PKGCONFIG != x], [
+    AC_MSG_CHECKING([for libpng-1.6.x])
+    AS_IF([$PKGCONFIG --exists libpng16], [
+        AC_MSG_RESULT([yes])
+        AC_DEFINE([HAVE_PNG_H], 1, [Have PNG library?])
+        syspnginc_ok=yes
+        syspnglib_ok=yes
+        PNGINC="$($PKGCONFIG --cflags libpng16)"
+        IMAGELIBS="$($PKGCONFIG --libs libpng16) $IMAGELIBS"
+        STATICIMAGELIBS="$($PKGCONFIG --libs libpng16) $STATICIMAGELIBS"
+    ], [
+        AC_MSG_RESULT([no])
+    ])
+])
+
+AS_IF([test x$enable_localpng != xyes -a $syspnglib_ok = no], [
     AC_CHECK_LIB([png], [png_read_info], [
         AC_CHECK_HEADER([png.h], [
             AC_DEFINE([HAVE_PNG_H])
@@ -1008,10 +1023,29 @@ AS_CASE([$host_os_gui], [cygwin* | mingw*], [
 
     # MacOS X uses Cocoa for graphics.
     LIBS="$LIBS -framework Cocoa"
-    macosversion_maj=$(sw_vers -productVersion | cut -d. -f1)
-    AS_IF([test $macosversion_maj -ge 11], [
-      LIBS="$LIBS -framework UniformTypeIdentifiers"
-    ])
+    # Add weak-linked additional frameworks for increasingly high macOS versions
+    AC_LANG_PUSH([C])
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <AvailabilityMacros.h>
+              #if __MAC_OS_X_VERSION_MAX_ALLOWED < 110000
+              #error __MAC_OS_X_VERSION_MAX_ALLOWED < 110000
+              #endif
+            ]], [[
+            ]])],
+        [LIBS="$LIBS -weak_framework UniformTypeIdentifiers"],
+        [])
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <AvailabilityMacros.h>
+              #if __MAC_OS_X_VERSION_MAX_ALLOWED < 150000
+              #error __MAC_OS_X_VERSION_MAX_ALLOWED < 150000
+              #endif
+            ]], [[
+            ]])],
+        [LIBS="$LIBS -weak_framework ScreenCaptureKit"],
+        [])
+    AC_LANG_POP([])
 
     AS_IF([test x$have_pthread = xyes], [
         AC_DEFINE([HAVE_PTHREAD])

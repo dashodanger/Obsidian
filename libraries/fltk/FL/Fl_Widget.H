@@ -63,6 +63,12 @@ struct FL_EXPORT Fl_Label {
   Fl_Align align_;
   /** type of label. \see Fl_Labeltype */
   uchar type;
+  /** Spacing between label and the horizontally aligned side of the widget. */
+  signed char h_margin_;
+  /** Spacing between label and the vertically aligned side of the widget. */
+  signed char v_margin_;
+  /** Spacing between an image and the label text */
+  uchar spacing;
 
   /** Draws the label aligned to the given box */
   void draw(int,int,int,int, Fl_Align) const ;
@@ -72,8 +78,8 @@ struct FL_EXPORT Fl_Label {
 
 /** A class prototype that allows for additional data in callbacks.
 
- Users can extend this class and pass it to widget callbacks. Widgets can
- take ownership of the callback data, deleting the data when the widget
+ Users can derive this class and pass objects of such derived classes to widget callbacks.
+ Widgets can take ownership of the callback data, deleting the data when the widget
  itself is deleted.
 
  The destructor of this class is virtual, allowing for additional code to
@@ -83,9 +89,11 @@ struct FL_EXPORT Fl_Label {
  \see Fl_Widget::callback(Fl_Callback*, Fl_Callback_User_Data*, bool)
  \see Fl_Widget::user_data(Fl_Callback_User_Data*, bool)
  */
-class Fl_Callback_User_Data {
+class FL_EXPORT Fl_Callback_User_Data {
+protected:
+  Fl_Callback_User_Data() {} ///< Protected constructor
 public:
-  virtual ~Fl_Callback_User_Data() { }
+  virtual ~Fl_Callback_User_Data() { } ///< Destructor
 };
 
 
@@ -684,6 +692,37 @@ public:
    \see deimage_bound(), bind_image()
    */
   void bind_deimage(int f) { if (f) set_flag(DEIMAGE_BOUND); else clear_flag(DEIMAGE_BOUND); }
+
+  /** Set the gap between the label and the image in pixels.
+   This value is limited to 0..255.
+   \param[in] gap spacing in pixels
+   */
+  void label_image_spacing(int gap) { label_.spacing = (uchar)gap; }
+
+  /** Return the gap size between the label and the image.
+   \return spacing in pixels
+   */
+  int label_image_spacing() { return label_.spacing; }
+
+  /** Set the spacing between the label and the horizontal edge of the widget.
+   \param[in] px gap in pixels
+   */
+  void horizontal_label_margin(int px) { label_.h_margin_ = (signed char)px; }
+
+  /** Get the spacing between the label and the horizontal edge of the widget.
+   \return px gap in pixels
+   */
+  int horizontal_label_margin() { return label_.h_margin_; }
+
+  /** Set the spacing between the label and the vertical edge of the widget.
+   \param[in] px gap in pixels
+   */
+  void vertical_label_margin(int px) { label_.v_margin_ = (signed char)px; }
+
+  /** Get the spacing between the label and the vertical edge of the widget.
+   \return px gap in pixels
+   */
+  int vertical_label_margin() { return label_.v_margin_; }
 
   /** Gets the current tooltip text.
       \return a pointer to the tooltip text or NULL

@@ -29,8 +29,25 @@ class Fl_Window_Type;
 class Fd_Project_Reader;
 class Fd_Project_Writer;
 
+/**
+ Declare where a new type is placed in the hierarchy.
+
+ Note that a type can also be the start of a hierarchy of types. In that case,
+
+ \see Fl_Type *Fl_..._Type::make(Strategy strategy) calls `add()`
+ Add single Type:
+    Fl_Type *add_new_widget_from_user(Fl_Type *inPrototype, Strategy strategy, bool and_open)
+    Fl_Type *add_new_widget_from_user(const char *inName, Strategy strategy, bool and_open)
+    Fl_Type *add_new_widget_from_file(const char *inName, Strategy strategy)
+ Add a hierarchy of Types
+    void Fl_Type::add(Fl_Type *p, Strategy strategy)
+    int read_file(const char *filename, int merge, Strategy strategy)
+    Fl_Type *Fd_Project_Reader::read_children(Fl_Type *p, int merge, Strategy strategy, char skip_options)
+    int Fd_Project_Reader::read_project(const char *filename, int merge, Strategy strategy)
+ */
 typedef enum {
-  kAddAsLastChild = 0,
+  kAddAsFirstChild = 0,
+  kAddAsLastChild,
   kAddAfterCurrent
 } Strategy;
 
@@ -75,6 +92,13 @@ void select_all_cb(Fl_Widget *,void *);
 void select_none_cb(Fl_Widget *,void *);
 void earlier_cb(Fl_Widget*,void*);
 void later_cb(Fl_Widget*,void*);
+
+#ifndef NDEBUG
+void print_project_tree();
+bool validate_project_tree();
+bool validate_independent_branch(class Fl_Type *root);
+bool validate_branch(class Fl_Type *root);
+#endif
 
 /**
  \brief This is the base class for all elements in the project tree.
@@ -134,7 +158,7 @@ public: // things that should not be public:
    (see `haderror`). It seems that this is often confused with new_selected
    which seems to hold the true and visible selection state. */
   char selected; // copied here by selection_changed()
-  char open_;   // state of triangle in browser
+  char folded_;  // if set, children are not shown in browser
   char visible; // true if all parents are open
   int level;    // number of parents over this
   static Fl_Type *first, *last;
@@ -229,12 +253,13 @@ public:
   virtual Fl_Widget *enter_live_mode(int top=0); // build widgets needed for live mode
   virtual void leave_live_mode(); // free allocated resources
   virtual void copy_properties(); // copy properties from this type into a potential live object
+  virtual void copy_properties_for_children() { } // copy remaining properties after children were added
 
   // get message number for I18N
   int msgnum();
 
   /** Return 1 if the Type can have children. */
-  virtual int is_parent() const {return 0;}
+  virtual int can_have_children() const {return 0;}
   /** Return 1 if the type is a widget or menu item. */
   virtual int is_widget() const {return 0;}
   /** Return 1 if the type is a widget but not a menu item. */

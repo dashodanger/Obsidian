@@ -96,7 +96,7 @@ set(STATICIMAGELIBS "")
 if(WIN32 AND NOT CYGWIN)
   set(FLTK_CONFIG_PATH CMake)
 elseif(APPLE AND NOT FLTK_BACKEND_X11)
-  set(FLTK_CONFIG_PATH FLTK.framework/Resources/CMake)
+  set(FLTK_CONFIG_PATH ${FLTK_DATADIR}/fltk)
 else()
   set(FLTK_CONFIG_PATH ${FLTK_DATADIR}/fltk)
 endif(WIN32 AND NOT CYGWIN)
@@ -111,6 +111,25 @@ if(CMAKE_GENERATOR MATCHES "Xcode")
 endif()
 
 if(APPLE)
+  # Check if the __MAC_OS_X_VERSION_MAX_ALLOWED compile time macro is at least
+  # the version encoded in SDK_VERSION and return TRUE or FALSE in RESULT.
+  # Note 1: try_compile() always creates an *internal* CMake cache variable for
+  #         the result which we set to 'FLTK_CHECK_OSX_MAX_ALLOWED_${SDK_VERSION}'.
+  # Note 2: 'FLTK_' to avoid polluting the cache if FLTK is built as a subproject.
+  # Note 3: We don't care about the cache, i.e. we run try_compile() unconditionally
+  #         so users can switch SDK's, particularly if they *upgrade* Xcode.
+
+  function(CHECK_OSX_MAX_ALLOWED SDK_VERSION RESULT)
+    set(_result FLTK_CHECK_OSX_MAX_ALLOWED_${SDK_VERSION})
+    try_compile(${_result}
+      ${CMAKE_CURRENT_BINARY_DIR}/CHECK_OSX_MAX_ALLOWED_${SDK_VERSION}
+      SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/CMake/macOSMaxAllowed.c
+      COMPILE_DEFINITIONS -DSDK_VERSION_CHECK=${SDK_VERSION}
+    )
+    set(${RESULT} ${${_result}} PARENT_SCOPE)
+  endfunction()
+
+  # APPLE macOS setup
   set(HAVE_STRCASECMP 1)
   set(HAVE_DIRENT_H 1)
   set(HAVE_SNPRINTF 1)
@@ -123,22 +142,17 @@ if(APPLE)
     endif(NOT(${CMAKE_SYSTEM_VERSION} VERSION_LESS 17.0.0))
   else()
     set(FLTK_COCOA_FRAMEWORKS "-framework Cocoa")
-    set(UTI_CONDITION FALSE)
-    string(LENGTH "${CMAKE_OSX_DEPLOYMENT_TARGET}" TARGET_LEN)
-    string(LENGTH "${CMAKE_SYSTEM_VERSION}" SDK_LEN)
-    if(TARGET_LEN GREATER 0)
-      if( ${CMAKE_OSX_DEPLOYMENT_TARGET} VERSION_GREATER_EQUAL 11.0)
-        set(UTI_CONDITION TRUE)
-      endif()
-    elseif(SDK_LEN GREATER 0)
-      if( ${CMAKE_SYSTEM_VERSION} VERSION_GREATER_EQUAL 20.0 )
-        set(UTI_CONDITION TRUE)
-      endif()
-    endif()
-    if(UTI_CONDITION) # a.k.a. macOS version ≥ 11.0
-      if (NOT (CMAKE_OSX_ARCHITECTURES STREQUAL "ppc" OR CMAKE_OSX_ARCHITECTURES STREQUAL "i386"))
-        list(APPEND FLTK_COCOA_FRAMEWORKS "-framework UniformTypeIdentifiers")
-      endif()
+    if (NOT (CMAKE_OSX_ARCHITECTURES STREQUAL "ppc" OR CMAKE_OSX_ARCHITECTURES STREQUAL "i386"))
+      CHECK_OSX_MAX_ALLOWED(150000 SDK_15_AVAILABLE) # at least SDK 15.0.0 ?
+      if (SDK_15_AVAILABLE)
+        list(APPEND FLTK_COCOA_FRAMEWORKS "-weak_framework ScreenCaptureKit")       # 15.0
+        list(APPEND FLTK_COCOA_FRAMEWORKS "-weak_framework UniformTypeIdentifiers") # 11.0
+      else(SDK_15_AVAILABLE)
+        CHECK_OSX_MAX_ALLOWED(110000 SDK_11_AVAILABLE) # at least SDK 11.0.0 ?
+        if (SDK_11_AVAILABLE)
+          list(APPEND FLTK_COCOA_FRAMEWORKS "-weak_framework UniformTypeIdentifiers")
+        endif(SDK_11_AVAILABLE)
+      endif(SDK_15_AVAILABLE)
     endif()
   endif(FLTK_BACKEND_X11)
 endif(APPLE)
@@ -162,29 +176,7 @@ endif(WIN32)
 
 #######################################################################
 # size of ints
-include(CheckTypeSize)
 
-CHECK_TYPE_SIZE(short SIZEOF_SHORT)
-CHECK_TYPE_SIZE(int   SIZEOF_INT)
-CHECK_TYPE_SIZE(long  SIZEOF_LONG)
-CHECK_TYPE_SIZE("long long" HAVE_LONG_LONG)
-
-if(${SIZEOF_SHORT} MATCHES "^2$")
-  set(U16 "unsigned short")
-endif(${SIZEOF_SHORT} MATCHES "^2$")
-
-if(${SIZEOF_INT} MATCHES "^4$")
-  set(U32 "unsigned")
-else()
-  if(${SIZEOF_LONG} MATCHES "^4$")
-    set(U32 "unsigned long")
-  endif(${SIZEOF_LONG} MATCHES "^4$")
-endif(${SIZEOF_INT} MATCHES "^4$")
-
-if(${SIZEOF_INT} MATCHES "^8$")
-   set(U64 "unsigned")
-else()
-   if(${SIZEOF_LONG} MATCHES "^8$")
-    set(U64 "unsigned long")
-   endif(${SIZEOF_LONG} MATCHES "^8$")
-endif(${SIZEOF_INT} MATCHES "^8$")
+set(U16 "unsigned short")
+set(U32 "unsigned")
+set(U64 "unsigned long long")
