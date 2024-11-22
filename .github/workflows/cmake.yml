@@ -104,30 +104,3 @@ jobs:
             tools
             obsidian
           retention-days: ${{env.RETENTION_DAYS}}
-  build-macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v4
-    - name: Install HomeBrew FLTK
-      run: brew install fltk
-    - name: Configure CMake MacOS
-      run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-    - name: Build MacOS
-      run: cmake --build build --config ${{env.BUILD_TYPE}}
-    - uses: actions/upload-artifact@v4
-      with:
-        name: obsidian-macos
-        path: |
-          addons
-          data
-          engines
-          games
-          language
-          modules
-          ports
-          presets
-          scripts
-          theme
-          tools
-          obsidian
-        retention-days: ${{env.RETENTION_DAYS}}
