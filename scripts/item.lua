@@ -1002,13 +1002,31 @@ function Item_pickups_for_class(LEVEL, CL)
       if not stats.health then
         stats.health = 1
       end
+
+      local pick1
+      local pick2
+      if R.zone.weap_palette
+      and not table.empty(R.zone.weap_palette)
+      and OB_CONFIG.secrets_bonus ~= nil then
+        pick1 = rand.key_by_probs(R.zone.weap_palette)
+        if rand.odds(33 + LEVEL.id) then
+          pick2 = rand.key_by_probs(R.zone.weap_palette)
+        end
+      end
+
+      if pick1 and not stats[GAME.WEAPONS[pick1].ammo] then
+        stats[GAME.WEAPONS[pick1].ammo] = 1
+      end
+      if pick2 and not stats[GAME.WEAPONS[pick2].ammo] then
+        stats[GAME.WEAPONS[pick2].ammo] = 1
+      end
     end
 
     for stat,qty in pairs(stats) do
 
       -- this secret room is a treasure trove, baby!
       if R.is_secret and OB_CONFIG.secrets_bonus ~= nil then
-        qty = R.svolume * SECRET_BONUS_FACTORS[OB_CONFIG.secrets_bonus]
+        qty = qty + (R.svolume/2) * SECRET_BONUS_FACTORS[OB_CONFIG.secrets_bonus]
       end
 
       select_pickups(R, item_list, stat, qty)

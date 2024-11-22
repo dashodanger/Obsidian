@@ -3628,6 +3628,12 @@ end
         R.shapes_applied = 1
       end
 
+      if not R.shapes or table.empty(R.shapes) then
+        R.shapes = {}
+      else
+        R.shapes[cur_rule.name] = R.shapes[cur_rule.name] + 1
+      end
+
       if cur_rule.is_absurd then
         if R.absurd_shapes then
           table.add_unique(R.absurd_shapes, cur_rule.name)
