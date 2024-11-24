@@ -8,13 +8,6 @@ fastPRNG - Copyright (c) 2020 Michele Morrone
 BSD 3-Clause License
 ===========================================================================================
 
-3270 Font - Copyright (c) 2011-2017, Ricardo Banffy.
-				Copyright (c) 1993-2011, Paul Mattes.
-				Copyright (c) 2004-2005, Don Russell.
-				Copyright (c) 2004, Dick Altenbern.
-				Copyright (c) 1990, Jeff Sparkes.
-				Copyright (c) 1989, Georgia Tech Research Corporation (GTRC), Atlanta, GA 30332.
-
 Blasphemer (Assorted graphic assets) - Copyright (c) 2021 Contributors to the Blasphemer project
 
 Freedoom (Assorted graphic assets) - Copyright (c) 2001-2019 Contributors to the Freedoom project
@@ -97,12 +90,6 @@ CC-SAMPLING+-1.0 Generic License
 "Fan Noise" sound - Copyright (c) 2020 calivintage via Freesound.org
 
 ===========================================================================================
-FLTK License
-===========================================================================================
-
-FLTK - Copyright (c) 1998-2024 Bill Spitzak and others
-
-===========================================================================================
 GPL2 License
 ===========================================================================================
 
@@ -132,31 +119,6 @@ minilua - Copyright (c) 2020-2023 Eduardo Bart (https://github.com/edubart).
 miniz - Copyright (c) 2013-2014 RAD Game Tools and Valve Software
 				Copyright (c) 2010-2014 Rich Geldreich and Tenacious Software LLC
 
-
-===========================================================================================
-SIL Open Font License
-===========================================================================================
-
-Avenixel - Copyright (c) 2020 Gabriel Sammartino (https://www.behance.net/webcreativity | contact@gabrielsammartino.com),
-										with Reserved Font Name Avenixel.
-
-Drama Sans - Copyright (c) 2018 Drama Sans (dramasans@outlook.com),
-										with Reserved Font Name "Drama Sans".
-
-FPD Pressure - Copyright (c) 2020 Felix Summ
-
-Kalam - Copyright (c) 2014 Indian Type Foundry (info@indiantypefoundry.com)
-
-MiniSmallCaps (renamed to "Sam I Am") - Copyright (c) 2019 Sam Trenholme
-
-Source Sans Pro (renamed to "Sauce") - Copyright 2010, 2012, 2014 Adobe Systems Incorporated (http://www.adobe.com/), with Reserved Font Name ‘Source’
-
-Teko - Copyright (c) 2014, Indian Type Foundry (info@indiantypefoundry.com)
-
-The Neue Black (renamed to "New Black") - Copyright (c) 2019-2021, Tre Seals <beheard@vocaltype.co>, Micah Rich <micah@micahrich.com>, The League of Moveable Type Limited Liability Company <founders@theleagueofmoveabletype.com>
-with Reserved Font Name: "The Neue Black"
-
-Workbench - Copyright (c) 2019, Jens Kutilek (www.kutilek.de)
 
 ===========================================================================================
 Public Domain

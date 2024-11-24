@@ -3666,10 +3666,6 @@ end
     -- debug statistics
     GROWER_DEBUG_INFO[cur_rule.name].applied = GROWER_DEBUG_INFO[cur_rule.name].applied + 1
 
-    if PARAM["live_minimap"] == "step" then
-      Seed_draw_minimap(SEEDS, LEVEL)
-    end
-
     update_aversions(cur_rule)
 
     update_shape_groupings(cur_rule, LEVEL)
@@ -3958,8 +3954,6 @@ end
 
 
 function Grower_grow_room(SEEDS, LEVEL, R)
-  gui.ticker()
-
   if R.is_street then
     R.is_grown = true
     return
@@ -4022,10 +4016,6 @@ function Grower_grow_room(SEEDS, LEVEL, R)
         end
       end
     end
-  end
-
-  if PARAM["live_minimap"] == "room" then
-    Seed_draw_minimap(SEEDS, LEVEL)
   end
 
   R.is_grown = true
@@ -4454,8 +4444,6 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
 
     if R then final_R = R end
   
-    Seed_draw_minimap(SEEDS, LEVEL)
-
     if final_R.is_hallway or final_R.is_grown then
       local found_room
       local cur_id = #LEVEL.rooms
@@ -4526,7 +4514,6 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
       MAX_RETRIES = MAX_RETRIES - 1
       rand.shuffle(LEVEL.shape_transform_possiblities)
       if MAX_RETRIES == 0 then
-        Seed_draw_minimap(SEEDS, LEVEL)
         error("Unable to sprout more rooms.")
       end
     end
@@ -4645,9 +4632,6 @@ function Grower_decorate_rooms(SEEDS, LEVEL)
   for _,R in pairs(room_list) do
     if not R.is_hallway and not R.is_street then
       Grower_grammatical_room(SEEDS, LEVEL, R, "decorate")
-      if PARAM["live_minimap"] == "room" then
-        Seed_draw_minimap(SEEDS, LEVEL)
-      end
     end
   end
 end
@@ -4673,9 +4657,6 @@ function Grower_expand_parks(SEEDS, LEVEL)
   for _,R in pairs(room_list) do
     if R.is_outdoor and not R.is_street then
       Grower_grammatical_room(SEEDS, LEVEL, R, "smoother")
-    end
-    if PARAM["live_minimap"] == "room" then
-    Seed_draw_minimap(SEEDS, LEVEL)
     end
   end
 
@@ -5048,8 +5029,6 @@ function Grower_create_rooms(LEVEL, SEEDS)
       gui.printf("\n")
     end
   end
-
-  Seed_draw_minimap(SEEDS, LEVEL)
 
 -- FIXME : VALIDATION CRUD
     --for sx = 1, SEED_W do

@@ -34,6 +34,8 @@
 
 #include "tx_forge.h"
 
+#include <string.h>
+
 #include "lib_util.h"
 #include "main.h"
 #include "sys_assert.h"
@@ -354,29 +356,6 @@ void TX_SpectralSynth(unsigned long long seed, float *buf, int width, double fra
     }
 
     free_mesh();
-}
-
-void TX_TestSynth(unsigned long long seed)
-{
-    float *buf = new float[128 * 128];
-
-    TX_SpectralSynth(seed, buf, 128);
-
-    LogPrint("P6\n128 128 255\n");
-
-    for (int y = 0; y < 128; y++)
-    {
-        for (int x = 0; x < 128; x++)
-        {
-            float f = buf[y * 128 + x];
-
-            int ity = (int)(1 + f * 253);
-
-            LogPrint("ITY: %d\n", ity);
-        }
-    }
-
-    delete[] buf;
 }
 
 //--- editor settings ---

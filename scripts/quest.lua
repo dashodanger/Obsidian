@@ -831,7 +831,6 @@ function Quest_scan_all_conns(LEVEL, new_goals, do_quest)
   -- do_quest can be NIL, or a particular quest to try dividing
 
   gui.debugf("Quest_scan_all_conns.....\n")
-  gui.ticker()
 
   local info =
   {

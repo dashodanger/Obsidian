@@ -19,6 +19,8 @@
 //
 //----------------------------------------------------------------------
 
+#include <string.h>
+
 #include "lib_argv.h"
 #include "lib_util.h"
 #include "main.h"

@@ -21,6 +21,8 @@
 
 #include "csg_main.h"
 
+#include <string.h>
+
 #include <algorithm>
 
 #include "csg_local.h"

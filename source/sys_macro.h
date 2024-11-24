@@ -24,11 +24,6 @@
 #include <math.h>
 #include <stdint.h>
 
-constexpr const char *BLANKOUT =
-    "                                                                                           "
-    "                                                                                           "
-    "                                                                    ";
-
 // basic constants
 constexpr uint16_t OBSIDIAN_MSG_BUF_LEN  = 2000;
 constexpr double   OBSIDIAN_POLY_EPSILON = (1.0 / 128.0);

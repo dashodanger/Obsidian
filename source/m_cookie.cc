@@ -22,8 +22,7 @@
 #include "m_cookie.h"
 
 #include <locale.h>
-
-#include <stdexcept>
+#include <string.h>
 
 #include "lib_argv.h"
 #include "lib_util.h"
@@ -65,10 +64,7 @@ static void Cookie_SetValue(std::string name, const std::string &value)
     if (!active_module.empty())
     {
         ob_set_mod_option(active_module, name, value);
-        if (batch_mode)
-        {
-            ob_set_config(name, value);
-        }
+        ob_set_config(name, value);
         return;
     }
 
@@ -80,30 +76,14 @@ static void Cookie_SetValue(std::string name, const std::string &value)
 
         if (context == cookie_context_e::Arguments || keep_seed)
         {
-            try
+            size_t converted = 0;
+            next_rand_seed = stoull(value, &converted);
+
+            if (converted != value.size())
             {
-                next_rand_seed = stoull(value);
-                return;
-            }
-            catch (std::invalid_argument &e)
-            {
-                (void)e;
-                if (!value.empty())
-                {
-                    string_seed = value;
-                    ob_set_config("string_seed", value.c_str());
-                    next_rand_seed = StringHash64(string_seed);
-                }
-                else
-                {
-                    LogPrint("Invalid argument. Will generate new seed.\n");
-                }
-            }
-            catch (std::out_of_range &e)
-            {
-                (void)e;
-                LogPrint("Resulting number would be out of range. Will generate new "
-                         "seed.\n");
+                string_seed = value;
+                ob_set_config("string_seed", value.c_str());
+                next_rand_seed = StringHash64(string_seed);
             }
         }
 
@@ -192,10 +172,7 @@ bool Cookie_Load(const std::string &filename)
         return false;
     }
 
-    if (main_action != MAIN_SOFT_RESTART)
-    {
-        LogPrint("Loading config file: %s\n", filename.c_str());
-    }
+    LogPrint("Loading config file: %s\n", filename.c_str());
 
     int error_count = 0;
 
@@ -223,17 +200,15 @@ bool Cookie_Load(const std::string &filename)
 
     fclose(cookie_fp);
 
-    if (main_action != MAIN_SOFT_RESTART)
+    if (error_count > 0)
     {
-        if (error_count > 0)
-        {
-            LogPrint("DONE (found %d parse errors)\n\n", error_count);
-        }
-        else
-        {
-            LogPrint("DONE.\n\n");
-        }
+        LogPrint("DONE (found %d parse errors)\n\n", error_count);
     }
+    else
+    {
+        LogPrint("DONE.\n\n");
+    }
+
     setlocale(LC_NUMERIC, numeric_locale.c_str());
     return true;
 }
@@ -276,10 +251,7 @@ bool Cookie_Save(const std::string &filename)
         return false;
     }
 
-    if (main_action == MAIN_HARD_RESTART || main_action == MAIN_QUIT)
-    {
-        LogPrint("Saving config file...\n");
-    }
+    LogPrint("Saving config file...\n");
 
     // header...
     fprintf(cookie_fp, "-- CONFIG FILE : OBSIDIAN %s \"%s\"\n", OBSIDIAN_SHORT_VERSION, OBSIDIAN_CODE_NAME.c_str());
@@ -297,10 +269,7 @@ bool Cookie_Save(const std::string &filename)
         fprintf(cookie_fp, "%s\n", lines[i].c_str());
     }
 
-    if (main_action == MAIN_HARD_RESTART || main_action == MAIN_QUIT)
-    {
-        LogPrint("DONE.\n\n");
-    }
+    LogPrint("DONE.\n\n");
 
     fclose(cookie_fp);
     setlocale(LC_NUMERIC, numeric_locale.c_str());
@@ -368,200 +337,6 @@ void Cookie_ParseArguments(void)
         }
 
         Cookie_SetValue(name.c_str(), value);
-    }
-}
-
-//----------------------------------------------------------------------
-//   RECENT FILE HANDLING
-//----------------------------------------------------------------------
-
-static constexpr uint8_t MAX_RECENT = 10;
-
-class RecentFiles_c
-{
-  public:
-    int size;
-
-    // newest is at index [0]
-    std::string filenames[MAX_RECENT];
-
-  public:
-    RecentFiles_c() : size(0)
-    {
-        for (int k = 0; k < MAX_RECENT; k++)
-        {
-            filenames[k].clear();
-        }
-    }
-
-    ~RecentFiles_c()
-    {
-        clear();
-    }
-
-    void clear()
-    {
-        for (int k = 0; k < size; k++)
-        {
-            filenames[k].clear();
-        }
-
-        size = 0;
-    }
-
-    int find(const std::string &file)
-    {
-        // ignore the path when matching filenames
-        const std::string a = GetFilename(file);
-
-        for (int k = 0; k < size; k++)
-        {
-            if (a == GetFilename(filenames[k]))
-            {
-                return k;
-            }
-        }
-
-        return -1; // not found
-    }
-
-    void erase(int index)
-    {
-        SYS_ASSERT(index < size);
-
-        size--;
-
-        SYS_ASSERT(size < MAX_RECENT);
-
-        for (; index < size; index++)
-        {
-            filenames[index] = filenames[index + 1];
-        }
-
-        filenames[index].clear();
-    }
-
-    void push_front(const std::string &file)
-    {
-        if (size >= MAX_RECENT)
-        {
-            erase(MAX_RECENT - 1);
-        }
-
-        // shift elements up
-        for (int k = size - 1; k >= 0; k--)
-        {
-            filenames[k + 1] = filenames[k];
-        }
-
-        filenames[0] = file;
-
-        size++;
-    }
-
-    void insert(const std::string &file)
-    {
-        // ensure filename (without any path) is unique
-        int f = find(file);
-
-        if (f >= 0)
-        {
-            erase(f);
-        }
-
-        push_front(file);
-    }
-
-    void remove(std::string file)
-    {
-        int f = find(file);
-
-        if (f >= 0)
-        {
-            erase(f);
-        }
-    }
-
-    void write_all(FILE *fp, std::string keyword) const
-    {
-        // Files are written in opposite order, newest at the end.
-        // This allows the parser to merely insert() items in the
-        // order they are read.
-
-        for (int k = size - 1; k >= 0; k--)
-        {
-            fprintf(fp, "%s = %s\n", keyword.c_str(), filenames[k].c_str());
-        }
-
-        if (size > 0)
-        {
-            fprintf(fp, "\n");
-        }
-    }
-
-    bool get_name(int index, std::string &buffer, bool for_menu) const
-    {
-        if (index >= size)
-        {
-            return false;
-        }
-
-        const std::string &name = filenames[index];
-
-        if (for_menu)
-        {
-            buffer = StringFormat("%-.32s", name.c_str());
-        }
-        else
-        {
-            buffer = name;
-        }
-
-        return true;
-    }
-};
-
-static RecentFiles_c recent_wads;
-static RecentFiles_c recent_configs;
-
-void Recent_Parse(const std::string &name, const std::string &value)
-{
-    if (StringCompare(name, "recent_wad") == 0)
-    {
-        recent_wads.insert(value);
-    }
-    else if (StringCompare(name, "recent_config") == 0)
-    {
-        recent_configs.insert(value);
-    }
-}
-
-void Recent_Write(FILE *fp)
-{
-    fprintf(fp, "---- Recent Files ----\n\n");
-    recent_wads.write_all(fp, "recent_wad");
-    recent_configs.write_all(fp, "recent_config");
-}
-
-void Recent_AddFile(int group, const std::string &filename)
-{
-    SYS_ASSERT(0 <= group && group < RECG_NUM_GROUPS);
-
-    switch (group)
-    {
-    case RECG_Output:
-        recent_wads.insert(filename);
-        break;
-
-    case RECG_Config:
-        recent_configs.insert(filename);
-        break;
-    }
-
-    // push to disk now -- why wait?
-    if (!batch_mode)
-    {
-        Options_Save(options_file);
     }
 }
 

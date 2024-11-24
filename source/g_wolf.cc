@@ -18,9 +18,8 @@
 //
 //------------------------------------------------------------------------
 
-#ifndef OBSIDIAN_CONSOLE_ONLY
-#include <FL/Fl_Native_File_Chooser.H>
-#endif
+#include <string.h>
+
 #include "lib_util.h"
 #include "m_lua.h"
 #include "m_trans.h"
@@ -397,60 +396,13 @@ bool wolf_game_interface_c::Start(const char *ext)
 
     write_errors_seen = 0;
 
-    if (batch_mode)
+    if (IsPathAbsolute(batch_output_file))
     {
-        if (IsPathAbsolute(batch_output_file))
-        {
-            wolf_output_dir = GetDirectory(batch_output_file);
-        }
-        else
-        {
-            wolf_output_dir = Resolve_DefaultOutputPath();
-        }
+        wolf_output_dir = GetDirectory(batch_output_file);
     }
     else
     {
-#ifndef OBSIDIAN_CONSOLE_ONLY
-        int old_font_h = FL_NORMAL_SIZE;
-        FL_NORMAL_SIZE = 14 + KF;
-
-        Fl_Native_File_Chooser chooser;
-
-        chooser.title(_("Select output directory"));
-
-        chooser.directory(SanitizePath(BestDirectory()).c_str());
-
-        chooser.type(Fl_Native_File_Chooser::BROWSE_DIRECTORY);
-
-        int result = chooser.show();
-
-        FL_NORMAL_SIZE = old_font_h;
-
-        switch (result)
-        {
-        case -1:
-            LogPrint("%s\n", _("Error choosing directory:"));
-            LogPrint("   %s\n", chooser.errmsg());
-            break;
-
-        case 1:
-            ProgStatus("%s", _("Cancelled"));
-            return false;
-
-        default:
-            break; // OK
-        }
-
-        std::string dir_name = chooser.filename();
-
-        if (dir_name.empty())
-        {
-            LogPrint("%s\n", _("Empty directory provided???"));
-            dir_name = Resolve_DefaultOutputPath();
-        }
-
-        wolf_output_dir = dir_name;
-#endif
+        wolf_output_dir = Resolve_DefaultOutputPath();
     }
 
     if (ext)
@@ -496,12 +448,8 @@ bool wolf_game_interface_c::Start(const char *ext)
 
     solid_plane = new uint16_t[64 * 64 + 8]; // extra space for compressor
     thing_plane = new uint16_t[64 * 64 + 8];
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->Prog_Init(0, "");
-    }
-#endif
+    ob_build_progress = 0.0f;
+    ob_build_step.clear();
     return true;
 }
 

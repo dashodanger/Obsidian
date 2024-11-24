@@ -238,26 +238,6 @@ void ProgStatus(const char *message, ...)
 
     SYS_ASSERT(message_buf[LOG_BUF_LEN-1] == 0);
 
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->SetStatus(message_buf);
-    }
-    else if (batch_mode)
-    {
-        if (log_file)
-        {
-            fprintf(log_file, "%s", message_buf);
-            fflush(log_file);
-        }
-
-        if (terminal)
-        {
-            printf("%s", message_buf);
-            fflush(stdout);
-        }
-    }
-#else
     if (log_file)
     {
         fprintf(log_file, "%s", message_buf);
@@ -269,7 +249,6 @@ void ProgStatus(const char *message, ...)
         printf("%s", message_buf);
         fflush(stdout);
     }
-#endif
 }
 
 [[noreturn]] void FatalError(const char *message, ...)
@@ -296,76 +275,10 @@ void ProgStatus(const char *message, ...)
     if (terminal)
         printf("ERROR: %s", message_buf);
 
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    DLG_ShowError("%s", message_buf);
-#endif
+    ob_error_message = message_buf;
 
     Main::Shutdown(true);
-#if defined _WIN32 && !defined OBSIDIAN_CONSOLE_ONLY
-    if (batch_mode)
-    {
-        printf("\nClose window when finished...");
-        do
-        {
-        } while (true);
-    }
-#endif
     exit(9);
-}
-
-void LogReadLines(log_display_func_t display_func, void *priv_data)
-{
-    if (!log_file)
-    {
-        return;
-    }
-
-    // we close the log file so we can read it, and then open it
-    // again when finished.  That is because Windows OSes can be
-    // fussy about opening already open files (in Linux it would
-    // not be an issue).
-
-    fclose(log_file);
-    log_file = nullptr;
-
-    log_file = FileOpen(log_filename, "r");
-
-    // this is very unlikely to happen, but check anyway
-    if (!log_file)
-    {
-        return;
-    }
-
-    std::string buffer;
-    int         c = EOF;
-    for (;;)
-    {
-        buffer.clear();
-        while ((c = fgetc(log_file)) != EOF)
-        {
-            if (c == '\n' || c == '\r')
-                break;
-            else
-                buffer.push_back(c);
-        }
-
-        // remove any DEL characters (mainly to workaround an FLTK bug)
-        StringReplaceChar(&buffer, 0x7f, 0);
-
-        buffer.push_back('\n');
-
-        display_func(buffer, priv_data);
-
-        if (feof(log_file) || ferror(log_file))
-            break;
-    }
-
-    // close the log file after current contents are read
-    fclose(log_file);
-    log_file = nullptr;
-
-    // open the log file for writing again
-    log_file = FileOpen(log_filename, "a");
 }
 
 //--- editor settings ---

@@ -1886,7 +1886,7 @@ function Level_choose_themes()
 
   local function collect_mixed_themes()
     for name,info in pairs(OB_THEMES) do
-      if info.shown and info.mixed_prob then
+      if info.valid and info.mixed_prob then
         theme_tab[name] = info.mixed_prob
       end
     end
@@ -2693,9 +2693,7 @@ function Level_make_level(LEV)
   gui.property("error_flat", error_mat.f or error_mat.t)
 
   if LEVEL.description then
-    if OB_CONFIG.batch ~= "yes" then
-      gui.property("description", LEVEL.description)
-    end
+    gui.property("description", LEVEL.description)
   end
 
   LEVEL.PREFABS = table.copy(PREFABS)
@@ -2874,12 +2872,10 @@ function Level_make_all()
 
       if PARAM.float_historical_oblige_v2 and rand.odds(PARAM.float_historical_oblige_v2) then
         LEV.description = Naming_grab_one(LEV.name_class)
-        gui.minimap_disable(gui.gettext("Oblige V2"))
         if v094_create_LEVEL(GAME.FACTORY.all_levels[LEV.id], LEV.id, #GAME.levels) == "abort" then
           return "abort"
         end
       else
-        gui.minimap_enable()
         if Level_make_level(LEV) == "abort" then
           return "abort"
         end

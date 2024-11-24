@@ -66,35 +66,30 @@ function UI_ARCH.setup(self)
   module_param_up(self)
 
   if OB_CONFIG.engine ~= "limit_enforcing" then -- Do I actually need this check? I forget - Dasho
-    if OB_CONFIG.batch == "yes" and type(PARAM.float_size) ~= "string" then
-      SEED_W = 90
-      SEED_H = 90
-    else
-      if type(PARAM.float_size) == "string" then -- Use upper bound for Mix It Up, Progressive, and Episodic level sizes - Dasho
-      -- MSSP: the absolute maximum size is tightened down to the largest
-      -- agreed map size for performance's sake. Current agreed maximum is 74 W.
-      -- any higher will cause skyboxes and teleporter rooms to start merging with
-      -- the main map.
+    if type(PARAM.float_size) == "string" then -- Use upper bound for Mix It Up, Progressive, and Episodic level sizes - Dasho
+    -- MSSP: the absolute maximum size is tightened down to the largest
+    -- agreed map size for performance's sake. Current agreed maximum is 74 W.
+    -- any higher will cause skyboxes and teleporter rooms to start merging with
+    -- the main map.
 
-      -- Dasho: This shifts the default value of 90 for SEED_W and SEED_H to here instead of defs.lua. It will remain 90 unless someone
-      -- who is using slider overrides sets extremely high values for Level Size, then it is changed to prevent assertion errors later on.
-        if (PARAM.float_level_upper_bound > 86) then
-          SEED_W = PARAM.float_level_upper_bound + 4
-          SEED_H = PARAM.float_level_upper_bound + 4
-        else
-          SEED_W = 90
-          SEED_H = 90
-        end
-		  else
-        if (PARAM.float_size > 86) then
-          SEED_W = PARAM.float_size + 4
-          SEED_H = PARAM.float_size + 4
-        else
-          SEED_W = 90
-          SEED_H = 90
-        end
-		  end
-	  end
+    -- Dasho: This shifts the default value of 90 for SEED_W and SEED_H to here instead of defs.lua. It will remain 90 unless someone
+    -- who is using slider overrides sets extremely high values for Level Size, then it is changed to prevent assertion errors later on.
+      if (PARAM.float_level_upper_bound > 86) then
+        SEED_W = PARAM.float_level_upper_bound + 4
+        SEED_H = PARAM.float_level_upper_bound + 4
+      else
+        SEED_W = 90
+        SEED_H = 90
+      end
+    else
+      if (PARAM.float_size > 86) then
+        SEED_W = PARAM.float_size + 4
+        SEED_H = PARAM.float_size + 4
+      else
+        SEED_W = 90
+        SEED_H = 90
+      end
+    end
   end
 end
 

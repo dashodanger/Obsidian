@@ -62,5 +62,12 @@ std::string ob_get_password();
 
 bool ob_build_cool_shit();
 
+#ifdef OBSIDIAN_ENABLE_GUI
+bool ob_gui_init_ctx(void *context);
+bool ob_gui_init_fonts(void *atlas, float font_scale);
+bool ob_gui_frame(int width, int height);
+void ob_check_file_picker();
+#endif
+
 //--- editor settings ---
 // vi:ts=4:sw=4:noexpandtab
