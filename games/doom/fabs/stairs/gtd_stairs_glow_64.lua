@@ -5,7 +5,7 @@ PREFABS.Stairs_glow_1x =
 
   theme = "!tech",
 
-  prob   = 100,
+  prob   = 25,
   prob_skew = 3,
 
   style  = "liquids",
@@ -27,7 +27,7 @@ PREFABS.Stairs_glow_2x =
   template = "Stairs_glow_1x",
   map    = "MAP02",
 
-  prob   = 150,
+  prob   = 35,
 
   seed_h = 2,
 
@@ -39,7 +39,7 @@ PREFABS.Stairs_glow_3x =
   template = "Stairs_glow_1x",
   map    = "MAP03",
 
-  prob   = 250,
+  prob   = 45,
   seed_h = 3,
 
   delta_h = 128,
@@ -65,7 +65,7 @@ PREFABS.Stairs_glow_2x_tech =
   map    = "MAP02",
 
   theme = "tech",
-  prob   = 150,
+  prob   = 35,
 
   seed_h = 2,
 
@@ -81,7 +81,7 @@ PREFABS.Stairs_glow_3x_tech =
   map    = "MAP03",
 
   theme = "tech",
-  prob   = 250,
+  prob   = 45,
 
   seed_h = 3,
 
