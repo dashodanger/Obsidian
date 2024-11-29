@@ -2547,6 +2547,9 @@ function Level_build_it(LEVEL, SEEDS)
     if gui.abort() then return "abort" end
 
   Quest_make_quests(LEVEL)
+  -- do some prefab pre-filtering
+  -- remove prefabs that have no expectation to ever be used
+  Fab_trim_list(LEVEL)
     if gui.abort() then return "abort" end
 
   Room_build_all(LEVEL, SEEDS)
