@@ -3038,16 +3038,15 @@ function Quest_room_themes(LEVEL)
         or theme_name == "DEFAULTS" then
           -- do nothing
         else
-          wg_tab[theme_name] = {}
           for iterations = 1, max_room_themes+1 do
             local pick_tab = table.copy(GAME.THEMES[theme_name].wall_groups)
             local pick = rand.key_by_probs(pick_tab)
 
-            if wg_tab[theme_name][pick] then
+            if wg_tab[pick] then
               iterations = iterations - 1
             end
 
-            wg_tab[theme_name][pick] = iterations * 2
+            wg_tab[pick] = iterations * 2
           end
         end
       end
@@ -3120,12 +3119,12 @@ function Quest_room_themes(LEVEL)
     for _,R in pairs(LEVEL.rooms) do
       if R:get_env() == "building" then
         if not R.is_exit then
-          R.forced_wall_groups = the_wall_group_tab[LEVEL.theme_name]
+          R.forced_wall_groups = the_wall_group_tab
         end
       end
     end
 
-    LEVEL.preferred_wall_groups = the_wall_group_tab[LEVEL.theme_name]
+    LEVEL.preferred_wall_groups = the_wall_group_tab
   end
 
 

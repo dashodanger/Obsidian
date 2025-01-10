@@ -176,3 +176,17 @@ PREFABS.Wall_hell_engraving_arch_diag =
 
   group = "gtd_wall_hell_engraving_arch"
 }
+
+--
+
+PREFABS.Wall_hell_engraving_top_band =
+{
+  template = "Wall_hell_engraving_plain_1",
+  map = "MAP10",
+
+  height = 96,
+
+  bound_z2 = {22,24 , 88,89},
+
+  group = "gtd_wall_hell_engraving_top_band"
+}
