@@ -16,15 +16,20 @@
 --
 ----------------------------------------------------------------
 
-OB_MODULES["links_iwads"] =
+OB_MODULES["ui_useful_links"] =
 {
-  label = _("Game WADs (Libre/Freeware)"),
+  label = _("Useful Links"),
 
   where = "links",
   priority = 101,
 
   options =
   {
+    {
+      name = "header_free_content",
+      label = _("Game WADs (Libre/Freeware)"),
+      gap = 1
+    },
     { 
       name="url_freedoom",     
       label=_("Freedoom (Doom 1/2 Replacement)"),
@@ -53,20 +58,15 @@ OB_MODULES["links_iwads"] =
     { 
       name="url_rekkr",     
       label=_("REKKR"),
-      url="https://www.doomworld.com/idgames/levels/doom/megawads/rekkr",    
+      url="https://www.doomworld.com/idgames/levels/doom/megawads/rekkr",
+      gap=4    
     },
-  }
-}
 
-OB_MODULES["links_addons"] =
-{
-  label = _("Obsidian Addons"),
-
-  where = "links",
-  priority = 101,
-
-  options =
-  {
+    {
+      name = "header_addons",
+      label = _("Obsidian Addons"),
+      gap = 1
+    },   
     { 
       name="url_edge_classic_pack",     
       label=_("Lobo's EDGE-Classic Enhancements"),
@@ -100,20 +100,15 @@ OB_MODULES["links_addons"] =
     { 
       name="url_delta_resource_pack",     
       label=_("MsrSgtShooterPerson's Delta Resource Pack"),
-      url="https://obsidian-level-maker.github.io/addons.html",    
+      url="https://obsidian-level-maker.github.io/addons.html",
+      gap=4
     },
-  }
-}
 
-OB_MODULES["links_source_ports"] =
-{
-  label = _("Source Ports"),
-
-  where = "links",
-  priority = 100,
-
-  options =
-  {
+    {
+      name = "header_source_ports",
+      label = _("Source Ports"),
+      gap = 1
+    },  
     { 
       name="url_marshmallow",     
       label=_("Marshmallow Doom"),
@@ -162,7 +157,7 @@ OB_MODULES["links_source_ports"] =
     { 
       name="url_woof",     
       label=_("Woof"),
-      url="https://github.com/fabiangreffrath/woof",
-    },
+      url="https://github.com/fabiangreffrath/woof"
+    }
   }
 }

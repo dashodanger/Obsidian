@@ -121,7 +121,7 @@ void UI_Module::AddHeader(const std::string &opt, const std::string &label, int 
 
     add(rhead);
 
-    cur_opt_y += (gap ? KromulentHeight(36) : KromulentHeight(26));
+    cur_opt_y += (KromulentHeight(26) + (gap * 10));
 
     resize(x(), y(), w(), CalcHeight());
     redraw();
@@ -141,7 +141,7 @@ void UI_Module::AddUrl(const std::string &opt, const std::string &label, const s
     rurl->mod_link = new UI_ModHyperLink(rurl->x(), rurl->y(), rurl->w() * .95, KromulentHeight(24), "", url.c_str());
     rurl->mod_link->copy_label(label.c_str());
     rurl->mod_link->align((FL_ALIGN_CENTER | FL_ALIGN_INSIDE | FL_ALIGN_CLIP));
-    rurl->mod_link->labelfont(font_style + 1);
+    rurl->mod_link->labelfont(font_style);
     rurl->mod_link->labelsize(header_font_size - 2);
 
     if (!mod_button->value())
@@ -151,7 +151,7 @@ void UI_Module::AddUrl(const std::string &opt, const std::string &label, const s
 
     add(rurl);
 
-    cur_opt_y += (gap ? KromulentHeight(36) : KromulentHeight(26));
+    cur_opt_y += (KromulentHeight(26) + (gap * 10));
 
     resize(x(), y(), w(), CalcHeight());
     redraw();
@@ -217,7 +217,7 @@ void UI_Module::AddOption(const std::string &opt, const std::string &label, cons
 
     add(rch);
 
-    cur_opt_y += (gap ? KromulentHeight(36) : KromulentHeight(26));
+    cur_opt_y += (KromulentHeight(26) + (gap * 10));
 
     resize(x(), y(), w(), CalcHeight());
     redraw();
@@ -406,7 +406,7 @@ void UI_Module::AddSliderOption(const std::string &opt, std::string &label, cons
 
     add(rsl);
 
-    cur_opt_y += (gap ? KromulentHeight(36) : KromulentHeight(26));
+    cur_opt_y += (KromulentHeight(26) + (gap * 10));
 
     resize(x(), y(), w(), CalcHeight());
     redraw();
@@ -471,7 +471,7 @@ void UI_Module::AddButtonOption(const std::string &opt, const std::string &label
 
     add(rbt);
 
-    cur_opt_y += (gap ? KromulentHeight(36) : KromulentHeight(26));
+    cur_opt_y += (KromulentHeight(26) + (gap * 10));
 
     resize(x(), y(), w(), CalcHeight());
     redraw();
