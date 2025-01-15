@@ -1443,7 +1443,7 @@ function ob_init()
   end
 
   gui.printf("****************************\n")
-  gui.printf("** Obsidian (C) 2018-2023 **\n")
+  gui.printf("** Obsidian (C) 2018-2025 **\n")
   gui.printf("****************************\n")
   gui.printf("|    A Creation of the     |\n")
   gui.printf("|        Community         |\n")

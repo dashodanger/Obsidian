@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------
 //
-//  AJ-BSP  Copyright (C) 2023 The OBSIDIAN Team
+//  AJ-BSP  Copyright (C) 2023-2025 The OBSIDIAN Team
 //			Copyright (C) 2001-2022  Andrew Apted
 //          Copyright (C) 1994-1998  Colin Reed
 //          Copyright (C) 1997-1998  Lee Killough

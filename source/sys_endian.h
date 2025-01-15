@@ -2,7 +2,7 @@
 //  OBSIDIAN Endian handling
 //----------------------------------------------------------------------------
 //
-//  Copyright (c) 2024 The OBSIDIAN Team.
+//  Copyright (c) 2024-2025 The OBSIDIAN Team.
 //  Copyright (c) 2003-2024 The EDGE Team.
 //
 //  This program is free software; you can redistribute it and/or

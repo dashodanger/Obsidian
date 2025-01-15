@@ -76,7 +76,7 @@ CC-BY-NC-3.0 Unported License
 CC-BY-4.0 International License
 ===========================================================================================
 
-ObAddon and OBSIDIAN Prefab WAD files and colocated Lua definitions - Copyright (c) 2018-2024 The OBSIDIAN Team
+ObAddon and OBSIDIAN Prefab WAD files and colocated Lua definitions - Copyright (c) 2018-2025 The OBSIDIAN Team
 
 "Wide Stereo Outdoor Ambience" sound - Copyright (c) 2014 Kasper August Topp via Freesound.org
 
@@ -110,15 +110,15 @@ AJBSP - Copyright (c) 2000-2023 Andrew Apted, et al
 				Copyright (c) 1994-1998 Colin Reed
 				Copyright (c) 1997-1998 Lee Killough
 
-AJ-Polygonator - Copyright (c) 2021-2024 The OBSIDIAN Team
+AJ-Polygonator - Copyright (c) 2021-2025 The OBSIDIAN Team
 				Copyright (c) 2000-2013 Andrew Apted
 
 Filename Formatter - Copyright (c) 2021-2024 Phytolizer
 
-OBSIDIAN/OBLIGE Level Maker - Copyright (c) 2021-2024 The OBSIDIAN Team
+OBSIDIAN/OBLIGE Level Maker - Copyright (c) 2021-2025 The OBSIDIAN Team
 				Copyright (c) 2006-2017 Andrew Apted
 
-SLUMP - Copyright (c) 2021-2024 The OBSIDIAN Team
+SLUMP - Copyright (c) 2021-2025 The OBSIDIAN Team
 				Copyright (c) 2005-2007 Sam Trenholme
 				Copyright (c) 2000 David Chess
 

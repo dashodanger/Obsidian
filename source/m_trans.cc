@@ -4,7 +4,7 @@
 //
 //  OBSIDIAN Level Maker
 //
-//  Copyright (C) 2021-2022 The OBSIDIAN Team
+//  Copyright (C) 2021-2025 The OBSIDIAN Team
 //  Copyright (C) 2016-2017 Andrew Apted
 //  Copyright (C) 1995-2015 Free Software Foundation, Inc.
 //

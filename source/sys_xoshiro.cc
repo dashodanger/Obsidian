@@ -4,7 +4,7 @@
 //
 //  OBSIDIAN Level Maker
 //
-//  Copyright (C) 2020-2024 The OBSIDIAN Team
+//  Copyright (C) 2020-2025 The OBSIDIAN Team
 //
 //  This program is free software; you can redistribute it and/or
 //  modify it under the terms of the GNU General Public License

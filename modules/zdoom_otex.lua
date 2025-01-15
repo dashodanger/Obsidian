@@ -2,7 +2,7 @@
 --  MODULE: OTEX Theme Generator
 ------------------------------------------------------------------------
 --
---  Copyright (C) 2024-2024 MsrSgtShooterPerson
+--  Copyright (C) 2024-2025 MsrSgtShooterPerson
 --
 --  This program is free software; you can redistribute it and/or
 --  modify it under the terms of the GNU General Public License

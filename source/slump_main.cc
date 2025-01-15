@@ -1,5 +1,5 @@
 /*
- * Copyright 2000 David Chess; Copyright 2005-2007 Sam Trenholme; Copyright 2021-2022 The OBSIDIAN Team
+ * Copyright 2000 David Chess; Copyright 2005-2007 Sam Trenholme; Copyright 2021-2025 The OBSIDIAN Team
  *
  * Slump is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free

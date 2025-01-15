@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------
 //
 //  AJ-Polygonator
-//  (C) 2021-2022 The OBSIDIAN Team
+//  (C) 2021-2025 The OBSIDIAN Team
 //  (C) 2000-2013 Andrew Apted
 //
 //  This library is free software; you can redistribute it and/or
