@@ -6376,6 +6376,7 @@ GROW_SIDE_ON_RAMP_TALL_TO_JUNCTION_LIQUID =
 
   structure =
   {
+    "..xxxx..","AAxxxxAA",
     "........","AA%/%/AA",
     "........","AAA~~AAA",
     "xx....xx","xx^~~^xx",

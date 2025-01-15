@@ -142,10 +142,7 @@ function PREFAB_CONTROL.fine_tune_filters()
   }
   local new_fab_groups_multipliers =
   {
-    --[[gtd_AI_goth_comp_yellow_stained_glass = 1.12,
-    gtd_AI_boiler_room = 1.25,
-    gtd_AI_boiler_control_unit = 1.25,
-    gtd_AI_corpse_inset = 1.5]]
+    gtd_wall_hell_engraving_top_band = 2
   }
   local new_themes_multipliers =
   {

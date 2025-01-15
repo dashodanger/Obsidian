@@ -5491,9 +5491,10 @@ OBS_RESOURCE_PACK_THEMES =
       --
       gtd_wall_of_guns = 50,
       --
-      gtd_wall_hell_engraving_1 = 8,
-      gtd_wall_hell_engraving_2 = 8,
-      gtd_wall_hell_engraving_3 = 8,
+      gtd_wall_hell_engraving_1 = 7,
+      gtd_wall_hell_engraving_2 = 7,
+      gtd_wall_hell_engraving_3 = 7,
+      gtd_wall_hell_engraving_top_band = 7,
       --
       gtd_wall_hell_engraving_dark = 25,
       gtd_wall_hell_engraving_arch = 25,
@@ -5947,9 +5948,10 @@ OBS_RESOURCE_PACK_THEMES =
       --
       gtd_library_tall = 35,
       --
-      gtd_wall_hell_engraving_1 = 20,
-      gtd_wall_hell_engraving_2 = 20,
-      gtd_wall_hell_engraving_3 = 20,
+      gtd_wall_hell_engraving_1 = 17,
+      gtd_wall_hell_engraving_2 = 17,
+      gtd_wall_hell_engraving_3 = 17,
+      gtd_wall_hell_engraving_top_band = 17,
       --
       gtd_wall_candles = 50,
       --

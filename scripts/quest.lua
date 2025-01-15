@@ -3025,7 +3025,35 @@ function Quest_room_themes(LEVEL)
 
 
   local function choose_building_themes()
-    
+
+    local function choose_wall_groups()
+      local wg_tab = {}
+      local max_room_themes = math.floor(PARAM.float_max_room_themes or 2)
+  
+      for _,T in pairs(GAME.THEMES) do
+        local iterations
+        local theme_name = T.name
+
+        if theme_name == "exclusions" 
+        or theme_name == "DEFAULTS" then
+          -- do nothing
+        else
+          for iterations = 1, max_room_themes+1 do
+            local pick_tab = table.copy(GAME.THEMES[theme_name].wall_groups)
+            local pick = rand.key_by_probs(pick_tab)
+
+            if wg_tab[pick] then
+              iterations = iterations - 1
+            end
+
+            wg_tab[pick] = iterations * 2
+          end
+        end
+      end
+
+      return wg_tab
+    end
+
     local building_tab = collect_usable_themes("building")
 
     local max_room_theme = math.floor(PARAM.float_max_room_themes or 1)
@@ -3054,11 +3082,11 @@ function Quest_room_themes(LEVEL)
 
     visit_room(LEVEL.start_room, nil, nil, building_tab)
 
-    local max_wall_groups = math.floor(PARAM.float_max_indoor_wall_groups or 2)
+    --local max_wall_groups = math.floor(PARAM.float_max_indoor_wall_groups or 2)
 
-    local the_wall_group_tab = table.copy(LEVEL.theme.wall_groups)
+    local the_wall_group_tab --= table.copy(LEVEL.theme.wall_groups)
 
-    if not PARAM.bool_avoid_wall_group_reuse or (PARAM.bool_avoid_wall_group_reuse and PARAM.bool_avoid_wall_group_reuse == 1) then
+    --[[if not PARAM.bool_avoid_wall_group_reuse or (PARAM.bool_avoid_wall_group_reuse and PARAM.bool_avoid_wall_group_reuse == 1) then
       for group,odds in pairs(the_wall_group_tab) do
         if table.has_elem(SEEN_WALL_GROUPS, group) then
           the_wall_group_tab[group] = nil
@@ -3085,7 +3113,8 @@ function Quest_room_themes(LEVEL)
     for set,prob in pairs(the_wall_group_tab) do
       prob_modifier = prob_modifier / 2
       the_wall_group_tab[set] = prob_modifier
-    end
+    end]]
+    the_wall_group_tab = choose_wall_groups()
 
     for _,R in pairs(LEVEL.rooms) do
       if R:get_env() == "building" then
@@ -3095,6 +3124,7 @@ function Quest_room_themes(LEVEL)
       end
     end
 
+    LEVEL.preferred_wall_groups = the_wall_group_tab
   end
 
 
