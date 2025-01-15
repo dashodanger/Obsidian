@@ -131,6 +131,7 @@ extern int                                      window_scaling;
 extern int                                      font_scaling;
 extern int                                      num_fonts;
 extern std::vector<std::pair<std::string, int>> font_menu_items;
+extern bool                                     collapse_disabled_modules;
 #endif
 extern int         filename_prefix;
 extern std::string custom_prefix;

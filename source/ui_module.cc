@@ -39,7 +39,6 @@ UI_Module::UI_Module(int X, int Y, int W, int H, const std::string &id, const st
     box(box_style);
 
     id_name = id;
-    og_label = label;
 
     if ((red >= 0) && (green >= 0) && (blue >= 0))
     {
@@ -116,7 +115,10 @@ void UI_Module::AddHeader(const std::string &opt, const std::string &label, int 
 
     if (!mod_button->value())
     {
-        rhead->deactivate();
+        if (collapse_disabled_modules)
+            rhead->hide();
+        else
+            rhead->deactivate();
     }
 
     add(rhead);
@@ -146,7 +148,10 @@ void UI_Module::AddUrl(const std::string &opt, const std::string &label, const s
 
     if (!mod_button->value())
     {
-        rurl->deactivate();
+        if (collapse_disabled_modules)
+            rurl->hide();
+        else
+            rurl->deactivate();
     }
 
     add(rurl);
@@ -212,7 +217,10 @@ void UI_Module::AddOption(const std::string &opt, const std::string &label, cons
 
     if (!mod_button->value())
     {
-        rch->deactivate();
+        if (collapse_disabled_modules)
+            rch->hide();
+        else
+            rch->deactivate();
     }
 
     add(rch);
@@ -401,7 +409,10 @@ void UI_Module::AddSliderOption(const std::string &opt, std::string &label, cons
 
     if (!mod_button->value())
     {
-        rsl->deactivate();
+        if (collapse_disabled_modules)
+            rsl->hide();
+        else
+            rsl->deactivate();
     }
 
     add(rsl);
@@ -466,7 +477,10 @@ void UI_Module::AddButtonOption(const std::string &opt, const std::string &label
 
     if (!mod_button->value())
     {
-        rbt->deactivate();
+        if (collapse_disabled_modules)
+            rbt->hide();
+        else
+            rbt->deactivate();
     }
 
     add(rbt);
@@ -481,19 +495,23 @@ void UI_Module::AddButtonOption(const std::string &opt, const std::string &label
 
 int UI_Module::CalcHeight() const
 {
-    return cur_opt_y + KromulentHeight(6);
+    if (collapse_disabled_modules)
+    {
+        if (mod_button->value())
+        {
+            return cur_opt_y + KromulentHeight(6);
+        }
+        else
+        {
+            return KromulentHeight(34);
+        }
+    }
+    else
+        return cur_opt_y + KromulentHeight(6);
 }
 
 void UI_Module::update_Enable()
-{
-    if (!Is_UI())
-    {
-        if (mod_button->value())
-            heading->copy_label(og_label.c_str());
-        else
-            heading->copy_label(StringFormat("%s (DISABLED)", og_label.c_str()).c_str());
-    }
-
+{       
     std::map<std::string, UI_RChoice *>::const_iterator IT;
     std::map<std::string, UI_RSlide *>::const_iterator  IT2;
     std::map<std::string, UI_RButton *>::const_iterator IT3;
@@ -506,11 +524,17 @@ void UI_Module::update_Enable()
 
         if (mod_button->value())
         {
-            M->activate();
+            if (collapse_disabled_modules)
+                M->show();
+            else
+                M->activate();
         }
         else
         {
-            M->deactivate();
+            if (collapse_disabled_modules)
+                M->hide();
+            else
+                M->deactivate();
         }
     }
 
@@ -520,50 +544,77 @@ void UI_Module::update_Enable()
 
         if (mod_button->value())
         {
-            M->activate();
+            if (collapse_disabled_modules)
+                M->show();
+            else
+                M->activate();
         }
         else
         {
-            M->deactivate();
+            if (collapse_disabled_modules)
+                M->hide();
+            else
+                M->deactivate();
         }
     }
 
     for (IT3 = choice_map_button.begin(); IT3 != choice_map_button.end(); IT3++)
     {
         UI_RButton *M = IT3->second;
+
         if (mod_button->value())
         {
-            M->activate();
+            if (collapse_disabled_modules)
+                M->show();
+            else
+                M->activate();
         }
         else
         {
-            M->deactivate();
+            if (collapse_disabled_modules)
+                M->hide();
+            else
+                M->deactivate();
         }
     }
 
     for (IT4 = choice_map_header.begin(); IT4 != choice_map_header.end(); IT4++)
     {
         UI_RHeader *M = IT4->second;
+
         if (mod_button->value())
         {
-            M->activate();
+            if (collapse_disabled_modules)
+                M->show();
+            else
+                M->activate();
         }
         else
         {
-            M->deactivate();
+            if (collapse_disabled_modules)
+                M->hide();
+            else
+                M->deactivate();
         }
     }
 
     for (IT5 = choice_map_url.begin(); IT5 != choice_map_url.end(); IT5++)
     {
         UI_RLink *M = IT5->second;
+
         if (mod_button->value())
         {
-            M->activate();
+            if (collapse_disabled_modules)
+                M->show();
+            else
+                M->activate();
         }
         else
         {
-            M->deactivate();
+            if (collapse_disabled_modules)
+                M->hide();
+            else
+                M->deactivate();
         }
     }
 }
@@ -1269,13 +1320,6 @@ bool UI_CustomMods::ShowModule(const std::string &id, bool new_shown)
     if (new_shown)
     {
         M->show();
-        if (!M->Is_UI())
-        {
-            if (M->mod_button->value())
-                M->heading->copy_label(M->og_label.c_str());
-            else
-                M->heading->copy_label(StringFormat("%s (DISABLED)", M->og_label.c_str()).c_str());
-        }
     }
     else
     {

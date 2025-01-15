@@ -141,6 +141,7 @@ static int                               old_h = 0;
 static std::string                       old_seed;
 static std::string                       old_name;
 static uint8_t                          *old_pixels;
+bool collapse_disabled_modules = false;
 #endif
 int         filename_prefix        = 0;
 std::string custom_prefix          = "CUSTOM_";

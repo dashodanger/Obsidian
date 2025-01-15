@@ -105,6 +105,12 @@ void Parse_Option(const std::string &name, const std::string &value)
     {
         custom_prefix = value;
     }
+#ifndef OBSIDIAN_CONSOLE_ONLY
+    else if (StringCompare(name, "collapse_disabled_modules") == 0)
+    {
+        collapse_disabled_modules = StringToInt(value) ? true : false;
+    }
+#endif
     else if (StringCompare(name, "default_output_path") == 0)
     {
         default_output_path = value;
@@ -210,6 +216,9 @@ bool Options_Save(const std::string &filename)
     fprintf(option_fp, "mature_word_lists = %d\n", (mature_word_lists ? 1 : 0));
     fprintf(option_fp, "filename_prefix = %d\n", filename_prefix);
     fprintf(option_fp, "custom_prefix = %s\n", custom_prefix.c_str());
+#ifndef OBSIDIAN_CONSOLE_ONLY
+    fprintf(option_fp, "collapse_disabled_modules = %d\n", (collapse_disabled_modules ? 1 : 0));
+#endif
     fprintf(option_fp, "%s", StringFormat("default_output_path = %s\n\n", default_output_path.c_str()).c_str());
 
     VFS_OptWrite(option_fp);
@@ -252,6 +261,7 @@ class UI_OptionsWin : public Fl_Window
     UI_CustomCheckBox *opt_overwrite;
     UI_CustomCheckBox *opt_debug;
     UI_CustomCheckBox *opt_limit_break;
+    UI_CustomCheckBox *opt_collapse_disabled;
 
   public:
     UI_OptionsWin(int W, int H, const char *label = NULL);
@@ -491,6 +501,21 @@ class UI_OptionsWin : public Fl_Window
 
             that->want_quit = true;
         }
+    }
+
+    static void callback_CollapseDisabled(Fl_Widget *w, void *data)
+    {
+        UI_OptionsWin *that = (UI_OptionsWin *)data;
+
+        collapse_disabled_modules = that->opt_collapse_disabled->value() ? true : false;
+
+        // clang-format off
+        fl_alert("%s", _("Toggling module collapsing requires a restart.\nObsidian will now restart."));
+        // clang-format on
+
+        main_action = MAIN_HARD_RESTART;
+
+        that->want_quit = true;
     }
 
     static void callback_PrefixHelp(Fl_Widget *w, void *data)
@@ -752,6 +777,16 @@ UI_OptionsWin::UI_OptionsWin(int W, int H, const char *label) : Fl_Window(W, H, 
     opt_limit_break->selection_color(SELECTION);
     opt_limit_break->down_box(button_style);
 
+    cy += opt_limit_break->h() + y_step * .5;
+
+    opt_collapse_disabled = new UI_CustomCheckBox(cx + W * .38, cy, listwidth, KromulentHeight(24), "");
+    opt_collapse_disabled->copy_label(_(" Collapse Disabled Modules"));
+    opt_collapse_disabled->value(collapse_disabled_modules ? 1 : 0);
+    opt_collapse_disabled->callback(callback_CollapseDisabled, this);
+    opt_collapse_disabled->labelfont(font_style);
+    opt_collapse_disabled->selection_color(SELECTION);
+    opt_collapse_disabled->down_box(button_style);
+
     //----------------
 
     int dh = KromulentHeight(60);
@@ -809,7 +844,7 @@ int UI_OptionsWin::handle(int event)
 
 void DLG_OptionsEditor(void)
 {
-    int opt_w = KromulentWidth(500);
+    int opt_w = KromulentWidth(550);
     int opt_h = KromulentHeight(475);
 
     UI_OptionsWin *option_window = new UI_OptionsWin(opt_w, opt_h, _("OBSIDIAN Misc Options"));

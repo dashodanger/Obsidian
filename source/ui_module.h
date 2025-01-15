@@ -56,8 +56,6 @@ class UI_Module : public Fl_Group
 
     std::string id_name;
 
-    std::string og_label; // For toggling the (Disabled) text
-
     // only used while positioning the options (as they are added)
     int cur_opt_y;
 
