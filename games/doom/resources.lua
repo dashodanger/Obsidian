@@ -884,13 +884,6 @@ function DOOM.make_cool_gfx()
   gui.set_colormap(4, DOOM.RESOURCES.LEVEL_GFX_COLORS.iron)
   gui.set_colormap(5, DOOM.RESOURCES.LEVEL_GFX_COLORS.black)
 
-  -- patches (CEMENT1 .. CEMENT4)
-  gui.wad_logo_gfx("WALL52_1", "p", "PILL",   128,128, 1)
-  gui.wad_logo_gfx("WALL53_1", "p", "BOLT",   128,128, 2)
-  gui.wad_logo_gfx("WALL55_1", "p", "RELIEF", 128,128, 3)
---gui.wad_logo_gfx("WALL54_1", "p", "CARVE",  128,128, 4)
-  gui.wad_logo_gfx("WALL52_2", "p", "CARVE",  128,128, 5) -- O_BLACK
-
   -- flats
   gui.wad_logo_gfx("O_PILL",   "f", "PILL",   64,64, 1)
   gui.wad_logo_gfx("O_BOLT",   "f", "BOLT",   64,64, 2)
@@ -944,27 +937,9 @@ function DOOM.all_done()
   DOOM.make_cool_gfx()
   DOOM.make_episode_gfx()
 
-  local dir = "games/doom/data/"
-
-  gui.wad_merge_sections(dir .. "doom_falls.wad")
-  gui.wad_merge_sections(dir .. "lift_flat.wad")
-  gui.wad_merge_sections(dir .. "metal_step.wad")
-  gui.wad_merge_sections(dir .. "vine_dude.wad")
-  gui.wad_merge_sections(dir .. "logos.wad")
-  gui.wad_merge_sections(dir .. "invisible_wall.wad")
-
-  if OB_CONFIG.game == "doom1" or OB_CONFIG.game == "ultdoom" then
-    gui.wad_merge_sections(dir .. "short_bars.wad")
-  end
-
   if ob_mod_enabled("compress_output") == 1 then
     gui.pk3_insert_file("data/endoom/ENDOOM.bin", "ENDOOM.bin")
   else
     gui.wad_insert_file("data/endoom/ENDOOM.bin", "ENDOOM")
-  end
-
--- Honestly, this really should be an option
-  if OB_CONFIG.length == "game" then
-    gui.wad_merge_sections(dir .. "freedoom_face.wad")
   end
 end
