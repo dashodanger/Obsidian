@@ -14,36 +14,40 @@ env:
 
 jobs:
   build-win32:
-    runs-on: windows-latest
+    runs-on: ubuntu-24.04
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Download w64devkit
-        run: invoke-webrequest https://github.com/skeeto/w64devkit/releases/download/v2.0.0/w64devkit-x86-2.0.0.exe -outfile ${{github.workspace}}\w64devkit.exe
-      - name: Extract w64devkit
-        run: ${{github.workspace}}\w64devkit.exe -y
-      - name: Set environment variables and build
-        run: |
-          $env:Path = "${{github.workspace}}\w64devkit\bin;" + $env:Path
-          cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_FLAGS="-isystem ${{github.workspace}}\w64devkit\include" -DCMAKE_C_FLAGS="-isystem ${{github.workspace}}\w64devkit\include" -G "MinGW Makefiles"
-          cmake --build build --config ${{env.BUILD_TYPE}}
-          strip ${{github.workspace}}\obsidian.exe
-      - uses: actions/upload-artifact@v4
-        with:
-          name: obsidian-win32
-          path: |
-            addons
-            data
-            engines
-            games
-            language
-            modules
-            ports
-            presets
-            scripts
-            theme
-            tools
-            obsidian.exe
-          retention-days: ${{env.RETENTION_DAYS}}
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y mingw-w64
+
+    - name: Configure CMake
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_TOOLCHAIN_FILE=Toolchain-mingw32.cmake
+
+    - name: Build
+      # Build your program with the given configuration
+      run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}}
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: obsidian-win32
+        path: |
+          ${{github.workspace}}/addons
+          ${{github.workspace}}/data
+          ${{github.workspace}}/engines
+          ${{github.workspace}}/games
+          ${{github.workspace}}/language
+          ${{github.workspace}}/modules
+          ${{github.workspace}}/ports
+          ${{github.workspace}}/presets
+          ${{github.workspace}}/scripts
+          ${{github.workspace}}/theme
+          ${{github.workspace}}/tools
+          ${{github.workspace}}/obsidian.exe
+        retention-days: ${{env.RETENTION_DAYS}}
   build-win64:
     runs-on: windows-latest
     steps:

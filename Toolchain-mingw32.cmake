@@ -5,11 +5,6 @@ set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_C_COMPILER /usr/bin/i686-w64-mingw32-gcc)
 set(CMAKE_CXX_COMPILER /usr/bin/i686-w64-mingw32-g++)
 set(CMAKE_RC_COMPILER /usr/bin/i686-w64-mingw32-windres)
-# set(CMAKE_EXE_LINKER_FLAGS "-static-libgcc -static-libstdc++ -lm
-# -mwindows -lcomdlg32 -lole32 -luuid
-# -lgdi32 -lcomctl32 -lwsock32 -lsupc++") Above line works on Ubuntu; below line
-# works on OpenSUSE (my personal build platform), so switch between them as
-# needed - Dasho
 set(CMAKE_EXE_LINKER_FLAGS
     "-static -mwindows"
 )
@@ -23,8 +18,3 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 # search headers and libraries in the target environment,
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-
-set(CMAKE_INSTALL_PREFIX
-    ${CMAKE_FIND_ROOT_PATH}/usr
-    CACHE FILEPATH "install path prefix"
-)

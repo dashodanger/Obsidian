@@ -1406,6 +1406,10 @@ static LRESULT CALLBACK WndProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
         break;
 
       case WM_KILLFOCUS:
+        if (Fl::grab() && (Fl::grab() != window) && Fl::grab()->menu_window()) {
+          // simulate click at remote location (see issue #1166)
+          mouse_event(Fl::grab(), 0, 1, MK_LBUTTON, MAKELPARAM(100000, 0));
+        }
         Fl::handle(FL_UNFOCUS, window);
         Fl::flush(); // it never returns to main loop when deactivated...
         break;
@@ -1609,7 +1613,7 @@ content  key    keyboard layout
             } else {
               Fl::e_text = ( (Fl::e_state & FL_SHIFT) ? plus_other_char_utf8 : (char*)"+" );
             }
-            Fl::e_length = strlen(Fl::e_text);
+            Fl::e_length = (int)strlen(Fl::e_text);
           }
         }
         // end of processing of the +-containing key
@@ -1961,8 +1965,27 @@ int Fl_WinAPI_Window_Driver::fake_X_wm(int &X, int &Y, int &bt, int &bx, int &by
 
 ////////////////////////////////////////////////////////////////
 
+static void delayed_fullscreen(Fl_Window *win) {
+  Fl::remove_check((Fl_Timeout_Handler)delayed_fullscreen, win);
+  win->fullscreen_off();
+  win->fullscreen();
+}
+
+
+static void delayed_maximize(Fl_Window *win) {
+  Fl::remove_check((Fl_Timeout_Handler)delayed_maximize, win);
+  win->un_maximize();
+  win->maximize();
+}
+
+
 void Fl_WinAPI_Window_Driver::resize(int X, int Y, int W, int H) {
 //fprintf(stderr, "resize w()=%d W=%d h()=%d H=%d\n",pWindow->w(), W,pWindow->h(), H);
+  if (Fl_Window::is_a_rescale() && pWindow->fullscreen_active()) {
+    Fl::add_check((Fl_Timeout_Handler)delayed_fullscreen, pWindow);
+  } else if (Fl_Window::is_a_rescale() && pWindow->maximize_active()) {
+    Fl::add_check((Fl_Timeout_Handler)delayed_maximize, pWindow);
+  }
   UINT flags = SWP_NOSENDCHANGING | SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOOWNERZORDER;
   int is_a_resize = (W != w() || H != h() || Fl_Window::is_a_rescale());
   int resize_from_program = (pWindow != resize_bug_fix);

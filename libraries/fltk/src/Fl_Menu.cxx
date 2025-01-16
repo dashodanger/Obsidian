@@ -266,7 +266,7 @@ int Fl_Menu_Item::measure(int* hp, const Fl_Menu_* m) const {
   int w = 0; int h = 0;
   l.measure(w, hp ? *hp : h);
   fl_draw_shortcut = 0;
-  if (flags & (FL_MENU_TOGGLE|FL_MENU_RADIO)) w += FL_NORMAL_SIZE;
+  if (flags & (FL_MENU_TOGGLE|FL_MENU_RADIO)) w += FL_NORMAL_SIZE + 4;
   return w;
 }
 
@@ -698,38 +698,44 @@ static void setitem(int m, int n) {
 }
 
 static int forward(int menu) { // go to next item in menu menu if possible
-  menustate &pp = *p;
-  // Fl_Menu_Button can generate menu=-1. This line fixes it and selects the first item.
-  if (menu==-1)
+  // `menu` is -1 if no item is currently selected, so use the first menu
+  if (menu < 0)
     menu = 0;
+  menustate &pp = *p;
   menuwindow &m = *(pp.p[menu]);
   int item = (menu == pp.menu_number) ? pp.item_number : m.selected;
+  bool wrapped = false;
   do {
     while (++item < m.numitems) {
       const Fl_Menu_Item* m1 = m.menu->next(item);
       if (m1->activevisible()) {setitem(m1, menu, item); return 1;}
     }
+    if (wrapped) break;
     item = -1;
+    wrapped = true;
   }
-  while (pp.menubar && Fl::event_key() == FL_Right);
+  while (Fl::event_key() != FL_Down);
   return 0;
 }
 
 static int backward(int menu) { // previous item in menu menu if possible
-  // `menu` is -1 if no item is currently selected, we return 0
-  if (menu<0)
-    return 0;
+  // `menu` is -1 if no item is currently selected, so use the first menu
+  if (menu < 0)
+    menu = 0;
   menustate &pp = *p;
   menuwindow &m = *(pp.p[menu]);
   int item = (menu == pp.menu_number) ? pp.item_number : m.selected;
+  bool wrapped = false;
   do {
     while (--item >= 0) {
       const Fl_Menu_Item* m1 = m.menu->next(item);
       if (m1->activevisible()) {setitem(m1, menu, item); return 1;}
     }
+    if (wrapped) break;
     item = m.numitems;
+    wrapped = true;
   }
-  while (pp.menubar && Fl::event_key() == FL_Left);
+  while (Fl::event_key() != FL_Up);
   return 0;
 }
 
@@ -797,10 +803,7 @@ int menuwindow::handle_part1(int e) {
     switch (Fl::event_key()) {
     case FL_BackSpace:
     BACKTAB:
-      if (!backward(pp.menu_number)) {
-        pp.item_number = -1;
-        backward(pp.menu_number);
-      }
+      backward(pp.menu_number);
       return 1;
     case FL_Up:
       if (pp.menubar && pp.menu_number == 0) {
@@ -813,12 +816,10 @@ int menuwindow::handle_part1(int e) {
       return 1;
     case FL_Tab:
       if (Fl::event_shift()) goto BACKTAB;
+      if (pp.menubar && pp.menu_number == 0) goto RIGHT;
     case FL_Down:
       if (pp.menu_number || !pp.menubar) {
-        if (!forward(pp.menu_number) && Fl::event_key()==FL_Tab) {
-          pp.item_number = -1;
-          forward(pp.menu_number);
-        }
+        forward(pp.menu_number);
       } else if (pp.menu_number < pp.nummenus-1) {
         forward(pp.menu_number+1);
       }
@@ -839,9 +840,18 @@ int menuwindow::handle_part1(int e) {
     case ' ':
       // if the current item is a submenu with no callback,
       // simulate FL_Right to enter the submenu
-      if (pp.current_item && (!pp.menubar || pp.menu_number > 0) &&
-          pp.current_item->activevisible() && pp.current_item->submenu() && !pp.current_item->callback_)
+      if (   pp.current_item
+          && (!pp.menubar || pp.menu_number > 0)
+          && pp.current_item->activevisible()
+          && pp.current_item->submenu()
+          && !pp.current_item->callback_)
+      {
         goto RIGHT;
+      }
+      // Ignore keypresses over inactive items, mark KEYBOARD event as used.
+      if (pp.current_item && !pp.current_item->activevisible())
+        return 1;
+      // Mark the menu 'done' which will trigger the callback
       pp.state = DONE_STATE;
       return 1;
     case FL_Escape:
@@ -1007,7 +1017,13 @@ const Fl_Menu_Item* Fl_Menu_Item::pulldown(
     }
   }
   initial_item = pp.current_item;
-  if (initial_item) goto STARTUP;
+  if (initial_item) {
+    if (menubar && !initial_item->activevisible()) { // pointing at inactive item
+      Fl::grab(0);
+      return NULL;
+    }
+    goto STARTUP;
+  }
 
   // the main loop: runs until p.state goes to DONE_STATE or the menu
   // widget is deleted (e.g. from a timer callback, see STR #3503):

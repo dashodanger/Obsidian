@@ -180,6 +180,7 @@ Fl_PDF_File_Surface::~Fl_PDF_File_Surface() {
   delete platform_surface_;
 }
 
+
 /** Localizable text of the "PDF document settings" dialog */
 const char * Fl_PDF_File_Surface::format_dialog_title = "PDF document settings";
 /** Localizable text of the "PDF document settings" dialog */

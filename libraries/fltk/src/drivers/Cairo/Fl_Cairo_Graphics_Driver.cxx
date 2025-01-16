@@ -1493,8 +1493,8 @@ char Fl_Cairo_Graphics_Driver::can_do_alpha_blending() {
 float Fl_Cairo_Graphics_Driver::override_scale() {
   float s = scale();
   if (s != 1.f && Fl_Display_Device::display_device()->is_current()) {
-    Fl::screen_driver()->scale(0, 1.f);
-    cairo_scale(cairo_, 1/s, 1/s);
+    cairo_scale(cairo_, 1./s, 1./s);
+    Fl_Graphics_Driver::scale(1);
   }
   return s;
 }
@@ -1502,8 +1502,8 @@ float Fl_Cairo_Graphics_Driver::override_scale() {
 
 void Fl_Cairo_Graphics_Driver::restore_scale(float s) {
   if (s != 1.f && Fl_Display_Device::display_device()->is_current()) {
-    Fl::screen_driver()->scale(0, s);
     cairo_scale(cairo_, s, s);
+    Fl_Graphics_Driver::scale(s);
   }
 }
 

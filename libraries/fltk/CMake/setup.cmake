@@ -176,7 +176,29 @@ endif(WIN32)
 
 #######################################################################
 # size of ints
+include(CheckTypeSize)
 
-set(U16 "unsigned short")
-set(U32 "unsigned")
-set(U64 "unsigned long long")
+CHECK_TYPE_SIZE(short SIZEOF_SHORT)
+CHECK_TYPE_SIZE(int   SIZEOF_INT)
+CHECK_TYPE_SIZE(long  SIZEOF_LONG)
+CHECK_TYPE_SIZE("long long" HAVE_LONG_LONG)
+
+if(${SIZEOF_SHORT} MATCHES "^2$")
+  set(U16 "unsigned short")
+endif(${SIZEOF_SHORT} MATCHES "^2$")
+
+if(${SIZEOF_INT} MATCHES "^4$")
+  set(U32 "unsigned")
+else()
+  if(${SIZEOF_LONG} MATCHES "^4$")
+    set(U32 "unsigned long")
+  endif(${SIZEOF_LONG} MATCHES "^4$")
+endif(${SIZEOF_INT} MATCHES "^4$")
+
+if(${SIZEOF_INT} MATCHES "^8$")
+   set(U64 "unsigned")
+else()
+   if(${SIZEOF_LONG} MATCHES "^8$")
+    set(U64 "unsigned long")
+   endif(${SIZEOF_LONG} MATCHES "^8$")
+endif(${SIZEOF_INT} MATCHES "^8$")

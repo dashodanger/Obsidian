@@ -54,7 +54,7 @@ extern Fl_Double_Window *settings_window;
  @{
  */
 
-const int FL_SNAP_TO_WINDOW = 0x7f000000;
+const int FL_SNAP_TO_WINDOW = 0x01000000;
 
 static Fl_Box snap_clear_(0, 0, 0, 0);
 Fl_Widget *FL_SNAP_AREA_CLEAR = &snap_clear_;
@@ -104,6 +104,7 @@ static int convert_RGB_to_RGBA(Fl_RGB_Image *&img) {
   delete img;
   // Create the new image
   img = new Fl_RGB_Image(data, img_w, img_h, 4);
+  img->alloc_array = 1;
   return 0;
 }
 

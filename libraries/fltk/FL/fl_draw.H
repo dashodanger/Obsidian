@@ -1079,7 +1079,7 @@ FL_EXPORT void fl_draw_radio(int x, int y, int d, Fl_Color color);
   to 32 bits.
 */
 inline void fl_draw_image(const uchar *buf, int X, int Y, int W, int H, int D = 3, int L = 0) {
-  fl_graphics_driver->draw_image(buf, X, Y, W, H, D, L);
+  fl_graphics_driver->draw_image_general_(buf, X, Y, W, H, D, L);
 }
 
 /**
@@ -1087,7 +1087,7 @@ inline void fl_draw_image(const uchar *buf, int X, int Y, int W, int H, int D = 
   \see fl_draw_image(const uchar* buf, int X,int Y,int W,int H, int D, int L)
 */
 inline void fl_draw_image_mono(const uchar *buf, int X, int Y, int W, int H, int D = 1, int L = 0) {
-  fl_graphics_driver->draw_image_mono(buf, X, Y, W, H, D, L);
+  fl_graphics_driver->draw_image_mono_general_(buf, X, Y, W, H, D, L);
 }
 
 /**

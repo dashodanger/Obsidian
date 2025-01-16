@@ -122,7 +122,8 @@ int Fl_Button::handle(int event) {
       if (newval != value_) {
         value_ = newval;
         set_changed();
-        redraw();
+        if (box() && (fl_box(box())==box())) redraw();
+        else redraw_label();
         if (when() & FL_WHEN_CHANGED) do_callback(FL_REASON_CHANGED);
       }
       return 1;
@@ -131,10 +132,13 @@ int Fl_Button::handle(int event) {
         if (when() & FL_WHEN_NOT_CHANGED) do_callback(FL_REASON_SELECTED);
         return 1;
       }
-      set_changed();
-      if (type() == FL_RADIO_BUTTON) setonly();
-      else if (type() == FL_TOGGLE_BUTTON) oldval = value_;
-      else {
+      if (type() == FL_RADIO_BUTTON) {
+        setonly();
+        set_changed();
+      } else if (type() == FL_TOGGLE_BUTTON) {
+        oldval = value_;
+        set_changed();
+      } else {
         value(oldval);
         set_changed();
         if (when() & FL_WHEN_CHANGED) {
@@ -160,7 +164,10 @@ int Fl_Button::handle(int event) {
           int X = x() > 0 ? x() - 1 : 0;
           int Y = y() > 0 ? y() - 1 : 0;
           if (window()) window()->damage(FL_DAMAGE_ALL, X, Y, w() + 2, h() + 2);
-        } else redraw();
+        } else {
+          if (box() && (fl_box(box())==box())) redraw();
+          else redraw_label();
+        }
         return 1;
       } else return 0;
       /* NOTREACHED */
@@ -189,17 +196,14 @@ int Fl_Button::handle(int event) {
             do_callback(FL_REASON_RELEASED);
         } else {
           simulate_key_action();
-          value(1);
           if (when() & FL_WHEN_CHANGED) {
             set_changed();
             Fl_Widget_Tracker wp(this);
             do_callback(FL_REASON_CHANGED);
             if (wp.deleted()) return 1;
-            value(0);
             set_changed();
             do_callback(FL_REASON_RELEASED);
           } else if (when() & FL_WHEN_RELEASE) {
-            value(0);
             set_changed();
             do_callback(FL_REASON_RELEASED);
           }

@@ -2,7 +2,7 @@
 // Declaration of classes Fl_Graphics_Driver, Fl_Scalable_Graphics_Driver,
 // and Fl_Font_Descriptor for the Fast Light Tool Kit (FLTK).
 //
-// Copyright 2010-2023 by Bill Spitzak and others.
+// Copyright 2010-2024 by Bill Spitzak and others.
 //
 // This library is free software. Distribution and use rights are outlined in
 // the file "COPYING" which should have been included with this file.  If this
@@ -52,7 +52,17 @@ typedef void (*Fl_Draw_Image_Cb)(void* data,int x,int y,int w,uchar* buf);
 struct Fl_Fontdesc;
 typedef struct _PangoFontDescription PangoFontDescription;
 
-#define FL_REGION_STACK_SIZE 10
+// FIXME: The following constants are deprecated and will be removed in FLTK 1.5.0
+// in favor of dynamic clipping stack allocation. This needs C++11 features.
+// See issue #1139: "FL_REGION_STACK_SIZE could be increased"
+// and issue #1140: "Fix static array allocation".
+
+#if FL_ABI_VERSION >= 10401
+# define FL_REGION_STACK_SIZE 64
+#else
+# define FL_REGION_STACK_SIZE 10
+#endif
+
 #define FL_MATRIX_STACK_SIZE 32
 
 /**
@@ -85,6 +95,7 @@ class FL_EXPORT Fl_Graphics_Driver {
   friend void fl_draw_image(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D);
   friend void fl_copy_offscreen(int x, int y, int w, int h, Fl_Offscreen pixmap, int srcx, int srcy);
   friend int fl_convert_pixmap(const char*const* cdata, uchar* out, Fl_Color bg);
+  friend FL_EXPORT int fl_draw_pixmap(const char*const* cdata, int x, int y, Fl_Color bg);
   friend FL_EXPORT void gl_start();
   /* ============== Implementation note about image drawing =========================
    A graphics driver can implement up to 6 virtual member functions to draw images:
@@ -137,6 +148,8 @@ private:
   virtual void make_unused_color_(unsigned char &r, unsigned char &g, unsigned char &b, int color_count, void **data);
   // some platforms may need to reimplement this
   virtual void set_current_();
+  void draw_image_general_(const uchar *buf, int X, int Y, int W, int H, int D, int L);
+  void draw_image_mono_general_(const uchar *buf, int X, int Y, int W, int H, int D, int L);
   float scale_; // scale between FLTK and drawing coordinates: drawing = FLTK * scale_
 public:
   /** Creates the graphics driver that is used for core operations. */

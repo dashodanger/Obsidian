@@ -50,7 +50,7 @@
 #include <stddef.h>
 #include <string.h>
 
-#if defined(_MSC_VER) || defined(__WATCOMC__)
+#if defined(_MSC_VER) || defined(__WATCOMC__) || defined(__MINGW32__)
 #define json_weak __inline
 #elif defined(__clang__) || defined(__GNUC__)
 #define json_weak __attribute__((weak))

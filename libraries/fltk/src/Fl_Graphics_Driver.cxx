@@ -445,6 +445,60 @@ void Fl_Graphics_Driver::draw_image(Fl_Draw_Image_Cb cb, void* data, int X,int Y
 /** see fl_draw_image_mono(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D) */
 void Fl_Graphics_Driver::draw_image_mono(Fl_Draw_Image_Cb cb, void* data, int X,int Y,int W,int H, int D) {}
 
+
+typedef struct {
+  const uchar *buf;
+  int D_in;
+  int D_out;
+  int L;
+} image_data;
+
+
+static void scan_cb(image_data *data, int x, int y, int w, uchar *buffer) {
+  const uchar *from = data->buf + y * data->L + data->D_in * x;
+  while (w-- > 0) {
+    memcpy(buffer, from, data->D_out);
+    buffer += data->D_out;
+    from += data->D_in;
+  }
+}
+
+/* used only by inline fl_draw_image() */
+void Fl_Graphics_Driver::draw_image_general_(const uchar *buf, int X, int Y, int W, int H, int D, int L) {
+  const bool alpha = !!(abs(D) & FL_IMAGE_WITH_ALPHA);
+  int d_corrected, d_out;
+  if (alpha) {
+    d_corrected = D ^ FL_IMAGE_WITH_ALPHA;
+    d_out = 4;
+  } else {
+    d_corrected = D;
+    d_out = 3;
+  }
+  if (abs(d_corrected) > d_out) {
+    image_data data;
+    data.buf = buf;
+    data.D_in = d_corrected;
+    data.D_out = d_out;
+    data.L = (L ? L : W * d_corrected);
+    if (alpha) d_out |= FL_IMAGE_WITH_ALPHA;
+    fl_graphics_driver->draw_image((Fl_Draw_Image_Cb)scan_cb, &data, X, Y, W, H, d_out);
+  } else
+    fl_graphics_driver->draw_image(buf, X, Y, W, H, D, L);
+}
+
+/* used only by inline fl_draw_image_mono() */
+void Fl_Graphics_Driver::draw_image_mono_general_(const uchar *buf, int X, int Y, int W, int H, int D, int L) {
+  if (abs(D) > 1) {
+    image_data data;
+    data.buf = buf;
+    data.D_in = D;
+    data.D_out = 1;
+    data.L = (L ? L : W * D);
+    fl_graphics_driver->draw_image_mono((Fl_Draw_Image_Cb)scan_cb, &data, X, Y, W, H, 1);
+  } else
+    fl_graphics_driver->draw_image_mono(buf, X, Y, W, H, D, L);
+}
+
 /** Support function for image drawing */
 void Fl_Graphics_Driver::delete_bitmask(fl_uintptr_t /*bm*/) {}
 
@@ -1145,7 +1199,6 @@ void Fl_Scalable_Graphics_Driver::draw_image_mono_unscaled(Fl_Draw_Image_Cb cb, 
 float Fl_Scalable_Graphics_Driver::override_scale() {
   float s = scale();
   if (s != 1.f) {
-    push_no_clip();
     scale(1.f);
   }
   return s;
@@ -1154,7 +1207,6 @@ float Fl_Scalable_Graphics_Driver::override_scale() {
 void Fl_Scalable_Graphics_Driver::restore_scale(float s) {
   if (s != 1.f) {
     scale(s);
-    pop_clip();
   }
 }
 

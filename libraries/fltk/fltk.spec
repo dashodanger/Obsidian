@@ -14,7 +14,7 @@
 #      https://www.fltk.org/bugs.php
 #
 
-%define version @FLTK_VERSION@
+%define version 1.4.1
 %define release 1
 %define prefix /usr
 
@@ -24,7 +24,7 @@ Version: %{version}
 Release: %{release}
 License: LGPL
 Group: System Environment/Libraries
-Source: https://www.fltk.org/pub/fltk/%{version}/fltk-%{version}-source.tar.gz
+Source: https://github.com/fltk/fltk/releases/download/release-1.4.1/fltk-1.4.1-source.tar.gz
 URL: https://www.fltk.org/
 Packager: FLTK Developer <fltk@fltk.org>
 # use BuildRoot so as not to disturb the version already installed
