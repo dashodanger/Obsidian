@@ -4620,7 +4620,7 @@ gui.debugf("=== Coverage seeds: %d/%d  rooms: %d/%d\n",
   -- remove ungrown teleporter trunks
   for _,R in pairs(LEVEL.rooms) do
     if R.is_root and R.is_grown and #R.trunk.rooms == 1 
-    and R:calc_walk_vol() <= 24 and not R.is_start then
+    and R:calc_walk_vol() <= 24 and not R.is_start and not R.emergency_sprouted then
       gui.printf("Killed teleporter ROOM_" .. R.id .. "\n")
       gui.printf(table.tostr(R.trunk.rooms,1) .. "\n")
       gui.printf(table.tostr(R,2) .. "\n")
