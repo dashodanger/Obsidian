@@ -220,7 +220,11 @@ void UI_Module::AddOption(const std::string &opt, const std::string &label, cons
         if (collapse_disabled_modules)
             rch->hide();
         else
-            rch->deactivate();
+        {
+            rch->mod_label->deactivate();
+            rch->mod_menu->deactivate();
+            rch->mod_reset->deactivate();
+        }
     }
 
     add(rch);
@@ -328,6 +332,8 @@ void UI_Module::AddSliderOption(const std::string &opt, std::string &label, cons
         }
         rsl->nan_options->callback(callback_NanOptions, NULL);
     }
+    else
+        rsl->nan_options = nullptr;
 
     rsl->mod_entry = new UI_ManualEntry(rsl->x() + (rsl->w() * .85), rsl->y(), rsl->w() * .075, KromulentHeight(24));
     rsl->mod_entry->box(FL_NO_BOX);
@@ -412,7 +418,17 @@ void UI_Module::AddSliderOption(const std::string &opt, std::string &label, cons
         if (collapse_disabled_modules)
             rsl->hide();
         else
-            rsl->deactivate();
+        {
+            rsl->prev_button->deactivate();
+            rsl->next_button->deactivate();
+            rsl->mod_label->deactivate();
+            rsl->mod_reset->deactivate();
+            rsl->mod_slider->deactivate();
+            rsl->mod_entry->deactivate();
+            rsl->unit_label->deactivate();
+            if (rsl->nan_options)
+                rsl->nan_options->deactivate();
+        }
     }
 
     add(rsl);
@@ -480,7 +496,11 @@ void UI_Module::AddButtonOption(const std::string &opt, const std::string &label
         if (collapse_disabled_modules)
             rbt->hide();
         else
-            rbt->deactivate();
+        {
+            rbt->mod_label->deactivate();
+            rbt->mod_check->deactivate();
+            rbt->mod_reset->deactivate();
+        }
     }
 
     add(rbt);
@@ -527,14 +547,22 @@ void UI_Module::update_Enable()
             if (collapse_disabled_modules)
                 M->show();
             else
-                M->activate();
+            {
+                M->mod_label->activate();
+                M->mod_menu->activate();
+                M->mod_reset->activate();
+            }
         }
         else
         {
             if (collapse_disabled_modules)
                 M->hide();
             else
-                M->deactivate();
+            {
+                M->mod_label->deactivate();
+                M->mod_menu->deactivate();
+                M->mod_reset->deactivate();
+            }
         }
     }
 
@@ -547,14 +575,34 @@ void UI_Module::update_Enable()
             if (collapse_disabled_modules)
                 M->show();
             else
-                M->activate();
+            {
+                M->unit_label->activate();
+                M->prev_button->activate();
+                M->next_button->activate();
+                M->mod_label->activate();
+                M->mod_reset->activate();
+                M->mod_slider->activate();
+                M->mod_entry->activate();
+                if (M->nan_options)
+                    M->nan_options->activate();
+            }
         }
         else
         {
             if (collapse_disabled_modules)
                 M->hide();
             else
-                M->deactivate();
+            {
+                M->unit_label->deactivate();
+                M->prev_button->deactivate();
+                M->next_button->deactivate();
+                M->mod_label->deactivate();
+                M->mod_reset->deactivate();
+                M->mod_slider->deactivate();
+                M->mod_entry->deactivate();
+                if (M->nan_options)
+                    M->nan_options->deactivate();
+            }
         }
     }
 
@@ -567,14 +615,22 @@ void UI_Module::update_Enable()
             if (collapse_disabled_modules)
                 M->show();
             else
-                M->activate();
+            {
+                M->mod_label->activate();
+                M->mod_check->activate();
+                M->mod_reset->activate();
+            }
         }
         else
         {
             if (collapse_disabled_modules)
                 M->hide();
             else
-                M->deactivate();
+            {
+                M->mod_label->deactivate();
+                M->mod_check->deactivate();
+                M->mod_reset->deactivate();
+            }
         }
     }
 
