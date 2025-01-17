@@ -48,37 +48,6 @@ jobs:
           ${{github.workspace}}/tools
           ${{github.workspace}}/obsidian.exe
         retention-days: ${{env.RETENTION_DAYS}}
-  build-win64:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download w64devkit
-        run: invoke-webrequest https://github.com/skeeto/w64devkit/releases/download/v2.0.0/w64devkit-x64-2.0.0.exe -outfile ${{github.workspace}}\w64devkit.exe
-      - name: Extract w64devkit
-        run: ${{github.workspace}}\w64devkit.exe -y
-      - name: Set environment variables and build
-        run: |
-          $env:Path = "${{github.workspace}}\w64devkit\bin;" + $env:Path
-          cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DCMAKE_CXX_FLAGS="-isystem ${{github.workspace}}\w64devkit\include" -DCMAKE_C_FLAGS="-isystem ${{github.workspace}}\w64devkit\include" -G "MinGW Makefiles"
-          cmake --build build --config ${{env.BUILD_TYPE}}
-          strip ${{github.workspace}}\obsidian.exe
-      - uses: actions/upload-artifact@v4
-        with:
-          name: obsidian-win64
-          path: |
-            addons
-            data
-            engines
-            games
-            language
-            modules
-            ports
-            presets
-            scripts
-            theme
-            tools
-            obsidian.exe
-          retention-days: ${{env.RETENTION_DAYS}}
   build-linux:
       runs-on: ubuntu-24.04
       steps:

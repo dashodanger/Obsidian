@@ -1,0 +1,17 @@
+Addons must be either .zip archives or subfolders within this folder.
+
+The structure of your addon should mimic that of the base folder of the program, 
+for example if you want to add a new module and were using folders:
+
+(Obsidian folder)
+  |
+addons
+  |
+addon name
+  |
+modules
+  |
+your_cool_module.lua
+
+For zips, you would want the modules "folder" to be at the root of the archive, and
+name the zip itself whatever you'd like your addon to be called.
