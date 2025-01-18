@@ -13,7 +13,7 @@
 
 The C++ compiler/toolchain should already be present on a typical BSD install
 
-## Linux Dependencies (MSYS has some differences; see MSYS Cross-Compilation section below)
+## Linux Dependencies
 
 1. C++ compiler and associated tools
    * packages: `g++` `binutils`

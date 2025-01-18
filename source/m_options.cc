@@ -98,12 +98,6 @@ void Parse_Option(const std::string &name, const std::string &value)
     {
         custom_prefix = value;
     }
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    else if (StringCompare(name, "collapse_disabled_modules") == 0)
-    {
-        collapse_disabled_modules = StringToInt(value) ? true : false;
-    }
-#endif
     else if (StringCompare(name, "default_output_path") == 0)
     {
         default_output_path = value;
@@ -206,9 +200,6 @@ bool Options_Save(const std::string &filename)
     fprintf(option_fp, "mature_word_lists = %d\n", (mature_word_lists ? 1 : 0));
     fprintf(option_fp, "filename_prefix = %d\n", filename_prefix);
     fprintf(option_fp, "custom_prefix = %s\n", custom_prefix.c_str());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    fprintf(option_fp, "collapse_disabled_modules = %d\n", (collapse_disabled_modules ? 1 : 0));
-#endif
     fprintf(option_fp, "%s", StringFormat("default_output_path = %s\n\n", default_output_path.c_str()).c_str());
 
     VFS_OptWrite(option_fp);
