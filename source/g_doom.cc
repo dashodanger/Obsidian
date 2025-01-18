@@ -22,6 +22,7 @@
 #include "g_doom.h"
 
 #include <locale.h>
+#include <string.h>
 
 #include <bitset>
 #include <string>
@@ -51,6 +52,7 @@ extern int ef_liquid_type;
 extern int ef_thing_mode;
 
 static std::string level_name;
+static std::string level_description;
 
 int Doom::sub_format;
 
@@ -284,17 +286,16 @@ qLump_c *BSP_CreateInfoLump()
 //  AJBSP NODE BUILDING
 //----------------------------------------------------------------------------
 
+// TODO: Have the new GUI use this
+static float node_progress = 0.0f;
+
 namespace Doom
 {
 
 void Send_Prog_Nodes(int progress, int num_maps)
 {
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->Prog_Nodes(progress, num_maps);
-    }
-#endif
+    node_progress = (float)progress / (float)num_maps;
+    ob_build_step = _("Nodes");
 }
 
 bool BuildNodes(std::string filename)
@@ -461,11 +462,7 @@ bool Doom::StartWAD(const std::string &filename)
 {
     if (!WAD_OpenWrite(filename))
     {
-#ifndef OBSIDIAN_CONSOLE_ONLY
-        DLG_ShowError(_("Unable to create wad file:\n\n%s"), strerror(errno));
-#else
-        printf("%s\n\n%s\n", _("Unable to create wad file:"), strerror(errno));
-#endif
+        ob_error_message = StringFormat(_("Unable to create wad file:\n\n%s"), strerror(errno));
         return false;
     }
 
@@ -1341,37 +1338,18 @@ bool Doom::game_interface_c::Start(const char *preset)
 
     ob_invoke_hook("pre_setup");
 
-    if (batch_mode)
+    if (IsPathAbsolute(batch_output_file))
     {
-        if (IsPathAbsolute(batch_output_file))
-        {
-            filename = batch_output_file;
-        }
-        else
-        {
-            filename = PathAppend(CurrentDirectoryGet(), batch_output_file);
-        }
-        if (compress_output)
-        {
-            zip_filename = filename;
-            ReplaceExtension(zip_filename, ".pk3");
-        }
+        filename = batch_output_file;
     }
     else
     {
-#ifndef OBSIDIAN_CONSOLE_ONLY
-        if (compress_output)
-        {
-            std::string zip_preset = preset;
-            ReplaceExtension(zip_preset, ".pk3");
-            filename     = DLG_OutputFilename("pk3", zip_preset.c_str());
-            zip_filename = filename;
-        }
-        else
-        {
-            filename = DLG_OutputFilename("wad", preset);
-        }
-#endif
+        filename = PathAppend(CurrentDirectoryGet(), batch_output_file);
+    }
+    if (compress_output)
+    {
+        zip_filename = filename;
+        ReplaceExtension(zip_filename, ".pk3");
     }
 
     if (filename.empty())
@@ -1400,12 +1378,8 @@ bool Doom::game_interface_c::Start(const char *preset)
     {
         map_format  = FORMAT_BINARY;
         build_nodes = true;
-#ifndef OBSIDIAN_CONSOLE_ONLY
-        if (main_win)
-        {
-            main_win->build_box->Prog_Init(0, "");
-        }
-#endif
+        ob_build_progress = 0.0f;
+        ob_build_step.clear();
         return true;
     }
 
@@ -1432,12 +1406,8 @@ bool Doom::game_interface_c::Start(const char *preset)
         return false;
     }
 
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->Prog_Init(20, _("CSG"));
-    }
-#endif
+    ob_build_progress = 0.20f;
+    ob_build_step = _("CSG");
 
     if (StringCompare(current_port, "zdoom") == 0)
     {
@@ -1497,11 +1467,7 @@ bool Doom::game_interface_c::Finish(bool build_ok)
             FileDelete(filename);
         }
     }
-    else
-    {
-        Recent_AddFile(RECG_Output, filename);
-    }
-
+    
     if (build_ok)
     {
         if (compress_output)
@@ -1545,14 +1511,11 @@ void Doom::game_interface_c::Property(std::string key, std::string value)
 {
     if (StringCompare(key, "level_name") == 0)
     {
-        level_name = value.c_str();
-#ifndef OBSIDIAN_CONSOLE_ONLY
+        level_name = value;
     }
-    else if (StringCompare(key, "description") == 0 && main_win)
+    else if (StringCompare(key, "description") == 0)
     {
-        main_win->build_box->name_disp->copy_label(value.c_str());
-        main_win->build_box->name_disp->redraw();
-#endif
+        level_description = value;
     }
     else if (StringCompare(key, "sub_format") == 0)
     {
@@ -1612,18 +1575,15 @@ void Doom::game_interface_c::EndLevel()
         FatalError("Script problem: did not set level name!\n");
     }
 
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->Prog_Step("CSG");
-    }
-#endif
+    ob_build_step = _("CSG");
 
     CSG_DOOM_Write();
 
     Doom::EndLevel(level_name);
 
-    level_name = "";
+    level_name.clear();
+
+    level_description.clear();
 }
 
 game_interface_c *Doom_GameObject()

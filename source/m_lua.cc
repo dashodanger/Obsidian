@@ -21,11 +21,14 @@
 
 #include "m_lua.h"
 
+#include <string.h>
+
 #include <algorithm>
 
 #include "ff_main.h"
 #include "lib_midi.h"
 #include "lib_util.h"
+#include "luaalloc.h"
 #include "m_trans.h"
 #include "main.h"
 #include "minilua.h"
@@ -34,10 +37,22 @@
 #include "sys_debug.h"
 #include "sys_xoshiro.h"
 
+#ifdef OBSIDIAN_ENABLE_GUI
+#include <SDL3/SDL.h>
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#include "nuklear.h"
+#include "moonnuklear_extern.h"
+#endif
+
 static lua_State *LUA_ST;
 
 static bool has_loaded        = false;
-static bool has_added_buttons = false;
 
 static std::vector<std::string> *conf_line_buffer;
 
@@ -450,695 +465,8 @@ int gui_get_batch_randomize_groups(lua_State *L)
     return 1;
 }
 
-// LUA: add_choice(button, id, label)
-//
-int gui_add_choice(lua_State *L)
-{
-    std::string button = luaL_optstring(L, 1, "");
-    std::string id     = luaL_optstring(L, 2, "");
-    std::string label  = luaL_optstring(L, 3, "");
-
-    SYS_ASSERT(!button.empty() && !id.empty() && !label.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_choice called late.\n");
-    }
-
-    if (!main_win->game_box->AddChoice(button, id, label))
-    {
-        return luaL_error(L, "add_choice: unknown button '%s'\n", button.c_str());
-    }
-#endif
-    return 0;
-}
-
-// LUA: enable_choice(what, id, shown)
-//
-int gui_enable_choice(lua_State *L)
-{
-    std::string button = luaL_optstring(L, 1, "");
-    std::string id     = luaL_optstring(L, 2, "");
-
-    int enable = lua_toboolean(L, 3) ? 1 : 0;
-
-    SYS_ASSERT(!button.empty() && !id.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    if (!main_win->game_box->EnableChoice(button, id, enable))
-    {
-        return luaL_error(L, "enable_choice: unknown button '%s'\n", button.c_str());
-    }
-#endif
-    return 0;
-}
-
-// LUA: set_button(button, id)
-//
-int gui_set_button(lua_State *L)
-{
-    std::string button = luaL_optstring(L, 1, "");
-    std::string id     = luaL_optstring(L, 2, "");
-
-    SYS_ASSERT(!button.empty() && !id.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    if (!main_win->game_box->SetButton(button, id))
-    {
-        return luaL_error(L, "set_button: unknown button '%s'\n", button.c_str());
-    }
-#endif
-    return 0;
-}
-
-// LUA: add_module(where, id, label, tooltip)
-//
-int gui_add_module(lua_State *L)
-{
-    std::string where      = luaL_optstring(L, 1, "");
-    std::string id         = luaL_optstring(L, 2, "");
-    std::string label      = luaL_optstring(L, 3, "");
-    std::string tip        = luaL_optstring(L, 4, "");
-    int         red        = luaL_optinteger(L, 5, -1);
-    int         green      = luaL_optinteger(L, 6, -1);
-    int         blue       = luaL_optinteger(L, 7, -1);
-    bool        suboptions = luaL_checkinteger(L, 8);
-
-    SYS_ASSERT(!where.empty() && !id.empty() && !label.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_module called late.\n");
-    }
-
-    if (StringCompare(where, "arch") == 0)
-    {
-        if (!main_win->mod_tabs->arch_mods->FindID(id))
-        {
-            main_win->mod_tabs->arch_mods->AddModule(id, label, tip, red, green, blue, suboptions);
-        }
-    }
-    else if (StringCompare(where, "combat") == 0)
-    {
-        if (!main_win->mod_tabs->combat_mods->FindID(id))
-        {
-            main_win->mod_tabs->combat_mods->AddModule(id, label, tip, red, green, blue, suboptions);
-        }
-    }
-    else if (StringCompare(where, "pickup") == 0)
-    {
-        if (!main_win->mod_tabs->pickup_mods->FindID(id))
-        {
-            main_win->mod_tabs->pickup_mods->AddModule(id, label, tip, red, green, blue, suboptions);
-        }
-    }
-    else if (StringCompare(where, "other") == 0)
-    {
-        if (!main_win->mod_tabs->other_mods->FindID(id))
-        {
-            main_win->mod_tabs->other_mods->AddModule(id, label, tip, red, green, blue, suboptions);
-        }
-    }
-    else if (StringCompare(where, "debug") == 0)
-    {
-        if (!main_win->mod_tabs->debug_mods->FindID(id))
-        {
-            main_win->mod_tabs->debug_mods->AddModule(id, label, tip, red, green, blue, suboptions);
-        }
-    }
-    else if (StringCompare(where, "experimental") == 0)
-    {
-        if (!main_win->mod_tabs->experimental_mods->FindID(id))
-        {
-            main_win->mod_tabs->experimental_mods->AddModule(id, label, tip, red, green, blue, suboptions);
-        }
-    }
-    else if (StringCompare(where, "links") == 0)
-    {
-        if (!main_win->mod_tabs->links->FindID(id))
-        {
-            main_win->mod_tabs->links->AddModule(id, label, tip, red, green, blue, suboptions);
-        }
-    }
-
-#endif
-    return 0;
-}
-
-// LUA: set_module(id, bool)
-//
-int gui_set_module(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-
-    int opt_val = lua_toboolean(L, 2) ? 1 : 0;
-
-    SYS_ASSERT(!module.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // FIXME : error if module is unknown
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        if (tab->EnableMod(module, opt_val))
-        {
-            break;
-        }
-    }
-
-#endif
-    return 0;
-}
-
-// LUA: show_module(module, shown)
-//
-int gui_show_module(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-
-    int shown = lua_toboolean(L, 2) ? 1 : 0;
-
-    SYS_ASSERT(!module.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // FIXME : error if module is unknown
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        if (tab->ShowModule(module, shown))
-        {
-            break;
-        }
-    }
-#endif
-    return 0;
-}
-
-// LUA: add_module_option(module, option, label, tooltip, gap, randomize_group)
-//
-int gui_add_module_header(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    std::string label = luaL_optstring(L, 3, "");
-
-    int gap = luaL_optinteger(L, 4, 0);
-
-    SYS_ASSERT(!module.empty() && !option.empty());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_module_header called late.\n");
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        UI_Module     *mod = tab->FindID(module);
-        if (mod)
-        {
-            if (!mod->FindHeaderOpt(option))
-            {
-                tab->AddHeader(module, option, label, gap);
-            }
-            return 0;
-        }
-    }
-
-    FatalError("Script problem: gui.add_module_header_option called for "
-               "non-existent module!\n");
-#endif
-    return 0;
-}
-
-// LUA: add_module_url(module, option, label, tooltip, gap, randomize_group)
-//
-int gui_add_module_url(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    std::string label = luaL_optstring(L, 3, "");
-
-    std::string url = luaL_optstring(L, 4, "");
-
-    int gap = luaL_optinteger(L, 5, 0);
-
-    SYS_ASSERT(!module.empty() && !option.empty() && !url.empty());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_module_url called late.\n");
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        UI_Module     *mod = tab->FindID(module);
-        if (mod)
-        {
-            if (!mod->FindUrlOpt(option))
-            {
-                tab->AddUrl(module, option, label, url, gap);
-            }
-            return 0;
-        }
-    }
-
-    FatalError("Script problem: gui.add_module_url called for "
-               "non-existent module!\n");
-#endif
-    return 0;
-}
-
-// LUA: add_module_option(module, option, label, tooltip, gap, randomize_group)
-//
-int gui_add_module_option(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    std::string label   = luaL_optstring(L, 3, "");
-    std::string tip     = luaL_optstring(L, 4, "");
-    std::string longtip = luaL_optstring(L, 5, "");
-
-    int gap = luaL_optinteger(L, 6, 0);
-
-    std::string randomize_group = luaL_optstring(L, 7, "");
-
-    std::string default_value = luaL_checkstring(L, 8);
-
-    SYS_ASSERT(!module.empty() && !option.empty() && !default_value.empty());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_module_option called late.\n");
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        UI_Module     *mod = tab->FindID(module);
-        if (mod)
-        {
-            if (!mod->FindOpt(option))
-            {
-                tab->AddOption(module, option, label, tip, longtip, gap, randomize_group, default_value);
-            }
-            return 0;
-        }
-    }
-
-    FatalError("Script problem: gui.add_module_option called for "
-               "non-existent module!\n");
-#endif
-    return 0;
-}
-
-// LUA: add_module_option(module, option, label, tooltip, gap)
-//
-int gui_add_module_slider_option(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    std::string label   = luaL_optstring(L, 3, "");
-    std::string tip     = luaL_optstring(L, 4, "");
-    std::string longtip = luaL_optstring(L, 5, "");
-
-    int gap = luaL_optinteger(L, 6, 0);
-
-    double min = luaL_checknumber(L, 7);
-    double max = luaL_checknumber(L, 8);
-    double inc = luaL_checknumber(L, 9);
-
-    std::string units   = luaL_optstring(L, 10, "");
-    std::string presets = luaL_optstring(L, 11, "");
-    std::string nan     = luaL_optstring(L, 12, "");
-
-    std::string randomize_group = luaL_optstring(L, 13, "");
-
-    std::string default_value = luaL_checkstring(L, 14);
-
-    SYS_ASSERT(!module.empty() && !option.empty() && !default_value.empty());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_module_option called late.\n");
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        UI_Module     *mod = tab->FindID(module);
-        if (mod)
-        {
-            if (!mod->FindSliderOpt(option))
-            {
-                tab->AddSliderOption(module, option, label, tip, longtip, gap, min, max, inc, units, presets, nan,
-                                     randomize_group, default_value);
-            }
-            return 0;
-        }
-    }
-
-    FatalError("Script problem: gui.add_module_slider_option called for "
-               "non-existent module!\n");
-#endif
-    return 0;
-}
-
-// LUA: add_module_button_option(module, option, label, tooltip, gap)
-//
-int gui_add_module_button_option(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    std::string label   = luaL_optstring(L, 3, "");
-    std::string tip     = luaL_optstring(L, 4, "");
-    std::string longtip = luaL_optstring(L, 5, "");
-
-    int gap = luaL_optinteger(L, 6, 0);
-
-    std::string randomize_group = luaL_optstring(L, 7, "");
-
-    std::string default_value = luaL_checkstring(L, 8);
-
-    SYS_ASSERT(!module.empty() && !option.empty() && !default_value.empty());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_module_option called late.\n");
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        UI_Module     *mod = tab->FindID(module);
-        if (mod)
-        {
-            if (!mod->FindButtonOpt(option))
-            {
-                tab->AddButtonOption(module, option, label, tip, longtip, gap, randomize_group, default_value);
-            }
-            return 0;
-        }
-    }
-
-    FatalError("Script problem: gui.add_module_button_option called for "
-               "non-existent module!\n");
-#endif
-    return 0;
-}
-
-// LUA: add_option_choice(module, option, id, label)
-//
-int gui_add_option_choice(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    std::string id    = luaL_optstring(L, 3, "");
-    std::string label = luaL_optstring(L, 4, "");
-
-    SYS_ASSERT(!module.empty() && !option.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    // only allowed during startup
-    if (has_added_buttons)
-    {
-        FatalError("Script problem: gui.add_option_choice called late.\n");
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        if (tab->AddOptionChoice(module, option, id, label))
-        {
-            break;
-        }
-    }
-#endif
-    return 0;
-}
-
-// LUA: set_module_option(module, option, value)
-//
-int gui_set_module_option(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-    std::string value  = luaL_optstring(L, 3, "");
-
-    SYS_ASSERT(!module.empty() && !option.empty() && !value.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    if (!StringCompare(option, "self"))
-    {
-        return luaL_error(L, "set_module_option: cannot use 'self' here\n", option.c_str());
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        if (tab->SetOption(module, option, value))
-        {
-            return 0;
-        }
-    }
-
-    return luaL_error(L, "set_module_option: unknown option '%s.%s'\n", module.c_str(), option.c_str());
-#endif
-    return 0;
-}
-
-// LUA: set_module_option(module, option, value)
-//
-int gui_set_module_slider_option(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-    std::string value  = luaL_optstring(L, 3, "");
-
-    SYS_ASSERT(!module.empty() && !option.empty() && !value.empty());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    if (!StringCompare(option, "self"))
-    {
-        return luaL_error(L, "set_module_option: cannot use 'self' here\n", option.c_str());
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        if (tab->SetSliderOption(module, option, value))
-        {
-            return 0;
-        }
-    }
-
-    return luaL_error(L, "set_module_option: unknown option '%s.%s'\n", module.c_str(), option.c_str());
-#endif
-    return 0;
-}
-
-// LUA: set_module_option(module, option, value)
-//
-int gui_set_module_button_option(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-    int         value  = luaL_checkinteger(L, 3);
-
-    SYS_ASSERT(!module.empty() && !option.empty());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    if (!StringCompare(option, "self"))
-    {
-        return luaL_error(L, "set_module_option: cannot use 'self' here\n", option.c_str());
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        if (tab->SetButtonOption(module, option, value))
-        {
-            return 0;
-        }
-    }
-
-    return luaL_error(L, "set_module_option: unknown option '%s.%s'\n", module.c_str(), option.c_str());
-#endif
-    return 0;
-}
-
-// LUA: get_module_slider_value(module, option)
-int gui_get_module_slider_value(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    SYS_ASSERT(!module.empty() && !option.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        UI_Module     *mod = tab->FindID(module);
-        if (mod)
-        {
-            UI_RSlide *slider = mod->FindSliderOpt(option);
-            if (slider)
-            {
-                if (slider->nan_choices.size() > 0)
-                {
-                    if (slider->nan_options->value() > 0)
-                    {
-                        lua_pushstring(L, slider->nan_options->text(slider->nan_options->value()));
-                    }
-                    else
-                    {
-                        lua_pushnumber(L, slider->mod_slider->value());
-                    }
-                }
-                else
-                {
-                    lua_pushnumber(L, slider->mod_slider->value());
-                }
-                return 1;
-            }
-        }
-    }
-
-    return luaL_error(L, "get_module_slider_value: unknown option '%s.%s'\n", module.c_str(), option.c_str());
-#else
-    return 0;
-#endif
-}
-
-// LUA: get_module_button_value(module, option)
-int gui_get_module_button_value(lua_State *L)
-{
-    std::string module = luaL_optstring(L, 1, "");
-    std::string option = luaL_optstring(L, 2, "");
-
-    SYS_ASSERT(!module.empty() && !option.empty());
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (!main_win)
-    {
-        return 0;
-    }
-
-    for (int i = 0; i < main_win->mod_tabs->children(); i++)
-    {
-        UI_CustomMods *tab = (UI_CustomMods *)main_win->mod_tabs->child(i);
-        UI_Module     *mod = tab->FindID(module);
-        if (mod)
-        {
-            UI_RButton *button = mod->FindButtonOpt(option);
-            if (button)
-            {
-                lua_pushnumber(L, button->mod_check->value());
-                return 1;
-            }
-        }
-    }
-
-    return luaL_error(L, "get_module_slider_value: unknown option '%s.%s'\n", module.c_str(), option.c_str());
-#else
-    return 0;
-#endif
-}
+// TODO: Have the new GUI use this
+static float plan_progress = 0.0f;
 
 // LUA: at_level(name, idx, total)
 //
@@ -1150,12 +478,8 @@ int gui_at_level(lua_State *L)
     int total = luaL_checkinteger(L, 3);
 
     ProgStatus("%s %s", _("Making"), name.c_str());
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->Prog_AtLevel(index, total);
-    }
-#endif
+    plan_progress = (float)index / (float)total;
+    ob_build_step = _("Plan");
     return 0;
 }
 
@@ -1164,22 +488,7 @@ int gui_at_level(lua_State *L)
 int gui_prog_step(lua_State *L)
 {
     const char *name = luaL_checkstring(L, 1);
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->Prog_Step(name);
-    }
-#endif
-    return 0;
-}
-
-// LUA: ticker()
-//
-int gui_ticker(lua_State * /*L*/)
-{
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    Main::Ticker();
-#endif
+    ob_build_step = name;
     return 0;
 }
 
@@ -1188,9 +497,6 @@ int gui_ticker(lua_State * /*L*/)
 int gui_abort(lua_State *L)
 {
     int value = (main_action >= MAIN_CANCEL) ? 1 : 0;
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    Main::Ticker();
-#endif
     lua_pushboolean(L, value);
     return 1;
 }
@@ -1273,116 +579,39 @@ int gui_bit_not(lua_State *L)
     return 1;
 }
 
-int gui_minimap_enable(lua_State *L)
+#ifdef OBSIDIAN_ENABLE_GUI
+static void gui_file_picker_callback(void *userdata, const char * const *filelist, int filter)
 {
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->alt_disp->label("");
+    bool *in_dialog = (bool *)userdata;
+    if (!filelist) {
+        LogPrint("An error occured: %s", SDL_GetError());
+        *in_dialog = false;
+        return;
+    } else if (!*filelist) {
+        LogPrint("The user did not select any file.");
+        LogPrint("Most likely, the dialog was canceled.");
+        *in_dialog = false;
+        return;
     }
-#endif
+    picker_filename = *filelist;
+    if (!picker_filename.empty())
+        lua_pushlstring(LUA_ST, picker_filename.c_str(), picker_filename.size());
+    else
+        lua_pushlstring(LUA_ST, NULL, 0);
+    lua_setglobal(LUA_ST, "OB_NK_PICKED_FILE");
+    *in_dialog = false;
+    return;
+}
+
+int gui_spawn_file_picker(lua_State *L)
+{
+    //const char *picked = tinyfd_openFileDialog("PICK FILE", install_dir.c_str(), 0, NULL, NULL, 0);
+    picker_filename.clear();
+    in_file_dialog = true;
+    SDL_ShowOpenFileDialog(gui_file_picker_callback, &in_file_dialog, NULL, NULL, 0, install_dir.c_str(), false);
     return 0;
 }
-
-int gui_minimap_disable(lua_State *L)
-{
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->mini_map->EmptyMap();
-        std::string genny = luaL_checkstring(L, 1);
-        // clang-format off
-        main_win->build_box->alt_disp->copy_label(StringFormat("%s %s -\n%s", 
-            _("Using"),
-            genny.c_str(), _("Preview Not Available")).c_str());
-        // clang-format on
-    }
 #endif
-    return 0;
-}
-
-int gui_minimap_begin(lua_State *L)
-{
-    // dummy size when running in batch mode
-    int map_W = 50;
-    int map_H = 50;
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        map_W = main_win->build_box->mini_map->GetWidth();
-        map_H = main_win->build_box->mini_map->GetHeight();
-
-        main_win->build_box->mini_map->MapBegin();
-    }
-#endif
-    lua_pushinteger(L, map_W);
-    lua_pushinteger(L, map_H);
-
-    return 2;
-}
-
-int gui_minimap_finish(lua_State *L)
-{
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->mini_map->MapFinish();
-    }
-#endif
-    return 0;
-}
-
-int gui_minimap_draw_line(lua_State *L)
-{
-    int x1 = luaL_checkinteger(L, 1);
-    int y1 = luaL_checkinteger(L, 2);
-
-    int x2 = luaL_checkinteger(L, 3);
-    int y2 = luaL_checkinteger(L, 4);
-
-    const char *color_str = luaL_checkstring(L, 5);
-
-    int r = 255;
-    int g = 255;
-    int b = 255;
-
-    sscanf(color_str, "#%2x%2x%2x", &r, &g, &b);
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->mini_map->DrawLine(x1, y1, x2, y2, (uint8_t)r, (uint8_t)g, (uint8_t)b);
-    }
-#endif
-
-    return 0;
-}
-
-int gui_minimap_fill_box(lua_State *L)
-{
-    int x1 = luaL_checkinteger(L, 1);
-    int y1 = luaL_checkinteger(L, 2);
-
-    int x2 = luaL_checkinteger(L, 3);
-    int y2 = luaL_checkinteger(L, 4);
-
-    const char *color_str = luaL_checkstring(L, 5);
-
-    int r = 255;
-    int g = 255;
-    int b = 255;
-
-    sscanf(color_str, "#%2x%2x%2x", &r, &g, &b);
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-    if (main_win)
-    {
-        main_win->build_box->mini_map->DrawBox(x1, y1, x2, y2, (uint8_t)r, (uint8_t)g, (uint8_t)b);
-    }
-#endif
-
-    return 0;
-}
 
 int generate_midi_track(lua_State *L)
 {
@@ -1500,31 +729,10 @@ static const luaL_Reg gui_script_funcs[] = {
     {"config_line", gui_config_line},
     {"set_colormap", gui_set_colormap},
 
-    {"add_choice", gui_add_choice},
-    {"enable_choice", gui_enable_choice},
-    {"set_button", gui_set_button},
-
-    {"add_module", gui_add_module},
-    {"show_module", gui_show_module},
-    {"set_module", gui_set_module},
-
-    {"add_module_header", gui_add_module_header},
-    {"add_module_url", gui_add_module_url},
-    {"add_module_option", gui_add_module_option},
-    {"add_module_slider_option", gui_add_module_slider_option},
-    {"add_module_button_option", gui_add_module_button_option},
-    {"add_option_choice", gui_add_option_choice},
-    {"set_module_option", gui_set_module_option},
-    {"set_module_slider_option", gui_set_module_slider_option},
-    {"set_module_button_option", gui_set_module_button_option},
-    {"get_module_slider_value", gui_get_module_slider_value},
-    {"get_module_button_value", gui_get_module_button_value},
-
     {"get_batch_randomize_groups", gui_get_batch_randomize_groups},
 
     {"at_level", gui_at_level},
     {"prog_step", gui_prog_step},
-    {"ticker", gui_ticker},
     {"abort", gui_abort},
     {"random", gui_random},
     {"random_int", gui_random_int},
@@ -1539,6 +747,9 @@ static const luaL_Reg gui_script_funcs[] = {
     {"get_filename_base", gui_get_filename_base},
     {"get_file_extension", gui_get_file_extension},
     {"get_save_path", gui_get_save_path},
+#ifdef OBSIDIAN_ENABLE_GUI
+    {"spawn_file_picker", gui_spawn_file_picker},
+#endif
 
     // CSG functions
     {"begin_level", CSG_begin_level},
@@ -1548,14 +759,6 @@ static const luaL_Reg gui_script_funcs[] = {
     {"add_brush", CSG_add_brush},
     {"add_entity", CSG_add_entity},
     {"trace_ray", CSG_trace_ray},
-
-    // Mini-Map functions
-    {"minimap_disable", gui_minimap_disable},
-    {"minimap_enable", gui_minimap_enable},
-    {"minimap_begin", gui_minimap_begin},
-    {"minimap_finish", gui_minimap_finish},
-    {"minimap_draw_line", gui_minimap_draw_line},
-    {"minimap_fill_box", gui_minimap_fill_box},
 
     // Wolf-3D functions
     {"wolf_block", WF_wolf_block},
@@ -1653,6 +856,10 @@ static int p_init_lua(lua_State *L)
         lua_setglobal(L, "gui");
         luaL_newlib(L, bit_functions);
         lua_setglobal(L, "bit");
+#ifdef OBSIDIAN_ENABLE_GUI
+        luaopen_moonnuklear(L);
+        lua_setglobal(L, "nk");
+#endif
     }
     lua_gc(L, LUA_GCRESTART, 0);
 
@@ -1700,24 +907,7 @@ static bool Script_CallFunc(const std::string &func_name, int nresult = 0, const
             err_msg = msg;
         }
 
-        if (batch_mode)
-        {
-            LogPrint("ERROR MESSAGE: %s\n", err_msg);
-        }
-
-// this will appear in the log file too
-#ifndef OBSIDIAN_CONSOLE_ONLY
-        if (main_win)
-        {
-            main_win->label(StringFormat("%s %s %s \"%s\"", _("[ ERROR ]"), OBSIDIAN_TITLE.c_str(),
-                                         OBSIDIAN_SHORT_VERSION, OBSIDIAN_CODE_NAME.c_str())
-                                .c_str());
-            DLG_ShowError("%s: %s", _("Script Error: "), err_msg);
-            main_win->label(
-                StringFormat("%s %s \"%s\"", OBSIDIAN_TITLE.c_str(), OBSIDIAN_SHORT_VERSION, OBSIDIAN_CODE_NAME.c_str())
-                    .c_str());
-        }
-#endif
+        LogPrint("ERROR MESSAGE: %s\n", err_msg);
         lua_pop(LUA_ST, 2); // ob_traceback, message
         return false;
     }
@@ -1838,14 +1028,12 @@ void Script_Load(std::string script_name)
 
 void Script_Open()
 {
-    if (main_action != MAIN_SOFT_RESTART)
-    {
-        LogPrint("\n--- OPENING LUA VM ---\n\n");
-    }
+    LogPrint("\n--- OPENING LUA VM ---\n\n");
 
     // create Lua state
 
-    LUA_ST = luaL_newstate();
+    LUA_ST = lua_newstate(luaalloc, luaalloc_create(NULL, NULL));
+
     if (!LUA_ST)
     {
         FatalError("LUA Init failed: cannot create new state");
@@ -1861,45 +1049,25 @@ void Script_Open()
 
     import_dir = "scripts";
 
-    if (main_action != MAIN_SOFT_RESTART)
-    {
-        LogPrint("Loading initial script: init.lua\n");
-    }
+    LogPrint("Loading initial script: init.lua\n");
 
     Script_Load("init.lua");
 
-    if (main_action != MAIN_SOFT_RESTART)
-    {
-        LogPrint("Loading main script: obsidian.lua\n");
-    }
+    LogPrint("Loading main script: obsidian.lua\n");
 
     Script_Load("obsidian.lua");
 
     has_loaded = true;
-    if (main_action != MAIN_SOFT_RESTART)
-    {
-        LogPrint("DONE.\n\n");
-    }
+
+    LogPrint("DONE.\n\n");
 
     // ob_init() will load all the game-specific scripts, engine scripts, and
     // module scripts.
 
-    if (main_action == MAIN_SOFT_RESTART)
+    if (!Script_CallFunc("ob_init"))
     {
-        if (!Script_CallFunc("ob_restart"))
-        {
-            FatalError("The ob_init script failed.\n");
-        }
+        FatalError("The ob_init script failed.\n");
     }
-    else
-    {
-        if (!Script_CallFunc("ob_init"))
-        {
-            FatalError("The ob_init script failed.\n");
-        }
-    }
-
-    has_added_buttons = true;
 }
 
 void Script_Close()
@@ -1909,14 +1077,9 @@ void Script_Close()
         lua_close(LUA_ST);
     }
 
-    if (main_action != MAIN_SOFT_RESTART)
-    {
-        LogPrint("\n--- CLOSED LUA VM ---\n\n");
-    }
+    LogPrint("\n--- CLOSED LUA VM ---\n\n");
 
     LUA_ST = NULL;
-
-    has_added_buttons = false; // Needed if doing live restart
 }
 
 //------------------------------------------------------------------------
@@ -2126,26 +1289,7 @@ bool ob_build_cool_shit()
 {
     if (!Script_CallFunc("ob_build_cool_shit", 1))
     {
-#ifndef OBSIDIAN_CONSOLE_ONLY
-        if (main_win)
-        {
-            main_win->label(StringFormat("%s %s %s \"%s\"", _("[ ERROR ]"), OBSIDIAN_TITLE.c_str(),
-                                         OBSIDIAN_SHORT_VERSION, OBSIDIAN_CODE_NAME.c_str())
-                                .c_str());
-        }
-#endif
         ProgStatus("%s", _("Script Error"));
-#ifndef OBSIDIAN_CONSOLE_ONLY
-        if (main_win)
-        {
-            main_win->label(
-                StringFormat("%s %s \"%s\"", OBSIDIAN_TITLE.c_str(), OBSIDIAN_SHORT_VERSION, OBSIDIAN_CODE_NAME.c_str())
-                    .c_str());
-#ifdef _WIN32
-            Main::Blinker();
-#endif
-        }
-#endif
         return false;
     }
 
@@ -2162,6 +1306,147 @@ bool ob_build_cool_shit()
     ProgStatus("%s", _("Cancelled"));
     return false;
 }
+
+#ifdef OBSIDIAN_ENABLE_GUI
+bool ob_gui_init_ctx(void *context)
+{
+    SYS_ASSERT(context);
+
+    lua_getglobal(LUA_ST, "nk");
+
+    lua_pushstring(LUA_ST, "init_from_ptr");
+
+    lua_gettable(LUA_ST, -2);
+
+    if (lua_type(LUA_ST, -1) == LUA_TNIL)
+    {
+        FatalError("Script problem: missing function 'nk.init_from_ptr'");
+    }
+
+    lua_pushlightuserdata(LUA_ST, context);
+
+    int status = lua_pcall(LUA_ST, 1, 1, -2);
+
+    if (status != 0)
+    {
+        // error, better quit
+        return false;
+    }
+
+    lua_setglobal(LUA_ST, "OB_NK_CTX");
+
+    // remove result from lua stack
+    lua_pop(LUA_ST, 1);
+
+    return true;
+}
+
+bool ob_gui_init_fonts(void *atlas, float font_scale)
+{
+    SYS_ASSERT(atlas);
+
+    lua_getglobal(LUA_ST, "nk");
+
+    lua_pushstring(LUA_ST, "font_atlas_from_ptr");
+
+    lua_gettable(LUA_ST, -2);
+
+    if (lua_type(LUA_ST, -1) == LUA_TNIL)
+    {
+        LogPrint("Script problem: missing function 'nk.font_atlas_from_ptr'");
+        return false;
+    }
+
+    lua_pushlightuserdata(LUA_ST, atlas);
+
+    int status = lua_pcall(LUA_ST, 1, 1, -2);
+
+    if (status != 0)
+    {
+        // error, better quit
+        return false;
+    }
+
+    lua_setglobal(LUA_ST, "OB_NK_ATLAS");
+
+    // remove result from lua stack
+    lua_pop(LUA_ST, 1);
+
+    lua_getglobal(LUA_ST, "ob_gui_init_fonts");
+
+    if (lua_type(LUA_ST, -1) == LUA_TNIL)
+    {
+        LogPrint("Script problem: missing function 'ob_gui_init_fonts'");
+        return false;
+    }
+
+    lua_pushnumber(LUA_ST, font_scale);
+
+    status = lua_pcall(LUA_ST, 1, 1, -2);
+
+    if (status != 0)
+    {
+        // error, better quit
+        return false;
+    }
+
+    const char *res = lua_tolstring(LUA_ST, -1, NULL);
+
+    // remove result from lua stack
+    lua_pop(LUA_ST, 1);
+
+    if (!res)
+    {
+        return false;
+    }
+
+    if (StringCompare(res, "bork") == 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool ob_gui_frame(int width, int height)
+{
+    lua_getglobal(LUA_ST, "ob_gui_frame");
+
+    if (lua_type(LUA_ST, -1) == LUA_TNIL)
+    {
+        FatalError("Script problem: missing function 'ob_gui_frame'");
+    }
+
+    lua_pushinteger(LUA_ST, width);
+
+    lua_pushinteger(LUA_ST, height);
+
+    int status = lua_pcall(LUA_ST, 2, 1, -3);
+
+    if (status != 0)
+    {
+        // error, better quit
+        return false;
+    }
+
+    const char *res = lua_tolstring(LUA_ST, -1, NULL);
+
+    // remove result from lua stack
+    lua_pop(LUA_ST, 1);
+
+    if (!res)
+    {
+        return false;
+    }
+
+    if (StringCompare(res, "quit") == 0)
+    {
+        return false;
+    }
+
+    return true;
+}
+#endif
 
 //--- editor settings ---
 // vi:ts=4:sw=4:noexpandtab

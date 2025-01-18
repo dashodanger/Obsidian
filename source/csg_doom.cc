@@ -19,6 +19,8 @@
 //
 //------------------------------------------------------------------------
 
+#include <string.h>
+
 #include <algorithm>
 #include <unordered_map>
 

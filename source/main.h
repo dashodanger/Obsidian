@@ -27,9 +27,6 @@
 #include <string>
 #include <vector>
 
-#ifndef OBSIDIAN_CONSOLE_ONLY
-#include "ui_window.h"
-#endif
 #include "lib_util.h"
 #include "sys_debug.h"
 
@@ -50,23 +47,15 @@ constexpr const char *OBSIDIAN_WEBSITE = "https://obsidian-level-maker.github.io
 
 constexpr const char *CONFIG_FILENAME  = "CONFIG.txt";
 constexpr const char *OPTIONS_FILENAME = "OPTIONS.txt";
-constexpr const char *THEME_FILENAME   = "THEME.txt";
 constexpr const char *LOG_FILENAME     = "LOGS.txt";
 constexpr const char *REF_FILENAME     = "REFERENCE.txt";
-
-#if !defined OBSIDIAN_CONSOLE_ONLY && !defined __APPLE__
-extern int v_unload_private_font(const char *path);
-#endif
 
 extern std::string home_dir;
 extern std::string install_dir;
 extern std::string config_file;
 extern std::string options_file;
-extern std::string theme_file;
 extern std::string logging_file;
 extern std::string reference_file;
-
-extern bool batch_mode;
 
 extern std::string batch_output_file;
 
@@ -79,60 +68,15 @@ enum main_action_kind_e
     MAIN_BUILD,
     MAIN_CANCEL,
     MAIN_QUIT,
-    MAIN_HARD_RESTART,
-    MAIN_SOFT_RESTART
 };
 
 extern int main_action;
 
+extern std::string ob_error_message;
+extern float ob_build_progress;
+extern std::string ob_build_step;
+
 // Misc Options
-#ifndef OBSIDIAN_CONSOLE_ONLY
-extern uchar                                    text_red;
-extern uchar                                    text_green;
-extern uchar                                    text_blue;
-extern uchar                                    text2_red;
-extern uchar                                    text2_green;
-extern uchar                                    text2_blue;
-extern uchar                                    bg_red;
-extern uchar                                    bg_green;
-extern uchar                                    bg_blue;
-extern uchar                                    bg2_red;
-extern uchar                                    bg2_green;
-extern uchar                                    bg2_blue;
-extern uchar                                    button_red;
-extern uchar                                    button_green;
-extern uchar                                    button_blue;
-extern uchar                                    gradient_red;
-extern uchar                                    gradient_green;
-extern uchar                                    gradient_blue;
-extern uchar                                    border_red;
-extern uchar                                    border_green;
-extern uchar                                    border_blue;
-extern uchar                                    gap_red;
-extern uchar                                    gap_green;
-extern uchar                                    gap_blue;
-extern Fl_Boxtype                               box_style;
-extern Fl_Boxtype                               button_style;
-extern Fl_Font                                  font_style;
-extern Fl_Color                                 FONT_COLOR;
-extern Fl_Color                                 FONT2_COLOR;
-extern Fl_Color                                 WINDOW_BG;
-extern Fl_Color                                 SELECTION;
-extern Fl_Color                                 GAP_COLOR;
-extern Fl_Color                                 GRADIENT_COLOR;
-extern Fl_Color                                 BUTTON_COLOR;
-extern Fl_Color                                 BORDER_COLOR;
-extern int                                      color_scheme;
-extern int                                      font_theme;
-extern int                                      box_theme;
-extern int                                      button_theme;
-extern int                                      widget_theme;
-extern int                                      window_scaling;
-extern int                                      font_scaling;
-extern int                                      num_fonts;
-extern std::vector<std::pair<std::string, int>> font_menu_items;
-extern bool                                     collapse_disabled_modules;
-#endif
 extern int         filename_prefix;
 extern std::string custom_prefix;
 extern bool        create_backups;
@@ -150,19 +94,16 @@ extern bool        random_string_seeds;
 extern bool        password_mode;
 extern bool        mature_word_lists;
 extern bool        did_specify_seed;
+#ifdef OBSIDIAN_ENABLE_GUI
+extern bool        in_file_dialog;
+extern std::string picker_filename;
+#endif
 
 extern std::string def_filename;
 
 extern std::string              last_directory;
 extern std::string              numeric_locale;
 extern std::vector<std::string> batch_randomize_groups;
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-// Dialog Windows
-void DLG_ShowError(const char *msg, ...);
-
-std::string DLG_OutputFilename(const char *ext, const char *preset = nullptr);
-#endif
 
 extern std::string default_output_path;
 
@@ -171,40 +112,11 @@ extern std::string Resolve_DefaultOutputPath();
 extern std::string string_seed;
 extern std::string selected_lang;
 
-// Clippy/program menu stuff
-#ifndef OBSIDIAN_CONSOLE_ONLY
-extern Fl_Pixmap *clippy;
-
-void DLG_AboutText();
-void DLG_OptionsEditor();
-void DLG_ThemeEditor();
-
-void DLG_EditSeed();
-void DLG_ViewLogs();
-void DLG_ViewGlossary();
-void DLG_ManageConfig();
-#endif
-
 namespace Main
 {
 
 void Shutdown(bool error);
 bool BackupFile(const std::string &filename);
-
-#if defined _WIN32 && !defined OBSIDIAN_CONSOLE_ONLY
-void Blinker();
-#endif
-
-#if !defined(OBSIDIAN_CONSOLE_ONLY) && !defined(__APPLE__)
-bool LoadInternalFont(const char *fontpath, int fontnum, const char *fontname);
-#endif
-
-#ifndef OBSIDIAN_CONSOLE_ONLY
-void SetupFLTK();
-int  DetermineScaling();
-void PopulateFontMap();
-void Ticker();
-#endif
 
 } // namespace Main
 

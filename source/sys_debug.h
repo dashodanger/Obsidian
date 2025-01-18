@@ -48,9 +48,5 @@ void              ProgStatus(const char *message, ...);
 [[noreturn]] void FatalError(const char *message, ...);
 #endif
 
-using log_display_func_t = void (*)(std::string_view line, void *priv_data);
-
-void LogReadLines(log_display_func_t display_func, void *priv_data);
-
 //--- editor settings ---
 // vi:ts=4:sw=4:noexpandtab

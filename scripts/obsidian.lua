@@ -26,7 +26,6 @@ gui.import("prefab")
 gui.import("autodetail")
 
 gui.import("seed")
---gui.import("shapes")
 gui.import("grower")
 gui.import("area")
 gui.import("connect")
@@ -46,6 +45,12 @@ gui.import("title_gen")
 gui.import("level")
 
 gui.import("script_manager")
+
+-- Try to keep all UI-related code in ui.lua so that we don't have to throw
+-- a bunch of guards in random scripts if we aren't compiling the GUI
+if nk ~= nil then
+  gui.import("ui")
+end
 
 gui.set_import_dir("data/text/")
 
@@ -446,7 +451,7 @@ function ob_match_module(T)
   for _,name in pairs(mod_tab) do
     local def = OB_MODULES[name]
 
-    if not (def and def.shown and def.enabled) then
+    if not (def and def.valid and def.enabled) then
       return false
     end
   end
@@ -534,13 +539,11 @@ function ob_update_games()
   local need_new = false
 
   for name,def in pairs(OB_GAMES) do
-    local shown = ob_match_conf(def)
+    local valid = ob_match_conf(def)
 
-    if not shown and (OB_CONFIG.game == name) then
+    if not valid and (OB_CONFIG.game == name) then
       need_new = true
     end
-
-    gui.enable_choice("game", name, shown)
   end
 
   if need_new then
@@ -549,7 +552,6 @@ function ob_update_games()
     else
       OB_CONFIG.game = "doom2"
     end
-    gui.set_button("game", OB_CONFIG.game)
   end
 end
 
@@ -557,13 +559,11 @@ function ob_update_ports()
   local need_new = false
 
   for name,def in pairs(OB_PORTS) do
-    local shown = ob_match_conf(def)
+    local valid = ob_match_conf(def)
 
-    if not shown and (OB_CONFIG.port == name) then
+    if not valid and (OB_CONFIG.port == name) then
       need_new = true
     end
-
-    gui.enable_choice("port", name, shown)
   end
 
   if need_new then
@@ -578,43 +578,28 @@ function ob_update_ports()
     else -- shouldn't get here - Dasho
       OB_CONFIG.port = "vanilla"
     end
-    gui.set_button("port", OB_CONFIG.port)
   end
 end
 
 function ob_update_themes()
-  local new_label
+  local need_new = false
 
   for name,def in pairs(OB_THEMES) do
-    local shown = ob_match_conf(def)
+    local valid = ob_match_conf(def)
 
-    if not shown and (OB_CONFIG.theme == name) then
-      new_label = def.label
+    if not valid and (OB_CONFIG.theme == name) then
+      need_new = true
     end
 
-    def.shown = shown
-    gui.enable_choice("theme", name, def.shown)
+    def.valid = valid
   end
 
-  -- try to keep the same GUI label
-  if new_label then
-    for name,def in pairs(OB_THEMES) do
-      local shown = ob_match_conf(def)
-
-      if shown and def.label == new_label then
-        OB_CONFIG.theme = name
-        gui.set_button("theme", OB_CONFIG.theme)
-        return
-      end
-    end
-
-    -- otherwise revert to As Original
+  if need_new then
     if OB_CONFIG.port == "limit_enforcing" then
       OB_CONFIG.theme = "default"
     else
       OB_CONFIG.theme = "original"
     end
-    gui.set_button("theme", OB_CONFIG.theme)
   end
 end
 
@@ -629,14 +614,13 @@ function ob_update_modules()
     local changed = false
 
     for name,def in pairs(OB_MODULES) do
-      local shown = ob_match_conf(def)
+      local valid = ob_match_conf(def)
 
-      if shown ~= def.shown then
+      if valid ~= def.valid then
         changed = true
       end
 
-      def.shown = shown
-      gui.show_module(name, def.shown)
+      def.valid = valid
     end
 
     if not changed then break; end
@@ -706,14 +690,9 @@ function ob_set_mod_option(name, option, value)
       for other,odef in pairs(OB_MODULES) do
         if odef ~= mod and ob_defs_conflict(mod, odef) then
           odef.enabled = false
-          gui.set_module(other, odef.enabled)
         end
       end
     end
-
-    -- this is required for parsing the CONFIG.TXT file
-    -- [but redundant when the user merely changed the widget]
-    gui.set_module(name, mod.enabled)
 
     ob_update_all()
     return
@@ -737,16 +716,6 @@ function ob_set_mod_option(name, option, value)
 
   opt.value = value
   
-  if not opt.valuator then
-    gui.set_module_option(name, option, value)
-  else
-    if opt.valuator == "slider" then
-      gui.set_module_slider_option(name, option, value)
-    elseif opt.valuator == "button" then
-      gui.set_module_button_option(name, option, tonumber(value))
-    end
-  end
-
   -- no need to call ob_update_all
   -- (nothing ever depends on custom options)
 end
@@ -757,7 +726,7 @@ function ob_mod_enabled(name)
     gui.printf("ob_mod_enabled: Ignoring unknown module: %s\n", name)
     return 0
   else
-    if mod.enabled and mod.shown then return 1 else return 0 end
+    if mod.enabled and mod.valid then return 1 else return 0 end
   end
 end
 
@@ -790,9 +759,7 @@ function ob_set_config(name, value)
       for _,opt in pairs(mod.options) do
         if opt.name == name then
           ob_set_mod_option(mod.name, name, value)
-          if OB_CONFIG.batch == "yes" then
-            OB_CONFIG[name] = value
-          end
+          OB_CONFIG[name] = value
           return
         end
       end
@@ -838,13 +805,6 @@ function ob_set_config(name, value)
     ob_update_all()
   end
 
-  -- this is required for parsing the CONFIG.TXT file
-  -- [ but redundant when the user merely changed the widget ]
-  if name == "game"  or name == "engine" or name == "port"
-     or name == "theme" or name == "length"
-  then
-    gui.set_button(name, OB_CONFIG[name])
-  end
 end
 
 
@@ -943,43 +903,31 @@ function ob_read_all_config(need_full, log_only)
       do_line("")
 
       for _,opt in pairs(def.options) do
-        if string.match(opt.name, "header_") then goto justaheader end
-        if string.match(opt.name, "url_") then goto justaheader end
+        if string.match(opt.name, "header_") then goto skipoption end
+        if string.match(opt.name, "url_") then goto skipoption end
         if string.match(opt.name, "float_") then
-            if OB_CONFIG.batch == "yes" then
-              if OB_CONFIG[opt.name] then
-                do_value(opt.name, OB_CONFIG[opt.name])
-              else
-                do_value(opt.name, opt.default)
-                ob_set_config(opt.name, opt.default)
-              end
-            else
-              do_value(opt.name, gui.get_module_slider_value(name, opt.name))
-            end
-        elseif string.match(opt.name, "bool_") then
-            if OB_CONFIG.batch == "yes" then
-              if OB_CONFIG[opt.name] then
-                do_value(opt.name, OB_CONFIG[opt.name])
-              else
-                do_value(opt.name, opt.default)
-                ob_set_config(opt.name, opt.default)
-              end
-            else
-              do_value(opt.name, gui.get_module_button_value(name, opt.name))
-            end
-        else
-          if OB_CONFIG.batch == "yes" then
-            if OB_CONFIG[opt.name] then
-              do_value(opt.name, OB_CONFIG[opt.name])
-            else
-              do_value(opt.name, opt.default)
-              ob_set_config(opt.name, opt.default)
-            end
+          if OB_CONFIG[opt.name] then
+            do_value(opt.name, OB_CONFIG[opt.name])
           else
-            do_value(opt.name, opt.value)
+            do_value(opt.name, opt.default)
+            ob_set_config(opt.name, opt.default)
+          end
+        elseif string.match(opt.name, "bool_") then
+          if OB_CONFIG[opt.name] then
+            do_value(opt.name, OB_CONFIG[opt.name])
+          else
+            do_value(opt.name, opt.default)
+            ob_set_config(opt.name, opt.default)
+          end
+        else
+          if OB_CONFIG[opt.name] then
+            do_value(opt.name, OB_CONFIG[opt.name])
+          else
+            do_value(opt.name, opt.default)
+            ob_set_config(opt.name, opt.default)
           end
         end
-        ::justaheader::
+        ::skipoption::
       end
 
       do_line("")
@@ -994,7 +942,7 @@ function ob_read_all_config(need_full, log_only)
 
     if ob_check_ui_module(def) then goto continue end
 
-    if not need_full and not def.shown then goto continue end
+    if not need_full and not def.valid then goto continue end
 
     do_line("@%s = %s", name, sel(def.enabled, "1", "0"))
 
@@ -1003,78 +951,54 @@ function ob_read_all_config(need_full, log_only)
       if def.options and not table.empty(def.options) then
         if def.options[1] then
           for _,opt in pairs(def.options) do
-            if string.match(opt.name, "header_") then goto justaheader end
-            if string.match(opt.name, "url_") then goto justaheader end
+            if string.match(opt.name, "header_") then goto skipoption end
+            if string.match(opt.name, "url_") then goto skipoption end
             if string.match(opt.name, "float_") then
-                if OB_CONFIG.batch == "yes" then
-                  if OB_CONFIG[opt.name] then
-                    do_mod_value(opt.name, OB_CONFIG[opt.name])
-                  else
-                    do_mod_value(opt.name, opt.default)
-                    ob_set_config(opt.name, opt.default)
-                  end
-                else
-                  do_mod_value(opt.name, gui.get_module_slider_value(name, opt.name))
-                end
-            elseif string.match(opt.name, "bool_") then
-                if OB_CONFIG.batch == "yes" then
-                  if OB_CONFIG[opt.name] then
-                    do_mod_value(opt.name, OB_CONFIG[opt.name])
-                  else
-                    do_mod_value(opt.name, opt.default)
-                    ob_set_config(opt.name, opt.default)
-                  end
-                else
-                  do_mod_value(opt.name, gui.get_module_button_value(name, opt.name))
-                end
-            else
-              if OB_CONFIG.batch == "yes" then
-                if OB_CONFIG[opt.name] then
-                  do_mod_value(opt.name, OB_CONFIG[opt.name])
-                else
-                  do_mod_value(opt.name, opt.default)
-                  ob_set_config(opt.name, opt.default)
-                end
+              if OB_CONFIG[opt.name] then
+                do_mod_value(opt.name, OB_CONFIG[opt.name])
               else
-                do_mod_value(opt.name, opt.value)
+                do_mod_value(opt.name, opt.default)
+                ob_set_config(opt.name, opt.default)
+              end
+            elseif string.match(opt.name, "bool_") then
+              if OB_CONFIG[opt.name] then
+                do_mod_value(opt.name, OB_CONFIG[opt.name])
+              else
+                do_mod_value(opt.name, opt.default)
+                ob_set_config(opt.name, opt.default)
+              end
+            else
+              if OB_CONFIG[opt.name] then
+                do_mod_value(opt.name, OB_CONFIG[opt.name])
+              else
+                do_mod_value(opt.name, opt.default)
+                ob_set_config(opt.name, opt.default)
               end
             end
-            ::justaheader::
+            ::skipoption::
           end
         else
           for o_name,opt in pairs(def.options) do
             if string.match(o_name, "float_") then
-                if OB_CONFIG.batch == "yes" then
-                  if OB_CONFIG[opt.name] then
-                    do_mod_value(o_name, OB_CONFIG[opt.name])
-                  else
-                    do_mod_value(o_name, opt.default)
-                    ob_set_config(o_name, opt.default)
-                  end
-                else
-                  do_mod_value(o_name, gui.get_module_slider_value(name, opt.name))
-                end
-            elseif string.match(o_name, "bool_") then
-                if OB_CONFIG.batch == "yes" then
-                  if OB_CONFIG[opt.name] then
-                    do_mod_value(o_name, OB_CONFIG[opt.name])
-                  else
-                    do_mod_value(o_name, opt.default)
-                    ob_set_config(o_name, opt.default)
-                  end
-                else
-                  do_mod_value(o_name, gui.get_module_button_value(name, opt.name))
-                end
-            else
-              if OB_CONFIG.batch == "yes" then
-                if OB_CONFIG[opt.name] then
-                  do_mod_value(o_name, OB_CONFIG[opt.name])
-                else
-                  do_mod_value(o_name, opt.default)
-                  ob_set_config(o_name, opt.default)
-                end
+              if OB_CONFIG[opt.name] then
+                do_mod_value(o_name, OB_CONFIG[opt.name])
               else
-                do_mod_value(o_name, opt.value)
+                do_mod_value(o_name, opt.default)
+                ob_set_config(o_name, opt.default)
+              end
+            elseif string.match(o_name, "bool_") then
+              if OB_CONFIG[opt.name] then
+                do_mod_value(o_name, OB_CONFIG[opt.name])
+              else
+                do_mod_value(o_name, opt.default)
+                ob_set_config(o_name, opt.default)
+              end
+            else
+              if OB_CONFIG[opt.name] then
+                do_mod_value(o_name, OB_CONFIG[opt.name])
+              else
+                do_mod_value(o_name, opt.default)
+                ob_set_config(o_name, opt.default)
               end
             end
           end
@@ -1204,233 +1128,6 @@ function ob_load_all_modules()
   gui.set_import_dir("")
 end
 
-function ob_restart()
-
-  -- the missing print functions
-  gui.printf = function (fmt, ...)
-    if fmt then gui.raw_log_print(string.format(fmt, ...)) end
-  end
-
-  gui.debugf = function (fmt, ...)
-    if fmt then gui.raw_debug_print(string.format(fmt, ...)) end
-  end
-
-  -- load definitions for all games
-  
-  ob_load_all_engines()
-  ob_load_all_games()
-  ob_load_all_ports()
-  ob_load_all_modules()
-
-  table.name_up(OB_ENGINES)
-  table.name_up(OB_GAMES)
-  table.name_up(OB_PORTS)
-  table.name_up(OB_THEMES)
-  table.name_up(OB_MODULES)
-
-
-  local function preinit_all(DEFS)
-    local removed = {}
-
-    for name,def in pairs(DEFS) do
-      if def.preinit_func then
-        if def.preinit_func(def) == REMOVE_ME then
-          table.insert(removed, name)
-        end
-      end
-    end
-
-    for _,name in pairs(removed) do
-      DEFS[name] = nil
-    end
-  end
-
-  preinit_all(OB_ENGINES)
-  preinit_all(OB_GAMES)
-  preinit_all(OB_PORTS)
-  preinit_all(OB_THEMES)
-  preinit_all(OB_MODULES)
-
-
-  local function button_sorter(A, B)
-    if A.priority or B.priority then
-      return (A.priority or 50) > (B.priority or 50)
-    end
-
-    return A.label < B.label
-  end
-
-
-  local function create_buttons(what, DEFS)
-    assert(DEFS)
-
-    local list = {}
-
-    local min_priority = 999
-
-    for name,def in pairs(DEFS) do
-      assert(def.name and def.label)
-      table.insert(list, def)
-      min_priority = math.min(min_priority, def.priority or 50)
-    end
-
-    -- add separators for the Theme menus
-    if what == "theme" and min_priority < 79 then
-      table.insert(list, { priority=79, name="_", label="_" })
-    end
-
-    table.sort(list, button_sorter)
-
-    for _,def in pairs(list) do
-      if what == "module" then
-        local where = def.where or "other"
-        local suboptions
-        assert(def.name and def.label)
-        if where == "links" then
-          suboptions = 1
-        else
-          suboptions = 0
-        end
-        if def.color then
-          gui.add_module(where, def.name, def.label, def.tooltip, def.color["red"], def.color["green"], def.color["blue"], suboptions)
-        else
-          gui.add_module(where, def.name, def.label, def.tooltip, nil, nil, nil, suboptions)
-        end
-      else
-        gui.add_choice(what, def.name, def.label)
-      end
-
-      -- TODO : review this, does it belong HERE ?
-      if what == "engine" then
-        assert(def.name)
-        gui.enable_choice("engine", def.name, true)
-      end
-    end
-
-    -- set the current value
-    if what ~= "module" then
-      local default = list[1] and list[1].name
-
-      OB_CONFIG[what] = default
-    end
-  end
-
-
-  local function simple_buttons(what, choices, default)
-    for i = 1,#choices,2 do
-      local id    = choices[i]
-      local label = choices[i+1]
-
-      gui.   add_choice(what, id, label)
-      gui.enable_choice(what, id, true)
-    end
-
-    OB_CONFIG[what] = default
-  end
-
-
-  local function create_mod_options()
-
-    for _,mod in pairs(OB_MODULES) do
-      if not mod.options then
-        mod.options = {}
-      else
-        local list = mod.options
-
-        -- handle lists (for UI modules) different from key/value tables
-        if list[1] == nil then
-          list = {}
-
-          for name,opt in pairs(mod.options) do
-            opt.name = name
-            table.insert(list, opt)
-          end
-
-          table.sort(list, button_sorter)
-        end
-
-        for _,opt in pairs(list) do
-          assert(opt.label)
-          if string.match(opt.name, "header_") then
-            gui.add_module_header(mod.name, opt.name, opt.label, opt.gap)
-            goto justaheader
-          end
-          if string.match(opt.name, "url_") then
-            assert(opt.url)
-            gui.add_module_url(mod.name, opt.name, opt.label, opt.url, opt.gap)
-            goto justaheader
-          end
-          if not opt.valuator then
-            assert(opt.choices)
-          end
-                  
-          if opt.valuator then
-            if opt.valuator == "slider" then
-              if not opt.default then
-                opt.default = (opt.min + opt.max) / 2
-              end
-              gui.add_module_slider_option(mod.name, opt.name, opt.label, opt.tooltip, opt.longtip, opt.gap, opt.min, opt.max, opt.increment, opt.units or "", opt.presets or "", opt.nan or "", opt.randomize_group or "", tostring(opt.default))
-              opt.value = opt.default
-              gui.set_module_slider_option(mod.name, opt.name, opt.value)
-            elseif opt.valuator == "button" then
-              if not opt.default then
-                opt.default = 0
-              end
-              gui.add_module_button_option(mod.name, opt.name, opt.label, opt.tooltip, opt.longtip, opt.gap, opt.randomize_group or "", tostring(opt.default))
-              opt.value = opt.default
-              gui.set_module_button_option(mod.name, opt.name, opt.value)
-            end
-          else
-            -- select a default value
-            if not opt.default then
-              if table.has_elem(opt.choices, "default") then opt.default = "default"
-              elseif table.has_elem(opt.choices, "normal")  then opt.default = "normal"
-              elseif table.has_elem(opt.choices, "medium")  then opt.default = "medium"
-              elseif table.has_elem(opt.choices, "mixed")   then opt.default = "mixed"
-              else   opt.default = opt.choices[1]
-              end
-            end
-            gui.add_module_option(mod.name, opt.name, opt.label, opt.tooltip, opt.longtip, opt.gap, opt.randomize_group or "", opt.default)
-            opt.avail_choices = {}
-
-            for i = 1,#opt.choices,2 do
-              local id    = opt.choices[i]
-              local label = opt.choices[i+1]
-
-              gui.add_option_choice(mod.name, opt.name, id, label)
-              opt.avail_choices[id] = 1
-            end
-            opt.value = opt.default
-            gui.set_module_option(mod.name, opt.name, opt.value)
-          end
-          ::justaheader::
-        end -- for opt
-      end
-    end -- for mod
-  end
-
-
-  OB_CONFIG.seed = 0,
-
-  create_buttons("engine",   OB_ENGINES)
-  create_buttons("game",   OB_GAMES)
-  create_buttons("port", OB_PORTS)
-  create_buttons("theme",  OB_THEMES)
-
-  simple_buttons("length",   LENGTH_CHOICES,   "game")
-
-  create_buttons("module", OB_MODULES)
-  create_mod_options()
-
-  ob_update_all()
-
-  gui.set_button("engine",   OB_CONFIG.engine)
-  gui.set_button("game",     OB_CONFIG.game)
-  gui.set_button("port",   OB_CONFIG.port)
-  gui.set_button("length",   OB_CONFIG.length)
-  gui.set_button("theme",    OB_CONFIG.theme)
-end
-
 function ob_init()
 
   -- the missing print functions
@@ -1532,62 +1229,15 @@ function ob_init()
   preinit_all(OB_THEMES)
   preinit_all(OB_MODULES)
 
-
-  local function button_sorter(A, B)
-    if A.priority or B.priority then
-      return (A.priority or 50) > (B.priority or 50)
-    end
-
-    return A.label < B.label
-  end
-
-
   local function create_buttons(what, DEFS)
     assert(DEFS)
     gui.debugf("creating buttons for %s\n", what)
 
     local list = {}
 
-    local min_priority = 999
-
     for name,def in pairs(DEFS) do
       assert(def.name and def.label)
       table.insert(list, def)
-      min_priority = math.min(min_priority, def.priority or 50)
-    end
-
-    -- add separators for the Theme menus
-    if what == "theme" and min_priority < 79 then
-      table.insert(list, { priority=79, name="_", label="_" })
-    end
-
-    table.sort(list, button_sorter)
-
-    for _,def in pairs(list) do
-      if what == "module" then
-        assert(def.name and def.label)
-        local where = def.where or "other"
-        local suboptions
-        if where == "links" then
-          suboptions = 1
-        else
-          suboptions = 0
-        end
-        if def.color then
-          gui.add_module(where, def.name, def.label, def.tooltip, def.color["red"], def.color["green"], def.color["blue"], suboptions)
-        else
-          gui.add_module(where, def.name, def.label, def.tooltip, nil, nil, nil, suboptions)
-        end
-      else
-        assert(def.name and def.label)
-        gui.add_choice(what, def.name, def.label)
-      end
-
-      -- TODO : review this, does it belong HERE ?
-      if what == "engine" then
-        assert(def.name)
-        gui.enable_choice("engine", def.name, true)
-      end
     end
 
     -- set the current value
@@ -1599,15 +1249,7 @@ function ob_init()
   end
 
 
-  local function simple_buttons(what, choices, default)
-    for i = 1,#choices,2 do
-      local id    = choices[i]
-      local label = choices[i+1]
-
-      gui.   add_choice(what, id, label)
-      gui.enable_choice(what, id, true)
-    end
-
+  local function simple_buttons(what, default)
     OB_CONFIG[what] = default
   end
 
@@ -1629,20 +1271,16 @@ function ob_init()
             opt.name = name
             table.insert(list, opt)
           end
-
-          table.sort(list, button_sorter)
         end
 
         for _,opt in pairs(list) do
           assert(opt.label)
           if string.match(opt.name, "header_") then
-            gui.add_module_header(mod.name, opt.name, opt.label, opt.gap)
-            goto justaheader
+            goto skipoption
           end
           if string.match(opt.name, "url_") then
             assert(opt.url)
-            gui.add_module_url(mod.name, opt.name, opt.label, opt.url, opt.gap)
-            goto justaheader
+            goto skipoption
           end
           if not opt.valuator then
             assert(opt.choices)
@@ -1653,16 +1291,12 @@ function ob_init()
               if not opt.default then
                 opt.default = (opt.min + opt.max) / 2
               end
-              gui.add_module_slider_option(mod.name, opt.name, opt.label, opt.tooltip, opt.longtip, opt.gap, opt.min, opt.max, opt.increment, opt.units or "", opt.presets or "", opt.nan or "", opt.randomize_group or "", tostring(opt.default))
               opt.value = opt.default
-              gui.set_module_slider_option(mod.name, opt.name, opt.value)
             elseif opt.valuator == "button" then
               if not opt.default then
                 opt.default = 0
               end
-              gui.add_module_button_option(mod.name, opt.name, opt.label, opt.tooltip, opt.longtip, opt.gap, opt.randomize_group or "", tostring(opt.default))
               opt.value = opt.default
-              gui.set_module_button_option(mod.name, opt.name, opt.value)
             end
           else
             -- select a default value
@@ -1674,20 +1308,17 @@ function ob_init()
               else   opt.default = opt.choices[1]
               end
             end
-            gui.add_module_option(mod.name, opt.name, opt.label, opt.tooltip, opt.longtip, opt.gap, opt.randomize_group or "", opt.default)
             opt.avail_choices = {}
 
             for i = 1,#opt.choices,2 do
               local id    = opt.choices[i]
               local label = opt.choices[i+1]
 
-              gui.add_option_choice(mod.name, opt.name, id, label)
               opt.avail_choices[id] = 1
             end
             opt.value = opt.default
-            gui.set_module_option(mod.name, opt.name, opt.value)
           end
-          ::justaheader::
+          ::skipoption::
         end -- for opt
       end
     end -- for mod
@@ -1709,12 +1340,6 @@ function ob_init()
   OB_CONFIG.engine = "idtech_1"
 
   ob_update_all()
-
-  gui.set_button("engine",   OB_CONFIG.engine)
-  gui.set_button("game",     OB_CONFIG.game)
-  gui.set_button("port",   OB_CONFIG.port)
-  gui.set_button("length",   OB_CONFIG.length)
-  gui.set_button("theme",    OB_CONFIG.theme)
 
   gui.printf("\n~~ Completed Lua initialization ~~\n\n")
 end
@@ -1747,12 +1372,7 @@ function ob_get_param(parameter)
   elseif OB_CONFIG[parameter] then
     param = OB_CONFIG[parameter]
   else
-    if OB_CONFIG.batch == "yes" then
-      print("MISSING PARAMETER: " .. parameter)
-    else
-      print("WARNING! " .. parameter .. " not found in config!")
-      return ""
-    end
+    print("MISSING PARAMETER: " .. parameter)
   end
   
   if type(param) == "string" then
@@ -1873,8 +1493,6 @@ end
 
 function ob_default_filename()
   -- create a default filename [ WITHOUT any extension ]
-
-  if OB_CONFIG.batch == "yes" then goto continue end
 
   assert(OB_CONFIG)
   assert(OB_CONFIG.game)
@@ -2072,7 +1690,7 @@ function ob_sort_modules()
   -- [ ignore the special UI modules/panels ]
 
   for _,mod in pairs(OB_MODULES) do
-    if mod.enabled and mod.shown and not ob_check_ui_module(mod) then
+    if mod.enabled and mod.valid and not ob_check_ui_module(mod) then
       table.insert(GAME.modules, mod)
     end
   end
@@ -2188,9 +1806,7 @@ function ob_build_setup()
   table.merge_missing(PARAM, GLOBAL_PARAMETERS)
 
   -- load all the prefab definitions
-  if OB_CONFIG.batch == "yes" then
-    RANDOMIZE_GROUPS = gui.get_batch_randomize_groups()
-  end
+  RANDOMIZE_GROUPS = gui.get_batch_randomize_groups()
 
   if not ob_match_game({game = {wolf=1,spear=1,noah=1,obc=1}}) then
     Naming_init(GAME.NAMES)
@@ -2667,39 +2283,20 @@ function ob_build_cool_shit()
     ob_invoke_hook("slump_setup")
     ob_invoke_hook("setup")
     assert(PARAM.slump_config)
-    gui.minimap_disable(gui.gettext("SLUMP"))
     return "ok" 
   end -- Skip the rest if using Vanilla Doom/SLUMP
 
-  gui.ticker()
-  
   ob_build_setup()
 
   -- Hijack here if Wolf3D is selected
 
   if OB_CONFIG.engine == "idtech_0" then
-    gui.minimap_disable(gui.gettext("id Tech 0"))
     local result = v094_build_wolf3d_shit()
     ob_clean_up()
     return result
   end
 
-  if PARAM["bool_save_gif"] == 1 then
-    -- Set frame delay based on how detailed the live minimap is - Dasho
-    if PARAM["live_minimap"] == "step" then
-      gui.minimap_gif_start(10)
-    elseif PARAM["live_minimap"] == "room" then
-      gui.minimap_gif_start(75)
-    else
-      gui.minimap_gif_start(175)
-    end
-  end
-
   status = Level_make_all()
-
-  if PARAM["bool_save_gif"] == 1 then
-    gui.minimap_gif_finish()
-  end
 
   ob_clean_up()
 

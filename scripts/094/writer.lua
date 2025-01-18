@@ -555,7 +555,6 @@ function write_level(lev_name)
 
       push_line()
 
-      gui.ticker()
     end
 
     gui.printf("TOTAL_GROUPS X = %d\n", total_group)
@@ -590,7 +589,6 @@ function write_level(lev_name)
 
       push_line()
 
-      gui.ticker()
     end
 
     gui.printf("TOTAL_GROUPS Y = %d\n", total_group)
@@ -786,8 +784,6 @@ function write_level(lev_name)
   local function write_linedefs()
 
     for zzz,L in ipairs(line_list) do
-      gui.ticker()
-
       if not L.deleted then
         if not L.v1.index then write_vertex(L.v1) end
         if not L.v2.index then write_vertex(L.v2) end

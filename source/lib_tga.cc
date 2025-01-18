@@ -26,6 +26,8 @@
 
 #include "lib_tga.h"
 
+#include <string.h>
+
 #include "m_addons.h"
 #include "main.h"
 #include "sys_macro.h"

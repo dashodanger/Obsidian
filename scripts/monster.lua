@@ -2609,8 +2609,6 @@ function Monster_make_battles(LEVEL, SEEDS)
     Monster_fill_room(LEVEL, R, SEEDS)
 
     Item_simulate_battle(LEVEL, R)
-
-    gui.ticker()
   end
 
   Monster_show_stats(LEVEL)

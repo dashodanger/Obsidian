@@ -190,65 +190,54 @@ end
 
 function module_param_up(module)
   for _,opt in pairs(module.options) do
-    if string.match(opt.name, "header_") then goto justaheader end
-    if OB_CONFIG.batch == "yes" then
-      if opt.valuator then
-        if opt.valuator == "slider" then 
-          local value = tonumber(OB_CONFIG[opt.name])
-          if not value then
-            PARAM[opt.name] = OB_CONFIG[opt.name]
+    if string.match(opt.name, "header_") then goto skipoption end
+    if string.match(opt.name, "url_") then goto skipoption end
+    if opt.valuator then
+      if opt.valuator == "slider" then 
+        local value = tonumber(OB_CONFIG[opt.name])
+        if not value then
+          PARAM[opt.name] = OB_CONFIG[opt.name]
+        else
+          if opt.increment < 1 then
+            PARAM[opt.name] = value
           else
-            if opt.increment < 1 then
-              PARAM[opt.name] = value
-            else
-              PARAM[opt.name] = math.floor(value)
-            end
-          end
-        elseif opt.valuator == "button" then
-          PARAM[opt.name] = tonumber(OB_CONFIG[opt.name])
-        end
-      else
-        PARAM[opt.name] = OB_CONFIG[opt.name]
-      end
-      if RANDOMIZE_GROUPS then
-        for _,group in pairs(RANDOMIZE_GROUPS) do
-          if opt.randomize_group and opt.randomize_group == group then
-            if opt.valuator then
-              if opt.valuator == "button" then
-                  PARAM[opt.name] = rand.sel(50, 1, 0)
-                  goto done
-              elseif opt.valuator == "slider" then
-                  if opt.increment < 1 then
-                    PARAM[opt.name] = rand.range(opt.min, opt.max)
-                  else
-                    PARAM[opt.name] = rand.irange(opt.min, opt.max)
-                  end
-                  goto done
-              end
-            else
-              local index
-              repeat
-                index = rand.irange(1, #opt.choices)
-              until (index % 2 == 1)
-              PARAM[opt.name] = opt.choices[index]
-              goto done
-            end
+            PARAM[opt.name] = math.floor(value)
           end
         end
+      elseif opt.valuator == "button" then
+        PARAM[opt.name] = tonumber(OB_CONFIG[opt.name])
       end
-      ::done::
     else
-      if opt.valuator then
-        if opt.valuator == "button" then
-            PARAM[opt.name] = gui.get_module_button_value(module.name, opt.name)
-        elseif opt.valuator == "slider" then
-            PARAM[opt.name] = gui.get_module_slider_value(module.name, opt.name)      
+      PARAM[opt.name] = OB_CONFIG[opt.name]
+    end
+    if RANDOMIZE_GROUPS then
+      for _,group in pairs(RANDOMIZE_GROUPS) do
+        if opt.randomize_group and opt.randomize_group == group then
+          if opt.valuator then
+            if opt.valuator == "button" then
+                PARAM[opt.name] = rand.sel(50, 1, 0)
+                goto done
+            elseif opt.valuator == "slider" then
+                if opt.increment < 1 then
+                  PARAM[opt.name] = rand.range(opt.min, opt.max)
+                else
+                  PARAM[opt.name] = rand.irange(opt.min, opt.max)
+                end
+                goto done
+            end
+          else
+            local index
+            repeat
+              index = rand.irange(1, #opt.choices)
+            until (index % 2 == 1)
+            PARAM[opt.name] = opt.choices[index]
+            goto done
+          end
         end
-      else
-        PARAM[opt.name] = opt.value
       end
     end
-    ::justaheader::
+    ::done::
+    ::skipoption::
   end
 end
 

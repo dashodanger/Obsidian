@@ -46,13 +46,6 @@ DEBUG_CONTROL.GROWTH_STEP_CHOICES =
   "no",       _("No"),
 }
 
-DEBUG_CONTROL.LIVEMAP_CHOICES =
-{
-  "step", _("Per Step (Very Slow)"),
-  "room", _("Per Room (Slightly Slow)"),
-  "none", _("No Live Minimap"),
-}
-
 function DEBUG_CONTROL.setup(self)
 
   module_param_up(self)
@@ -149,16 +142,6 @@ OB_MODULES["debugger"] =
       tooltip = _("Saves SVG format images of generated map thumbnails."),
       priority=94,
       gap = 1,
-    },
-
-    {
-      name="live_minimap",
-      label=_("Live Growth Minimap"),
-      choices=DEBUG_CONTROL.LIVEMAP_CHOICES,
-      default="none",
-      tooltip= _("Controls the granularity of steps shown on the GUI minimap as a level is built."),
-      longtip= _("Higher levels of detail will increase the amount of time that it takes to generate a WAD."),
-      gap = 1
     },
 
   },
