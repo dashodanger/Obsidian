@@ -55,7 +55,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y libxft-dev libfontconfig1-dev libgl-dev libfltk1.3-dev
+          sudo apt-get install -y libxft-dev libxext-dev
       - name: Configure CMake Ubuntu
         run: mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
       - name: Build Ubuntu
